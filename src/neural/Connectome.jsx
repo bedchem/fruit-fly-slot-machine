@@ -37,7 +37,7 @@ const GROUP_HUE = {
 };
 
 /** Rendered even when quiet, so the anatomy is always there. */
-const BASELINE = 0.42;
+const BASELINE = 0.36;
 const REST_RATE = 0.06;
 const TINT = 0.85;
 const SPLAT = [[1, 0], [0, 1], [1, 1]];
@@ -144,7 +144,7 @@ export function Connectome({ machineRef, store, ready, height = 300 }) {
         const r = gi >= 0 ? rate[gi] : REST_RATE;
         const j = jitter[i] * depth;
         const base = j * BASELINE;
-        const act = Math.max(0, r - REST_RATE) * j * 4.2;
+        const act = Math.max(0, r - REST_RATE) * j * 2.1;
 
         const hr = hue[i * 3], hg = hue[i * 3 + 1], hb = hue[i * 3 + 2];
         let cr = (120 + (hr - 120) * TINT) * base + hr * act;
@@ -153,7 +153,7 @@ export function Connectome({ machineRef, store, ready, height = 300 }) {
 
         const o = (sy2 * W + sx) * 3;
         accum[o] += cr; accum[o + 1] += cg; accum[o + 2] += cb;
-        if (act > 0.35) {
+        if (act > 0.55) {
           // a strongly firing cell gets a little bloom of its own
           cr *= 0.65; cg *= 0.65; cb *= 0.65;
           for (let k = 0; k < SPLAT.length; k++) {
@@ -167,9 +167,9 @@ export function Connectome({ machineRef, store, ready, height = 300 }) {
 
       const data = image.data;
       for (let i = 0, p = 0; i < accum.length; i += 3, p += 4) {
-        data[p] = 255 - 255 / (1 + accum[i] * 0.028);
-        data[p + 1] = 255 - 255 / (1 + accum[i + 1] * 0.028);
-        data[p + 2] = 255 - 255 / (1 + accum[i + 2] * 0.028);
+        data[p] = 255 - 255 / (1 + accum[i] * 0.020);
+        data[p + 1] = 255 - 255 / (1 + accum[i + 1] * 0.020);
+        data[p + 2] = 255 - 255 / (1 + accum[i + 2] * 0.020);
         data[p + 3] = 255;
       }
       ctx.putImageData(image, 0, 0);

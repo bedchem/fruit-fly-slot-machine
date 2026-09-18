@@ -162,7 +162,6 @@ export function FlyScene({ machine, onTick }) {
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       onCreated={(state) => {
         const { gl, scene } = state;
-        if (import.meta.env.DEV) window.__scene = state;
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 1.02;
         scene.background = new THREE.Color('#efe7d7');

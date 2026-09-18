@@ -32,7 +32,6 @@ export default function App() {
     });
   }
   const machine = machineRef.current;
-  if (import.meta.env.DEV) window.__machine = machine;
 
   const [ui, setUi] = useState({
     phase: machine.phase, credits: machine.credits, spins: 0, wins: 0,
@@ -118,21 +117,24 @@ export default function App() {
             <p>A <i>Drosophila</i> CT scan plays a one-armed bandit, on its own.</p>
           </header>
 
-          <div className="dock sheet">
+          <aside className="bank sheet">
             <div className="credits">
               <Credits value={ui.credits} /><span>credits</span>
             </div>
             <RunLog history={ui.history} />
-            <div className="dock-buttons">
-              <button className="btn" onClick={() => setMuted((v) => { sound.setMuted(!v); return !v; })}>
-                {muted ? 'Sound off' : 'Sound on'}
-              </button>
-            </div>
-            <p className="dock-status">
-              <span className="live" /> {PHASE_COPY[ui.phase] || ui.phase}
-              {ui.best > 0 && <em className="best">best {ui.best}</em>}
-            </p>
-          </div>
+            {ui.best > 0 && <div className="best">best {ui.best}</div>}
+          </aside>
+
+          <p className="dock-status">
+            <span className="live" /> {PHASE_COPY[ui.phase] || ui.phase}
+          </p>
+
+          <button
+            className={`pill ${muted ? 'off' : ''}`}
+            onClick={() => setMuted((v) => { sound.setMuted(!v); return !v; })}
+          >
+            {muted ? 'Sound off' : 'Sound on'}
+          </button>
 
           {showResult && <ResultSlip result={ui.result} />}
         </div>
