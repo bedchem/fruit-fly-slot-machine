@@ -1,0 +1,49 @@
+/**
+ * Design tokens, lifted from the "torn notepad" overlays in Ryhox/portfolio so
+ * this shares that project's visual language: cream paper, handwritten ink,
+ * tan tracks, punched spiral edges.
+ *
+ * The values (paper gradient, #d7c8a3 borders, the ink triple, the inset
+ * highlight + drop shadow stack) are the ones EscMenu.tsx and IslandInfo.tsx
+ * use, so panels here and there read as the same object.
+ */
+:root {
+  /* Keeps form controls and scrollbars on the light set: the page is paper
+     whatever the OS theme says. */
+  color-scheme: light;
+
+  /* paper */
+  --paper: #f6efda;
+  --paper-2: #efe5cb;
+  --paper-3: #e8ddbf;
+  --paper-sheet: linear-gradient(176deg, #f6efda 0%, #efe5cb 60%, #e8ddbf 100%);
+  --paper-edge: #d7c8a3;
+  --paper-edge-2: #c9ba94;
+  --highlight: rgba(255, 251, 236, 0.7);
+
+  /* ink */
+  --ink: #6f5836;
+  --ink-dark: #5a4528;
+  --ink-soft: rgba(111, 88, 54, 0.55);
+  --divider: rgba(120, 98, 64, 0.22);
+
+  /* the reward accent, and the stress accent */
+  --amber: #c0812f;
+  --amber-bright: #e8a86b;
+  --amber-glow: rgba(232, 168, 107, 0.4);
+  --alarm: #b4542a;
+
+  /* the connectome scope is a lit screen set into the paper */
+  --scope-bg: #08070d;
+  --scope-edge: #2a2114;
+
+  /* type: the portfolio's handwritten stack, with the same CJK fallbacks */
+  --hand: 'Patrick Hand', 'Nunito', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', cursive;
+  --ui: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  /* The overlays are flat: no drop shadows anywhere on the paper. */
+
+  --radius: 7px;
+  --panel-w: 23rem;
+}

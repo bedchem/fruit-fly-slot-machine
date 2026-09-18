@@ -1,0 +1,32 @@
+{
+  "name": "fruit-fly-slot-machine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "assets": "node --max-old-space-size=6144 tools/build-all.mjs",
+    "shot": "node --max-old-space-size=4096 tools/preview.mjs"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.114.0",
+    "@react-three/fiber": "^8.17.10",
+    "gsap": "^3.12.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "@duckdb/node-api": "^1.5.5-r.5",
+    "@gltf-transform/core": "^4.0.0",
+    "@gltf-transform/extensions": "^4.0.0",
+    "@gltf-transform/functions": "^4.0.0",
+    "@vitejs/plugin-react": "^4.3.3",
+    "apache-arrow": "^21.2.0",
+    "lz4js": "^0.2.0",
+    "meshoptimizer": "^0.22.0",
+    "vite": "^5.4.10"
+  }
+}
