@@ -1,49 +1,44 @@
 /**
- * Design tokens, lifted from the "torn notepad" overlays in Ryhox/portfolio so
- * this shares that project's visual language: cream paper, handwritten ink,
- * tan tracks, punched spiral edges.
+ * Design tokens.
  *
- * The values (paper gradient, #d7c8a3 borders, the ink triple, the inset
- * highlight + drop shadow stack) are the ones EscMenu.tsx and IslandInfo.tsx
- * use, so panels here and there read as the same object.
+ * Flat and quiet, so the readouts carry the page: solid surfaces, no
+ * gradients, no borders, no drop shadows. Surfaces are told apart by tone and
+ * spacing alone. One accent — the orange of the fly itself — marks anything
+ * rewarding; one red marks anything aversive. Everything else is ink at three
+ * strengths.
  */
 :root {
-  /* Keeps form controls and scrollbars on the light set: the page is paper
-     whatever the OS theme says. */
   color-scheme: light;
 
-  /* paper */
-  --paper: #f6efda;
-  --paper-2: #efe5cb;
-  --paper-3: #e8ddbf;
-  --paper-sheet: linear-gradient(176deg, #f6efda 0%, #efe5cb 60%, #e8ddbf 100%);
-  --paper-edge: #d7c8a3;
-  --paper-edge-2: #c9ba94;
-  --highlight: rgba(255, 251, 236, 0.7);
+  /* surfaces: warm beige, in the same family as the 3D scene's own backdrop
+     (#efe7d7) and a shade deeper, so panels separate from it by tone alone */
+  --page: #dacdb4;
+  --surface: #e1d6c1;     /* the credits box, the pills, the side panel */
+  --surface-2: #d3c6ac;   /* boxes inside a surface: heart, ledger, slip symbols */
+  --surface-hover: #d9cdb5;
+  --track: #cdbfa3;
+  --track-2: #bcac8e;
 
-  /* ink */
-  --ink: #6f5836;
-  --ink-dark: #5a4528;
-  --ink-soft: rgba(111, 88, 54, 0.55);
-  --divider: rgba(120, 98, 64, 0.22);
+  /* ink: warm near-black, never pure */
+  --ink: #2b241c;
+  --ink-2: #6c604f;
+  --ink-3: #978a75;
+  --divider: rgba(43, 36, 28, 0.1);
 
-  /* the reward accent, and the stress accent */
-  --amber: #c0812f;
-  --amber-bright: #e8a86b;
-  --amber-glow: rgba(232, 168, 107, 0.4);
-  --alarm: #b4542a;
+  /* accents: reward, and aversion */
+  --accent: #de7a22;
+  --accent-soft: rgba(222, 122, 34, 0.18);
+  --alarm: #cf4a2f;
 
-  /* the connectome scope is a lit screen set into the paper */
-  --scope-bg: #08070d;
-  --scope-edge: #2a2114;
+  /* the connectome scope is a lit screen */
+  --scope-bg: #0c0c0f;
 
-  /* type: the portfolio's handwritten stack, with the same CJK fallbacks */
-  --hand: 'Patrick Hand', 'Nunito', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', cursive;
-  --ui: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+  /* type */
+  --sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
 
-  /* The overlays are flat: no drop shadows anywhere on the paper. */
-
-  --radius: 7px;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --gutter: clamp(0.9rem, 2vw, 1.5rem);
   --panel-w: 23rem;
 }

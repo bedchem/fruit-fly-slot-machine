@@ -8,23 +8,6 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Labels for the fly's state. Deliberately not 'fear': flies express a
- * persistent, scalable defensive state, and the people who measured it are
- * careful not to call it fear (Gibson et al. 2015), so neither is this.
- */
-const MOODS = [
-  { at: 0.72, label: 'Highly aroused', note: 'defensive state, credits nearly gone' },
-  { at: 0.45, label: 'Aroused', note: 'losses stacking up' },
-  { at: 0.22, label: 'Unsettled', note: 'NPF falling' },
-  { at: 0.00, label: 'Settled', note: 'satiated, playing loose' },
-];
-
-function mood(fear, dopamine) {
-  if (dopamine > 0.5) return { label: 'Reinforced', note: 'PAM cluster firing' };
-  return MOODS.find((m) => fear >= m.at) || MOODS[MOODS.length - 1];
-}
-
-/**
  * What each signal is. Shown on hover, because the panel should be readable
  * without already knowing fly neuroscience.
  */
@@ -34,15 +17,12 @@ const EXPLAIN = {
   octopamine: 'The insect equivalent of adrenaline. It rises with anything salient, win or loss, and it sits upstream of the reward cells rather than beside them.',
   defensive: 'A persistent, scalable defensive state that builds as the credits drain. Deliberately not called fear — that word has not been earned in a fly.',
   npf: 'Neuropeptide F, this animal’s version of NPY: satisfaction. A losing streak drains it, and a fly running low on NPF seeks reward harder.',
-  mood: 'The fly’s overall state, read off NPF and the defensive signal together.',
 };
 
 export function Vitals({ machineRef }) {
   const ecgRef = useRef(null);
   const bpmRef = useRef(null);
   const rowsRef = useRef({});
-  const moodRef = useRef(null);
-  const noteRef = useRef(null);
 
   useEffect(() => {
     const canvas = ecgRef.current;
@@ -76,18 +56,19 @@ export function Vitals({ machineRef }) {
         else if (p < 0.22) v = Math.sin((p - 0.16) / 0.06 * Math.PI) * 1.0;   // R
         else if (p < 0.30) v = -0.3 * Math.sin((p - 0.22) / 0.08 * Math.PI);  // S
         else if (p < 0.52) v = Math.sin((p - 0.30) / 0.22 * Math.PI) * 0.26;  // T
-        trace.push(v + (Math.random() - 0.5) * 0.02);
+        // as it gives up the complexes shrink towards a flat line
+        trace.push(v * (1 - m.collapse * 0.85) + (Math.random() - 0.5) * 0.02);
         while (trace.length > W) trace.shift();
 
         ctx.clearRect(0, 0, W, H);
-        ctx.strokeStyle = 'rgba(111,88,54,0.18)';
+        ctx.strokeStyle = 'rgba(43,36,28,0.12)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(0, H / 2 + 0.5);
         ctx.lineTo(W, H / 2 + 0.5);
         ctx.stroke();
 
-        ctx.strokeStyle = m.fear > 0.5 ? '#b4542a' : '#6f5836';
+        ctx.strokeStyle = m.fear > 0.5 ? '#cf4a2f' : '#2b241c';
         ctx.lineWidth = 1.4;
         ctx.lineJoin = 'round';
         ctx.beginPath();
@@ -115,11 +96,6 @@ export function Vitals({ machineRef }) {
       set('defensive', m.fear, m.fear < 0.02 ? 'none' : m.fear.toFixed(2));
       set('npf', m.npf, m.npf.toFixed(2));
 
-      const mo = mood(m.fear, m.dopamine);
-      if (moodRef.current && moodRef.current.textContent !== mo.label) {
-        moodRef.current.textContent = mo.label;
-        if (noteRef.current) noteRef.current.textContent = mo.note;
-      }
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
@@ -148,10 +124,6 @@ export function Vitals({ machineRef }) {
       {row('defensive', 'Defensive')}
       {row('npf', 'NPF')}
 
-      <div className="mood tip" data-tip={EXPLAIN.mood} tabIndex={0}>
-        <b ref={moodRef}>Calm</b>
-        <i ref={noteRef}>playing loose</i>
-      </div>
     </section>
   );
 }

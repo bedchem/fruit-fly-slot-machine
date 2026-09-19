@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#e1d6c1"/>
+  <!-- wings -->
+  <ellipse cx="21" cy="27" rx="12" ry="6.5" transform="rotate(-28 21 27)" fill="#2b241c" fill-opacity="0.18" stroke="#2b241c" stroke-opacity="0.45" stroke-width="1.6"/>
+  <ellipse cx="43" cy="27" rx="12" ry="6.5" transform="rotate(28 43 27)" fill="#2b241c" fill-opacity="0.18" stroke="#2b241c" stroke-opacity="0.45" stroke-width="1.6"/>
+  <!-- legs -->
+  <g stroke="#2b241c" stroke-width="2" stroke-linecap="round" fill="none">
+    <path d="M28 33 L19 38 L16 45"/><path d="M36 33 L45 38 L48 45"/>
+    <path d="M28 38 L20 45 L19 52"/><path d="M36 38 L44 45 L45 52"/>
+  </g>
+  <!-- body -->
+  <ellipse cx="32" cy="41" rx="6.5" ry="11" fill="#de7a22"/>
+  <ellipse cx="32" cy="27.5" rx="7" ry="6" fill="#de7a22"/>
+  <!-- head and eyes -->
+  <circle cx="32" cy="18" r="5.5" fill="#2b241c"/>
+  <circle cx="28.3" cy="16.6" r="2.9" fill="#cf4a2f"/>
+  <circle cx="35.7" cy="16.6" r="2.9" fill="#cf4a2f"/>
+</svg>

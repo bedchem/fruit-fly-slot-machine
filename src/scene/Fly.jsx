@@ -19,6 +19,9 @@ import { FLY, PARTS } from './layout.js';
 
 /** What the fly watches when it is not working the handle: the middle reel. */
 const WATCH_REELS = PARTS.reels[1].center;
+/** How far it sags when it gives up, in radians: back, and over to one side. */
+const SLUMP_PITCH = 0.16;
+const SLUMP_ROLL = 0.10;
 
 const VERTEX_COMMON = /* glsl */`
   attribute vec3 aRigWeight;   // x: femur, y: tibia, z: head
@@ -148,16 +151,20 @@ export function Fly({ machine, gripTargetRef, dopamineRef }) {
     // the way anything nervous leans away from what it is afraid of.
     const fear = machine?.fear ?? 0;
     const arousal = machine?.arousal ?? dop;
-    const breathe = Math.sin(t * 1.35) * 0.006 + Math.sin(t * 3.1) * 0.002;
+    // Out of credit, it gives up: the breathing and the tremor fade out and it
+    // sags back and to one side on the stool.
+    const slump = machine?.collapse ?? 0;
+    const alive = 1 - slump;
+    const breathe = (Math.sin(t * 1.35) * 0.006 + Math.sin(t * 3.1) * 0.002) * (0.25 + 0.75 * alive);
     const tremor = arousal * (Math.sin(t * 22) * 0.004 + Math.sin(t * 31.3) * 0.003)
-      + fear * Math.sin(t * 41) * 0.0035;
-    g.position.y = FLY.position[1] + breathe + tremor;
-    g.rotation.y = FLY.rotationY + Math.sin(t * 0.47) * 0.012 + arousal * Math.sin(t * 9.7) * 0.008;
-    g.rotation.z = Math.sin(t * 0.83) * 0.006 + fear * Math.sin(t * 5.3) * 0.012;
+      + fear * alive * Math.sin(t * 41) * 0.0035;
+    g.position.y = FLY.position[1] + breathe + tremor - slump * 0.012;
+    g.rotation.y = FLY.rotationY + (Math.sin(t * 0.47) * 0.012 + arousal * Math.sin(t * 9.7) * 0.008) * alive;
+    g.rotation.z = (Math.sin(t * 0.83) * 0.006 + fear * Math.sin(t * 5.3) * 0.012) * alive + slump * SLUMP_ROLL;
     // FLY.pitch is what sits the fly up on the stool; the lean is the extra
     // tip it gives the handle on the way down.
     const lean = (machine?.grip ?? 0) * (machine ? -machine.pullProgress : 0);
-    g.rotation.x = FLY.pitch + lean * 0.06 - fear * 0.055;
+    g.rotation.x = FLY.pitch + lean * 0.06 - fear * alive * 0.055 - slump * SLUMP_PITCH;
 
     const u = uniforms.current?.current;
     if (!u) return;
@@ -167,7 +174,8 @@ export function Fly({ machine, gripTargetRef, dopamineRef }) {
     // turned onto whatever it should be watching: the reels while they run,
     // the handle while the fly is working it.
     const watch = (machine?.grip ?? 0) > 0.35 ? (gripTargetRef?.current ?? WATCH_REELS) : WATCH_REELS;
-    tmp.world.set(watch[0], watch[1], watch[2]);
+    // collapsed, it stops watching the reels and the head drops
+    tmp.world.set(watch[0], watch[1] - slump * 0.45, watch[2]);
     g.worldToLocal(tmp.local.copy(tmp.world));
     const glance = Math.sin(t * 0.8) * 0.012;
     const look = solveHeadLook([tmp.local.x + glance, tmp.local.y + glance * 0.6, tmp.local.z]);

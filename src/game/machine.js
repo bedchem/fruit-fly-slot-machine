@@ -30,6 +30,8 @@ export const PHASES = {
   SPINNING: 'spinning',
   RESOLVING: 'resolving',
   RESULT: 'result',
+  /** Out of credit. The fly is not dying — it only behaves as if it were. */
+  BROKE: 'broke',
 };
 
 const T = {
@@ -43,6 +45,10 @@ const T = {
   stopGap: 0.62,
   stopTime: 0.72,   // deceleration of a single reel
   resultHold: 2.4,
+  // out of credit: a burst of panic, a slow fade, then it lies still
+  panic: 2.2,
+  fade: 3.6,
+  still: 4.2,
 };
 
 const REEL_SPEED = 19;          // rad/s at full tilt
@@ -89,9 +95,20 @@ const OCTOPAMINE_DECAY = 2.6;
 const DOPAMINE_LAG = 0.22;      // dopamine follows octopamine, it does not lead
 const NPF_DRAIN = 0.11;         // per losing spin
 const NPF_GAIN = 0.34;          // per win
+const NPF_REST = 0.55;          // where it drifts back to on its own
+const NPF_RECOVER = 90;         // seconds: a neuropeptide level recovers slowly
 const HEART_REST = 268;         // bpm
 const HEART_MAX = 392;
 const LOW_CREDITS = 8;          // below this the state starts to shift
+const HEART_FAINT = 34;         // what the heart slows to once it gives up
+
+/** One spin in seven pays. A real machine is not a fountain and neither is this. */
+const WIN_RATE = 0.14;
+/** Multiples of the stake: three of a kind, and three sevens. */
+const PAY_LINE = 3;
+const PAY_JACKPOT = 12;
+export const MAX_BET = 5;
+const START_CREDITS = 20;
 
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -115,7 +132,7 @@ function pickWeighted(rng) {
  * the same way a real machine works. `nearMissRate` is what makes losing spins
  * land two-of-a-kind often enough to feel like something nearly happened.
  */
-export function rollOutcome(rng = Math.random, { winRate = 0.26, nearMissRate = 0.45 } = {}) {
+export function rollOutcome(rng = Math.random, { winRate = WIN_RATE, nearMissRate = 0.45 } = {}) {
   if (rng() < winRate) {
     const s = pickWeighted(rng);
     return { reels: [s, s, s], win: true, jackpot: SYMBOLS[s].id === 'seven' };
@@ -134,6 +151,23 @@ export function rollOutcome(rng = Math.random, { winRate = 0.26, nearMissRate = 
     reels = [pickWeighted(rng), pickWeighted(rng), pickWeighted(rng)];
   } while (reels[0] === reels[1] && reels[1] === reels[2]);
   return { reels, win: false, nearMiss: false };
+}
+
+/** Which of the pulls on the stake is winning, in words. */
+export function betReason({ chase, reward, memory, caution }) {
+  const top = Math.max(chase, reward, Math.abs(memory), caution);
+  if (top < 0.2) return 'satiated — a steady stake';
+  if (top === reward) return 'just rewarded — PAM still firing';
+  if (top === Math.abs(memory)) {
+    return memory < 0 ? 'remembers losing here — holding back' : 'remembers this machine paying';
+  }
+  if (top === chase) return 'NPF low — chasing its losses';
+  return 'defensive — playing it safe';
+}
+
+/** The stake an appetite would pick, before the last-moment doubt. */
+export function stakeFor(urge) {
+  return Math.max(1, Math.round(1 + urge * (MAX_BET - 1)));
 }
 
 /** Reel angle that parks symbol `i` in the middle of the window. */
@@ -168,8 +202,30 @@ export class SlotMachine {
     this.lossStreak = 0;
     this.heartRate = HEART_REST;
 
-    this.credits = 20;
-    this.startingCredits = 20;
+    this.credits = START_CREDITS;
+    this.startingCredits = START_CREDITS;
+    /** What the fly staked on the current spin, and why — see decideBet(). */
+    this.bet = 0;
+    this.betWhy = null;
+    /** 0 = upright, 1 = collapsed: how far into 'dying' the fly is. */
+    this.collapse = 0;
+    this.deaths = 0;
+    this.revivedAt = 0;
+    /** A short flash for the cabinet lamp — the payout, not the dopamine level. */
+    this.winGlow = 0;
+    /**
+     * What the mushroom body has learned about this machine, handed over by
+     * the brain (neural/memory.js): -1 "this machine is bad" .. +1 "good".
+     * Nothing here writes it — it is the balance of KC→MBON synapses that
+     * PAM and PPL1 dopamine have weakened over the session. `learned` is how
+     * much has been stored at all.
+     */
+    this.memory = 0;
+    this.learned = 0;
+    /** The ledger: what has gone into the machine and what has come out. */
+    this.staked = 0;
+    this.won = 0;
+    this.biggestStake = 0;
     this.spins = 0;
     this.wins = 0;
     this.lastResult = null;
@@ -204,10 +260,61 @@ export class SlotMachine {
 
   emit(type, detail) { this.onEvent(type, detail); }
 
+  /**
+   * How much to stake. Nothing here says "bet 3": the stake falls out of the
+   * fly's state at the moment it commits, and each pull on it is one that has
+   * been measured in this animal.
+   *
+   *   chase   — low NPF. A deprived fly seeks reward harder (Shohat-Ophir 2012),
+   *             so a losing streak pushes the stake UP: it chases its losses.
+   *   reward  — the PAM cluster is still firing from the last payout. That is
+   *             the signal that says the last pull was worth making, so it
+   *             makes the next one bigger.
+   *   memory  — what the mushroom body has learned about this machine. Not a
+   *             running score kept here: the balance of approach and avoidance
+   *             MBONs after a session of PAM and PPL1 dopamine (memory.js).
+   *   caution — the defensive state. A fly in a poor state reads ambiguous odds
+   *             pessimistically (Deakin 2018), which pulls the stake DOWN.
+   *
+   * Chase and caution both rise on a losing run, so which one wins depends on
+   * how the run has gone — which is why the stake wanders instead of settling.
+   *
+   * `appetite` is evaluated all the time, not just at the pull, so the scope
+   * and the panel can show what the fly is leaning towards while it sits there.
+   */
+  get appetite() {
+    const last = this.lastResult;
+    const chase = (1 - this.npf) * 0.6;
+    const reward = (last?.win ? (last.jackpot ? 0.55 : 0.35) : 0) + this.dopamine * 0.3;
+    const memory = this.memory * 0.45;
+    const caution = this.fear * 0.65;
+    const urge = clamp01(0.12 + chase + reward + memory - caution);
+    return { chase, reward, memory, caution, urge };
+  }
+
+  /** Commits to a stake: the appetite at this moment, plus a little doubt. */
+  decideBet() {
+    const a = this.appetite;
+    const urge = clamp01(a.urge + (this.rng() - 0.5) * 0.3);
+    const wanted = stakeFor(urge);
+    const bet = Math.min(wanted, this.credits);
+    this.bet = bet;
+    this.betWhy = { why: bet < wanted ? 'all it has left' : betReason(a), ...a, urge };
+    this.staked += bet;
+    if (bet > this.biggestStake) this.biggestStake = bet;
+    return bet;
+  }
+
+  /** From the brain: what the mushroom body currently says about this machine. */
+  setMemory(value, learned) {
+    this.memory = value;
+    this.learned = learned;
+  }
+
   /** Button, keypress or the end of a drag that got far enough. */
   start() {
     if (this.busy || this.credits <= 0) return false;
-    this.credits -= 1;
+    this.credits -= this.decideBet();
     this.spins += 1;
     this.outcome = rollOutcome(this.rng);
     this.reelsReleased = false;
@@ -238,7 +345,7 @@ export class SlotMachine {
     if (!this.dragging) return;
     this.dragging = false;
     if (this.dragAngle > 0.75 && this.credits > 0) {
-      this.credits -= 1;
+      this.credits -= this.decideBet();
       this.spins += 1;
       this.outcome = rollOutcome(this.rng);
       this.lastResult = null;
@@ -327,7 +434,19 @@ export class SlotMachine {
       case P.RESULT: {
         this.grip += (0 - this.grip) * Math.min(1, dt * 6);
         this.leverAngle += (0 - this.leverAngle) * Math.min(1, dt * 10);
-        if (this.t >= T.resultHold) { this.phase = P.IDLE; this.t = 0; }
+        if (this.t >= T.resultHold) {
+          this.t = 0;
+          if (this.credits <= 0) this.goBroke();
+          else this.phase = P.IDLE;
+        }
+        break;
+      }
+      case P.BROKE: {
+        this.grip += (0 - this.grip) * Math.min(1, dt * 6);
+        this.leverAngle += (0 - this.leverAngle) * Math.min(1, dt * 8);
+        const k = clamp01((this.t - T.panic) / T.fade);
+        this.collapse = easeInOut(k);
+        if (this.t >= T.panic + T.fade + T.still) this.revive();
         break;
       }
       default: {
@@ -341,7 +460,60 @@ export class SlotMachine {
     this.updateStress(dt);
     this.updateAutoplay(dt);
     this.shake = Math.max(0, this.shake - dt * 3.2);
+    this.winGlow = Math.max(0, this.winGlow - dt / 1.1);
+    // coming round is slower than going under
+    if (this.phase !== PHASES.BROKE) this.collapse = Math.max(0, this.collapse - dt / 2.2);
     return this;
+  }
+
+  /**
+   * Out of credit. To the fly this is the end: the one thing it has been
+   * working for is gone and there is no way to get more. What follows is the
+   * state a fly under inescapable threat actually shows — a burst of
+   * octopaminergic panic, then a collapse into stillness, heart slowing almost
+   * to a stop. It is not dying. It only behaves as if it were.
+   */
+  goBroke() {
+    this.phase = PHASES.BROKE;
+    this.t = 0;
+    this.deaths += 1;
+    this.bet = 0;
+    this.startle = 1;
+    this.octopamineTarget = 1;
+    this.shake = 0.6;
+    this.history.push({ at: Date.now(), dead: true });
+    if (this.history.length > 12) this.history.shift();
+    this.emit('broke');
+  }
+
+  /**
+   * 0..1 while idle: how close the fly is to committing to the next pull. It is
+   * mulling the machine over, and the mushroom body is where that happens.
+   */
+  get deliberation() {
+    if (this.phase !== PHASES.IDLE || !this.autoplay) return 0;
+    return clamp01(this.idleFor / Math.max(0.1, this.nextPullAfter));
+  }
+
+  /** Where the fly is in it — for the copy on screen. */
+  get brokeStage() {
+    if (this.phase !== PHASES.BROKE) return null;
+    if (this.t < T.panic) return 'panic';
+    if (this.t < T.panic + T.fade) return 'fading';
+    return 'still';
+  }
+
+  /** Someone feeds the machine. The fly comes round, still shaken. */
+  revive() {
+    this.credits = this.startingCredits;
+    this.phase = PHASES.IDLE;
+    this.t = 0;
+    this.lossStreak = 0;
+    this.lastResult = null;
+    this.revivedAt = Date.now();
+    this.idleFor = 0;
+    this.nextPullAfter = 3.2;
+    this.emit('revive');
   }
 
   updateAutoplay(dt) {
@@ -350,15 +522,18 @@ export class SlotMachine {
     this.idleFor += dt;
     if (this.idleFor < this.nextPullAfter) return;
     this.idleFor = 0;
-    // the fly is not going to walk off and get change
-    if (this.credits <= 0) { this.credits += 20; this.emit('refill'); }
+    if (this.credits <= 0) { this.goBroke(); return; }
     // longer pause after a win — it sits with it for a moment
     // a frightened fly hesitates before committing another credit
     const base = this.lastResult?.win ? 2.0 : 1.0;
     // state-dependent judgement bias: a fly in a poor state reads the odds
     // pessimistically and takes longer to commit (Deakin 2018)
     const pessimism = this.fear * 1.8 + (1 - this.npf) * 1.2;
-    this.nextPullAfter = base + pessimism + this.rng() * 1.4;
+    // a learned aversion makes the approach slower — but it never stops it.
+    // Flies keep going back to a reward cue even when it has been paired with
+    // punishment (Kaun et al. 2011); this one keeps going back to the lever.
+    const avoidance = Math.max(0, -this.memory) * 2.6;
+    this.nextPullAfter = base + pessimism + avoidance + this.rng() * 1.4;
     this.start();
   }
 
@@ -425,16 +600,20 @@ export class SlotMachine {
 
   resolve() {
     const o = this.outcome;
-    // tuned for ~96% return to player: generous enough to keep going, not a fountain
-    const payout = o.win ? (o.jackpot ? 12 : 3) : 0;
+    // about half of every stake comes back: the house wins, and the fly goes broke
+    const payout = o.win ? this.bet * (o.jackpot ? PAY_JACKPOT : PAY_LINE) : 0;
     this.credits += payout;
+    this.won += payout;
     if (o.win) this.wins += 1;
+    this.winGlow = o.win ? (o.jackpot ? 1 : 0.7) : 0;
     this.lastResult = {
       reels: o.reels.slice(),
       symbols: o.reels.map((i) => SYMBOLS[i]),
       win: o.win,
       jackpot: !!o.jackpot,
       nearMiss: !!o.nearMiss,
+      bet: this.bet,
+      betWhy: this.betWhy?.why ?? null,
       payout,
       at: Date.now(),
     };
@@ -468,16 +647,19 @@ export class SlotMachine {
    */
   setNeuralReadout(reward, punish) {
     this.neural = { reward, punish };
-    // Calibrate against the network's own resting level rather than a guessed
-    // zero: a slow floor-follower that drops fast and rises very slowly, so a
-    // reward pulse reads as a pulse and long-term drift is still absorbed.
-    if (this.neuralRest === undefined) { this.neuralRest = reward; this.neuralRestPunish = punish; }
-    this.neuralRest = reward < this.neuralRest
-      ? this.neuralRest + (reward - this.neuralRest) * 0.08
-      : this.neuralRest + (reward - this.neuralRest) * 0.0006;
-    this.neuralRestPunish = punish < this.neuralRestPunish
-      ? this.neuralRestPunish + (punish - this.neuralRestPunish) * 0.08
-      : this.neuralRestPunish + (punish - this.neuralRestPunish) * 0.0006;
+    // no rest level handed over yet: treat the first reading as rest
+    if (this.neuralRest === undefined) this.setNeuralRest(reward, punish);
+  }
+
+  /**
+   * The network's own resting level, measured once from the settled network
+   * with nothing driving it. It is deliberately NOT tracked afterwards: the
+   * fly's standing state drives the network all the time, and a floor that
+   * followed it would quietly subtract that state back out.
+   */
+  setNeuralRest(reward, punish) {
+    this.neuralRest = reward;
+    this.neuralRestPunish = punish;
   }
 
   updateDopamine(dt) {
@@ -509,9 +691,14 @@ export class SlotMachine {
   updateStress(dt) {
     const broke = clamp01((LOW_CREDITS - this.credits) / LOW_CREDITS);
     const streak = clamp01(this.lossStreak / 6);
-    const target = clamp01(broke * 0.7 + streak * 0.4 + (1 - this.npf) * 0.25);
+    const out = this.phase === PHASES.BROKE;
+    const target = out ? 1 : clamp01(broke * 0.7 + streak * 0.4 + (1 - this.npf) * 0.25);
+    // nothing left to seek with: satisfaction drains away while it lies there.
+    // Otherwise it drifts slowly back towards its resting level.
+    if (out) this.npf = Math.max(0, this.npf - dt * 0.12);
+    else this.npf += (NPF_REST - this.npf) * (1 - Math.exp(-dt / NPF_RECOVER));
     // dread builds faster than it lifts
-    const rate = target > this.fear ? 1.6 : 3.2;
+    const rate = out ? 0.5 : target > this.fear ? 1.6 : 3.2;
     this.fear += (target - this.fear) * (1 - Math.exp(-dt / rate));
 
     // Suspense while the reels run. With the connectome model attached this
@@ -533,12 +720,19 @@ export class SlotMachine {
     const effort = this.grip * 0.25;
     const want = HEART_REST + (HEART_MAX - HEART_REST)
       * clamp01(this.octopamine * 0.75 + this.dopamine * 0.5 + this.fear * 0.35 + effort);
-    this.heartRate += (want - this.heartRate) * (1 - Math.exp(-dt / 0.55));
+    // as it gives up, the heart winds down from panic to almost nothing
+    const heart = want + (HEART_FAINT - want) * this.collapse;
+    this.heartRate += (heart - this.heartRate) * (1 - Math.exp(-dt / 0.55));
+
+    // the amines go quiet with it
+    const still = 1 - this.collapse;
+    this.octopamine *= 0.1 + 0.9 * still;
+    this.dopamine *= still;
   }
 
   /** 0 = calm, 1 = as wound up as it gets. Drives the idle animation. */
   get arousal() {
-    return clamp01(this.dopamine * 0.7 + this.octopamine * 0.8 + this.fear * 0.35);
+    return clamp01(this.dopamine * 0.7 + this.octopamine * 0.8 + this.fear * 0.35) * (1 - this.collapse);
   }
 
   addCredits(n = 20) { this.credits += n; }

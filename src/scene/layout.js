@@ -108,4 +108,21 @@ export const CAMERA = {
   fov: 40,
 };
 
+/**
+ * Reel indices in the order the shot shows them, left to right. The drums run
+ * along Z and the camera looks at them from the handle side, so reel 0 lands on
+ * the right of the frame; anything that prints the result has to read it the
+ * same way or it comes out mirrored.
+ */
+export const REEL_SCREEN_ORDER = (() => {
+  const fx = CAMERA.target[0] - CAMERA.position[0];
+  const fz = CAMERA.target[2] - CAMERA.position[2];
+  // camera right = forward × up, projected onto the ground plane
+  const right = (c) => -fz * c[0] + fx * c[2];
+  return parts.reels
+    .map((r, i) => ({ i, x: right(r.center) }))
+    .sort((a, b) => a.x - b.x)
+    .map((r) => r.i);
+})();
+
 export const GROUND_Y = 0;

@@ -39,8 +39,14 @@ const GROUP_HUE = {
 /** Rendered even when quiet, so the anatomy is always there. */
 const BASELINE = 0.36;
 const REST_RATE = 0.06;
+/** How far above its own resting rate a type has to be to count as firing. */
+const FIRING = 0.04;
+/** Brightness per unit of rate above rest. */
+const ACT_GAIN = 3.4;
 const TINT = 0.85;
 const SPLAT = [[1, 0], [0, 1], [1, 1]];
+/** How far the cloud sways either side, radians. */
+const MAX_YAW = 0.38;
 
 export function Connectome({ machineRef, store, ready, height = 300 }) {
   const canvasRef = useRef(null);
@@ -51,6 +57,9 @@ export function Connectome({ machineRef, store, ready, height = 300 }) {
     if (!canvas || !ready) return undefined;
     const { neurons, sim } = store.current;
     if (!neurons || !sim) return undefined;
+    // each type's own resting rate, from the settled network: "firing" means
+    // above that, not above some fixed line most types never reach
+    const rest = store.current.rest ?? new Float32Array(sim.K).fill(REST_RATE);
 
     // per-neuron colour and the type index it reads its rate from
     const n = neurons.count;
@@ -69,26 +78,50 @@ export function Connectome({ machineRef, store, ready, height = 300 }) {
       if (gi !== undefined) typeToGraph[i] = gi;
     });
     const rateIndex = new Int32Array(n);
+    // how many drawn neurons each simulated type stands for, so the readout
+    // can count neurons firing rather than types
+    const perType = new Int32Array(graphMeta.types);
     let simulated = 0;
     for (let i = 0; i < n; i++) {
       const t = neurons.type[i];
       const gi = t >= 0 ? typeToGraph[t] : -1;
       rateIndex[i] = gi;
-      if (gi >= 0) simulated++;
+      if (gi >= 0) { simulated++; perType[gi]++; }
     }
     if (import.meta.env.DEV) {
       console.info(`[connectome] ${simulated.toLocaleString()} of ${n.toLocaleString()} drawn neurons `
         + `belong to a simulated cell type (${(100 * simulated / n).toFixed(0)}%)`);
     }
     // measure the cloud once so the framing fits whatever the data is
-    let bx0 = 1, bx1 = 0, by0 = 1, by1 = 0;
+    let bx0 = 1, bx1 = 0, by0 = 1, by1 = 0, bz0 = 1, bz1 = 0;
     for (let i = 0; i < n; i++) {
-      const X = neurons.pos[i * 3] / 65535, Y = neurons.pos[i * 3 + 1] / 65535;
+      const X = neurons.pos[i * 3] / 65535, Y = neurons.pos[i * 3 + 1] / 65535, Z = neurons.pos[i * 3 + 2] / 65535;
       if (X < bx0) bx0 = X; if (X > bx1) bx1 = X;
       if (Y < by0) by0 = Y; if (Y > by1) by1 = Y;
+      if (Z < bz0) bz0 = Z; if (Z > bz1) bz1 = Z;
     }
-    const extentX = bx1 - bx0, extentY = by1 - by0;
-    const midX = (bx0 + bx1) / 2 - 0.5, midY = (by0 + by1) / 2 - 0.5;
+    // the cloud's own centre: it turns about this, so it stays put on screen
+    const midX = (bx0 + bx1) / 2 - 0.5, midY = (by0 + by1) / 2 - 0.5, midZ = (bz0 + bz1) / 2 - 0.5;
+    // The widest and tallest the outline ever gets on screen over the whole
+    // sway, perspective included — measured once, so the fit is exact rather
+    // than a worst-case guess that leaves the brain small.
+    let fitW = 0, fitH = 0;
+    for (let k = 0; k <= 8; k++) {
+      const yaw = -MAX_YAW + (2 * MAX_YAW * k) / 8;
+      const c = Math.cos(yaw), s = Math.sin(yaw);
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (let i = 0; i < n; i++) {
+        const X = neurons.pos[i * 3] / 65535 - 0.5 - midX;
+        const Y = neurons.pos[i * 3 + 1] / 65535 - 0.5 - midY;
+        const Z = neurons.pos[i * 3 + 2] / 65535 - 0.5 - midZ;
+        const d = 1 / (1 + (-X * s + Z * c) * 0.5);
+        const px = (X * c + Z * s) * d, py = Y * d;
+        if (px < x0) x0 = px; if (px > x1) x1 = px;
+        if (py < y0) y0 = py; if (py > y1) y1 = py;
+      }
+      fitW = Math.max(fitW, x1 - x0);
+      fitH = Math.max(fitH, y1 - y0);
+    }
 
     // a fixed per-neuron speckle so the cloud has grain
     const jitter = new Float32Array(n);
@@ -98,6 +131,7 @@ export function Connectome({ machineRef, store, ready, height = 300 }) {
     let raf = 0;
     let accum = null, image = null;
     let W = 0, H = 0, spin = 0, tick = 0;
+    let shiftX = 0, shiftY = 0;
     let last = performance.now();
 
     const resize = () => {
@@ -118,33 +152,41 @@ export function Connectome({ machineRef, store, ready, height = 300 }) {
 
       const rate = sim.rate;
       spin += dt * 0.18;
-      const yaw = Math.sin(spin * 0.55) * 0.38;
+      const yaw = Math.sin(spin * 0.55) * MAX_YAW;
       const cy = Math.cos(yaw), sy = Math.sin(yaw);
 
-      // fit the measured extent, with a little room for the rotation
-      const scale = Math.min(W / (extentX * 1.5), H / (extentY * 1.12));
-      const ox = W / 2 - midX * scale;
-      const oy = H / 2 + midY * scale;
+      // fit the widest rotated extent, so nothing clips at any point of the sway
+      const scale = Math.min(W / (fitW * 1.06), H / (fitH * 1.06));
+      // centre on what is actually on screen: the brain is not symmetric, so
+      // its outline shifts as it turns. Measured while drawing, applied on the
+      // next frame — the sway is slow enough that one frame of lag never shows.
+      const ox = W / 2 + shiftX;
+      const oy = H / 2 + shiftY;
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
 
       accum.fill(0);
       const pos = neurons.pos;
       for (let i = 0; i < n; i++) {
-        // decode the quantised soma coordinate back to -0.5 .. 0.5
-        const X = pos[i * 3] / 65535 - 0.5;
-        const Y = pos[i * 3 + 1] / 65535 - 0.5;
-        const Z = pos[i * 3 + 2] / 65535 - 0.5;
+        // decode the quantised soma coordinate, relative to the cloud's centre
+        const X = pos[i * 3] / 65535 - 0.5 - midX;
+        const Y = pos[i * 3 + 1] / 65535 - 0.5 - midY;
+        const Z = pos[i * 3 + 2] / 65535 - 0.5 - midZ;
         const rx = X * cy + Z * sy;
         const rz = -X * sy + Z * cy;
         const depth = 1 / (1 + rz * 0.5);
-        const sx = (ox + rx * scale * depth) | 0;
-        const sy2 = (oy - Y * scale * depth) | 0;
+        const px = rx * scale * depth;
+        const py = -Y * scale * depth;
+        if (px < x0) x0 = px; if (px > x1) x1 = px;
+        if (py < y0) y0 = py; if (py > y1) y1 = py;
+        const sx = (ox + px) | 0;
+        const sy2 = (oy + py) | 0;
         if (sx < 0 || sx >= W || sy2 < 0 || sy2 >= H) continue;
 
         const gi = rateIndex[i];
-        const r = gi >= 0 ? rate[gi] : REST_RATE;
+        const lift = gi >= 0 ? rate[gi] - rest[gi] : 0;
         const j = jitter[i] * depth;
         const base = j * BASELINE;
-        const act = Math.max(0, r - REST_RATE) * j * 2.1;
+        const act = Math.max(0, lift) * j * ACT_GAIN;
 
         const hr = hue[i * 3], hg = hue[i * 3 + 1], hb = hue[i * 3 + 2];
         let cr = (120 + (hr - 120) * TINT) * base + hr * act;
@@ -164,6 +206,8 @@ export function Connectome({ machineRef, store, ready, height = 300 }) {
           }
         }
       }
+      shiftX = -(x0 + x1) / 2;
+      shiftY = -(y0 + y1) / 2;
 
       const data = image.data;
       for (let i = 0, p = 0; i < accum.length; i += 3, p += 4) {
@@ -176,9 +220,9 @@ export function Connectome({ machineRef, store, ready, height = 300 }) {
 
       if (headRef.current) {
         let hot = 0;
-        for (let i = 0; i < rate.length; i++) if (rate[i] > 0.35) hot++;
+        for (let i = 0; i < rate.length; i++) if (rate[i] - rest[i] > FIRING) hot += perType[i];
         headRef.current.textContent =
-          `${(1 / Math.max(dt, 1e-3)).toFixed(0)} FPS · LIF 200 HZ · ${hot} TYPES FIRING`;
+          `${(1 / Math.max(dt, 1e-3)).toFixed(0)} FPS · LIF 200 HZ · ${hot.toLocaleString()} NEURONS FIRING`;
       }
       void tick;
     };
@@ -200,9 +244,9 @@ export function Connectome({ machineRef, store, ready, height = 300 }) {
         data-tip="Every dot is one real neuron at its measured soma coordinate. Brightness is the simulated firing rate of that cell type, from a rate model running on the measured wiring — so a region lights up because current actually reached it."
         aria-label="Simulated neural activity"
       />
-      <div className="scope-foot tip" data-tip="The wiring the model runs on: cell types and the signed connections between them, collapsed from 151.9 million measured synapses.">
-        <b>{graphMeta.types.toLocaleString()}</b> cell types ·{' '}
-        <b>{graphMeta.edges.toLocaleString()}</b> connections · {cnsMeta.dataset}
+      <div className="scope-foot tip" data-tip={`${cnsMeta.neuronsDrawn.toLocaleString()} of the ${cnsMeta.neuronsTotal.toLocaleString()} real neurons are drawn. The model runs on the signed connections between their cell types, collapsed from 151.9 million measured synapses.`}>
+        <b>{cnsMeta.neuronsDrawn.toLocaleString()}</b> neurons ·{' '}
+        <b>{graphMeta.edges.toLocaleString()}</b> connections · <b>151.9 M</b> synapses
       </div>
     </div>
   );

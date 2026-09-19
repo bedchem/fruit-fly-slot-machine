@@ -3,16 +3,40 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Fruit Fly Slot Machine</title>
-    <meta name="description" content="A Drosophila CT scan plays a one-armed bandit; wins pulse the reward-coding dopaminergic cells." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- The handwritten stack from Ryhox/portfolio, so the overlays match. -->
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🪰</text></svg>" />
+    <!--site:head-->
+    <style>
+      /* the loading screen: what shows before the app starts, and all that a
+         crawler which does not run JavaScript ever sees */
+      html, body { margin: 0; background: #e1d6c1; }
+      .prerender {
+        min-height: 100vh; box-sizing: border-box; display: grid; place-content: center;
+        gap: 0.6rem; padding: 2rem; max-width: 40rem; margin: 0 auto;
+        font: 15px/1.55 system-ui, -apple-system, 'Segoe UI', sans-serif; color: #2b241c;
+      }
+      .prerender h1 { margin: 0; font-size: 1.9rem; letter-spacing: -0.02em; }
+      .prerender p { margin: 0; color: #6c604f; }
+      .prerender .loading { color: #978a75; font-size: 0.85rem; }
+      .prerender a { color: #2b241c; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main class="prerender">
+        <h1>Fruit Fly Slot Machine</h1>
+        <p>
+          A real fruit fly CT scan sits on a bar stool and plays a one-armed bandit by itself, while
+          60,000 real neurons from the MaleCNS connectome light up beside it. It picks its own stakes,
+          learns in its mushroom body that the machine is bad for it, and keeps playing anyway.
+        </p>
+        <p class="loading">Loading the fly and its brain…</p>
+        <p><a href="/about.html">How it works</a> · <a href="/legal.html">Legal &amp; privacy</a></p>
+      </main>
+    </div>
+    <noscript>
+      <p style="text-align:center;font-family:system-ui,sans-serif;color:#2b241c">
+        This piece needs JavaScript and WebGL. You can still read <a href="/about.html">how it works</a>.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

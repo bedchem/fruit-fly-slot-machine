@@ -33,8 +33,9 @@ function Rig({ machine, gripTargetRef, dopamineRef, leverRef, reelRefs, winGlowR
     const grip = gripAt(machine.leverAngle);
     gripTargetRef.current = machine.grip > 0.001 ? grip : REST_HAND_WORLD;
     dopamineRef.current = machine.dopamine;
-    winGlowRef.current = machine.dopamine;
-    dopamineRef.current = machine.dopamine;
+    // the cabinet lamp flashes on a payout; it does not follow the dopamine
+    // level, which sits above zero whenever the session is going well
+    winGlowRef.current = machine.winGlow;
 
     // lever detents, one per few degrees of travel, in both directions
     const step = 0.075;
@@ -51,7 +52,7 @@ function Rig({ machine, gripTargetRef, dopamineRef, leverRef, reelRefs, winGlowR
       if (mesh) mesh.rotation.y = machine.reels[i].angle;
     }
     sound.updateReels(machine.reels.map((r) => r.speed), dt);
-    sound.setArousal(machine.arousal);
+    sound.setArousal(machine.arousal, machine.collapse);
 
     // camera: settles back to its mark, kicked by the latch and by a win
     const t = state.clock.elapsedTime;

@@ -19,7 +19,8 @@ export class Sound {
   constructor() {
     this.ctx = null;
     this.ready = false;
-    this.muted = false;
+    // off until the visitor's first click or keypress turns it on
+    this.muted = true;
     this.reelVoices = [];
   }
 
@@ -39,7 +40,7 @@ export class Sound {
   build() {
     const ctx = this.ctx;
     this.master = ctx.createGain();
-    this.master.gain.value = 0.85;
+    this.master.gain.value = this.muted ? 0 : 0.85;
 
     // a touch of room so the metal is not bone dry
     this.reverb = ctx.createConvolver();
@@ -293,6 +294,27 @@ export class Sound {
     if (jackpot) for (let i = 0; i < 14; i++) this.burst({ at: 0.35 + i * 0.055, freq: 3000 + Math.random() * 2500, q: 14, gain: 0.10, dur: 0.02 });
   }
 
+  /**
+   * Out of credit. The last credit drops, then a long falling tone and a
+   * heartbeat that slows under it.
+   */
+  broke() {
+    if (!this.ready || this.muted) return;
+    this.tone({ freq: 220, to: 55, dur: 3.4, gain: 0.12, type: 'triangle', attack: 0.04 });
+    this.tone({ at: 0.05, freq: 110, to: 41, dur: 4.2, gain: 0.08, type: 'sine', attack: 0.3 });
+    let at = 0.4;
+    for (let i = 0; i < 9; i++) {
+      this.tone({ at, freq: 62, to: 44, dur: 0.16, gain: 0.16 * (1 - i / 11), type: 'sine' });
+      at += 0.3 + i * 0.14;
+    }
+  }
+
+  /** Coming round: a small rising breath, and the tray refilling. */
+  revive() {
+    this.tone({ freq: 196, to: 330, dur: 0.9, gain: 0.07, type: 'sine', attack: 0.2 });
+    this.coin(4);
+  }
+
   /** A loss: muted, brief, gone. */
   lose() {
     this.tone({ freq: 196, to: 146, dur: 0.3, gain: 0.12, type: 'triangle' });
@@ -335,12 +357,16 @@ export class Sound {
     g.gain.setTargetAtTime(this.ambient.base, t, 1.2);
   }
 
-  /** Excitement rides the dopamine level: faster, louder wings on a win. */
-  setArousal(x) {
+  /**
+   * Excitement rides the dopamine level: faster, louder wings on a win.
+   * `still` is how far the fly has collapsed — the hum you only notice when
+   * it stops.
+   */
+  setArousal(x, still = 0) {
     if (!this.ambient || !this.ready) return;
     const a = clamp(x, 0, 1);
     const t = this.now();
-    this.ambient.g.gain.setTargetAtTime(this.ambient.base * (1 + a * 3.2), t, 0.12);
+    this.ambient.g.gain.setTargetAtTime(this.ambient.base * (1 + a * 3.2) * (1 - clamp(still, 0, 1)), t, 0.12);
     this.ambient.o.frequency.setTargetAtTime(212 + a * 95, t, 0.12);
   }
 

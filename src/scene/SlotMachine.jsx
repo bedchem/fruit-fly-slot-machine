@@ -19,8 +19,25 @@ import { SYMBOLS } from '../game/machine.js';
  * The cabinet keeps the materials and baked textures it shipped with. The only
  * thing touched is `envMapIntensity`, so the chrome picks up the room probe —
  * no recolouring, because the downloaded look is the look.
+ *
+ * The one exception is the glass over the reels. As shipped it is a 73% grey
+ * pane at a quarter opacity, mirror-smooth and transmissive, and it sits
+ * directly in front of the drums: a grey haze with the whole room reflected in
+ * it, which is why the reels could barely be read. It keeps a faint reflection
+ * so it still reads as glass, and nothing else.
  */
 function useSourceMaterial(material) {
+  if (material.name?.startsWith('Glass')) {
+    material.transmission = 0;
+    material.color?.set('#ffffff');
+    material.opacity = 0.05;
+    material.transparent = true;
+    material.depthWrite = false;
+    material.roughness = 0.08;
+    material.envMapIntensity = 0.18;
+    material.needsUpdate = true;
+    return material;
+  }
   material.envMapIntensity = 0.85;
   return material;
 }
@@ -102,7 +119,8 @@ export function SlotMachine({ machine, leverRef, reelRefs, winGlowRef }) {
     if (leverGroup.current) leverGroup.current.rotation.z = machine.leverAngle;
     if (glowRef.current) {
       const d = winGlowRef?.current ?? 0;
-      glowRef.current.intensity = d * 5.5;
+      // kept low: the lamp sits right in front of the reels and must not wash them out
+      glowRef.current.intensity = d * 2.2;
       glowRef.current.visible = d > 0.004;
     }
   });

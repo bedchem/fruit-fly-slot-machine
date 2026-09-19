@@ -1,0 +1,145 @@
+/*
+ * The reading pages (about, legal, 404): plain HTML, no JavaScript, in the
+ * same palette and type as the piece.
+ */
+@import '@fontsource-variable/inter';
+@import '@fontsource/jetbrains-mono/latin-400.css';
+@import '../styles/tokens.css';
+
+* { box-sizing: border-box; }
+
+html { background: var(--surface); scrollbar-color: var(--ink-3) var(--surface-2); }
+/* the same visible scrollbar as the app's side panel */
+html::-webkit-scrollbar { width: 12px; }
+html::-webkit-scrollbar-track { background: var(--surface-2); }
+html::-webkit-scrollbar-thumb {
+  background: var(--ink-3);
+  border-radius: 12px;
+  border: 2px solid var(--surface-2);
+}
+html::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+.doc-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 0;
+}
+.doc-brand { font-weight: 600; letter-spacing: -0.01em; text-decoration: none; }
+.doc-top nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1.1rem; font-size: 0.9rem; margin-left: auto; }
+
+/* back to the piece, top left — the same pill as in the app */
+.doc-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  align-self: center;
+  padding: 0.5rem 1rem 0.5rem 0.75rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--ink);
+}
+.doc-back svg { width: 1.1em; height: 1.1em; color: var(--accent); }
+.doc-back:hover { background: var(--track); color: var(--ink); }
+/* with room to spare, it sits in the page's top-left corner, like the app's own controls */
+@media (min-width: 1000px) {
+  .doc-back { position: absolute; left: 1.5rem; top: 1.25rem; }
+}
+.doc-top nav a { color: var(--ink-2); text-decoration: none; }
+.doc-top nav a:hover, .doc-top nav a[aria-current='page'] { color: var(--ink); }
+
+.doc-main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.doc-main h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(1.8rem, 1.3rem + 2vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.doc-main h2 {
+  margin: 2.6rem 0 0.7rem;
+  font-size: 1.3rem;
+  letter-spacing: -0.015em;
+}
+.doc-main h3 { margin: 1.6rem 0 0.4rem; font-size: 1.05rem; }
+.doc-main p, .doc-main li { color: var(--ink); }
+.doc-main ul { padding-left: 1.2rem; }
+.doc-main li { margin: 0.3rem 0; }
+.doc-main li::marker { color: var(--accent); }
+.doc-main strong { font-weight: 600; }
+.doc-main em { font-style: italic; }
+
+.doc-main pre {
+  overflow-x: auto;
+  padding: 0.9rem 1rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.doc-main code { font-family: var(--mono); font-size: 0.9em; }
+
+.cta {
+  display: inline-block;
+  margin: 0.5rem 0 0;
+  padding: 0.7rem 1.3rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 500;
+  text-decoration: none;
+}
+.cta:hover { color: var(--surface); background: #000; }
+
+/* the FAQ: one open-able question per row */
+.faq {
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  margin: 0.5rem 0;
+  padding: 0.2rem 1rem;
+}
+.faq summary { cursor: pointer; list-style: none; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary h3 { display: inline; margin: 0; font-size: 1rem; font-weight: 600; }
+.faq summary { padding: 0.7rem 0; }
+.faq summary::after { content: '+'; float: right; color: var(--accent); font-weight: 600; }
+.faq[open] summary::after { content: '−'; }
+.faq p { margin: 0 0 0.9rem; color: var(--ink-2); }
+
+.muted { color: var(--ink-2); font-size: 0.9rem; }
+
+.doc-foot {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2.5rem;
+  border-top: 1px solid var(--divider);
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+.doc-foot p { margin: 0.3rem 0; }
+.doc-foot a { color: var(--ink-2); }
