@@ -101,6 +101,9 @@ const HEART_REST = 268;         // bpm
 const HEART_MAX = 392;
 const LOW_CREDITS = 8;          // below this the state starts to shift
 const HEART_FAINT = 34;         // what the heart slows to once it gives up
+/** Before enough credits have been observed, experience is deliberately weak. */
+const RETURN_PRIOR_CREDITS = 6;
+const RETURN_CONFIDENCE_CREDITS = 12;
 
 /** One spin in seven pays. A real machine is not a fountain and neither is this. */
 const WIN_RATE = 0.14;
@@ -154,11 +157,14 @@ export function rollOutcome(rng = Math.random, { winRate = WIN_RATE, nearMissRat
 }
 
 /** Which of the pulls on the stake is winning, in words. */
-export function betReason({ chase, reward, memory, caution }) {
+export function betReason({ chase, reward, memory, caution, returnRate, returnConfidence }) {
   const top = Math.max(chase, reward, Math.abs(memory), caution);
   if (top < 0.2) return 'satiated — a steady stake';
   if (top === reward) return 'just rewarded — PAM still firing';
   if (top === Math.abs(memory)) {
+    if (memory < 0 && returnConfidence > 0.45 && returnRate < 0.9) {
+      return 'remembers poor returns — protecting credit';
+    }
     return memory < 0 ? 'remembers losing here — holding back' : 'remembers this machine paying';
   }
   if (top === chase) return 'NPF low — chasing its losses';
@@ -270,9 +276,11 @@ export class SlotMachine {
    *   reward  — the PAM cluster is still firing from the last payout. That is
    *             the signal that says the last pull was worth making, so it
    *             makes the next one bigger.
-   *   memory  — what the mushroom body has learned about this machine. Not a
-   *             running score kept here: the balance of approach and avoidance
-   *             MBONs after a session of PAM and PPL1 dopamine (memory.js).
+   *   memory  — what the mushroom body has learned about this machine, plus a
+   *             cautious memory of its own return: credits paid out against
+   *             credits put in. The former is the balance of approach and
+   *             avoidance MBONs after PAM/PPL1 dopamine (memory.js); the
+   *             latter keeps one lucky pull from overruling a poor session.
    *   caution — the defensive state. A fly in a poor state reads ambiguous odds
    *             pessimistically (Deakin 2018), which pulls the stake DOWN.
    *
@@ -286,20 +294,58 @@ export class SlotMachine {
     const last = this.lastResult;
     const chase = (1 - this.npf) * 0.6;
     const reward = (last?.win ? (last.jackpot ? 0.55 : 0.35) : 0) + this.dopamine * 0.3;
-    const memory = this.memory * 0.45;
-    const caution = this.fear * 0.65;
+    const returns = this.returnMemory;
+    // The mushroom body says whether the cue is good or bad; payout history
+    // says whether spending another credit has actually been worthwhile.
+    // A small prior stops one lucky or unlucky pull overturning that value.
+    const experience = returns.signal * (0.18 + returns.confidence * 0.42);
+    const memory = Math.max(-0.85, Math.min(0.85, this.memory * 0.42 + experience));
+    const caution = this.fear * 0.65 + Math.max(0, -experience) * 0.28;
     const urge = clamp01(0.12 + chase + reward + memory - caution);
-    return { chase, reward, memory, caution, urge };
+    return {
+      chase, reward, memory, caution, urge,
+      returnRate: returns.rate,
+      returnSignal: returns.signal,
+      returnConfidence: returns.confidence,
+    };
+  }
+
+  /**
+   * A cautious memory of whether credits put in have come back out. `rate` is
+   * smoothed by a neutral one-to-one prior, then earns influence only after a
+   * dozen observed credits. Sustained losses therefore conserve credit, while
+   * one jackpot cannot immediately justify the maximum stake.
+   */
+  get returnMemory() {
+    const rate = (RETURN_PRIOR_CREDITS + this.won) / (RETURN_PRIOR_CREDITS + this.staked);
+    const confidence = clamp01(this.staked / RETURN_CONFIDENCE_CREDITS);
+    // 1× is neutral: a credit returned for a credit spent. The signal only
+    // becomes positive or negative once the observed return moves away from
+    // that point, saturating at +/- 0.75 credits per credit.
+    const signal = Math.max(-1, Math.min(1, (rate - 1) / 0.75));
+    return { rate, confidence, signal };
   }
 
   /** Commits to a stake: the appetite at this moment, plus a little doubt. */
   decideBet() {
     const a = this.appetite;
     const urge = clamp01(a.urge + (this.rng() - 0.5) * 0.3);
-    const wanted = stakeFor(urge);
+    const naturalWanted = stakeFor(urge);
+    // Once the return memory has enough evidence, a craving cannot erase it.
+    // The fly still approaches the machine, but preserves its remaining credit
+    // rather than escalating a consistently losing bet.
+    const valueCap = a.returnConfidence >= 0.5 && a.returnSignal < -0.65 ? 1
+      : a.returnConfidence >= 0.5 && a.returnSignal < -0.35 ? 2
+        : MAX_BET;
+    const wanted = Math.min(naturalWanted, valueCap);
     const bet = Math.min(wanted, this.credits);
     this.bet = bet;
-    this.betWhy = { why: bet < wanted ? 'all it has left' : betReason(a), ...a, urge };
+    this.betWhy = {
+      why: bet < wanted ? 'all it has left'
+        : valueCap < naturalWanted ? 'remembers poor returns — limits the stake'
+          : betReason(a),
+      ...a, urge, valueCap,
+    };
     this.staked += bet;
     if (bet > this.biggestStake) this.biggestStake = bet;
     return bet;

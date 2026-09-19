@@ -78,6 +78,6 @@ export const FAQ = [
   },
   {
     q: 'Who made the Fruit Fly Slot Machine?',
-    a: 'It was made by Ryhox. The source code is open on GitHub.',
+    a: 'It was made by ryhox and Nexor. The source code is open on GitHub.',
   },
 ];

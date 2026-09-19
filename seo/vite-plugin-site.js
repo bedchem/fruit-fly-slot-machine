@@ -24,6 +24,9 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace
 const today = () => new Date().toISOString().slice(0, 10);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const abs = (p) => site.url + p;
+const authors = site.authors?.length ? site.authors : [site.author];
+const authorNames = authors.map(({ name }) => name).join(' and ');
+const authorId = (author) => `${site.url}/#author-${encodeURIComponent(author.name.toLowerCase())}`;
 
 /** Placeholders usable in any HTML page or in about.md. */
 function fill(text, page) {
@@ -32,8 +35,8 @@ function fill(text, page) {
     'SITE.name': site.name,
     'SITE.tagline': site.tagline,
     'SITE.repository': site.repository,
-    'SITE.author': site.author.name,
-    'SITE.authorUrl': site.author.url,
+    'SITE.author': authorNames,
+    'SITE.authorUrl': authors[0].url,
     'SITE.operator.name': site.operator.name,
     'SITE.operator.email': site.operator.email,
     'SITE.host.name': site.host.name,
@@ -61,13 +64,14 @@ const CC_BY = 'https://creativecommons.org/licenses/by/4.0/';
 
 function jsonLd(page) {
   const url = abs(page.path);
-  const person = {
+  const people = authors.map((author) => ({
     '@type': 'Person',
-    '@id': `${site.url}/#author`,
-    name: site.author.name,
-    url: site.author.url,
-    sameAs: [site.author.url],
-  };
+    '@id': authorId(author),
+    name: author.name,
+    url: author.url,
+    sameAs: [author.url],
+  }));
+  const peopleRefs = authors.map((author) => ({ '@id': authorId(author) }));
   const website = {
     '@type': 'WebSite',
     '@id': `${site.url}/#website`,
@@ -75,7 +79,7 @@ function jsonLd(page) {
     name: site.name,
     description: site.description,
     inLanguage: site.language,
-    publisher: { '@id': `${site.url}/#author` },
+    publisher: peopleRefs,
   };
   const app = {
     '@type': ['WebApplication', 'CreativeWork'],
@@ -93,7 +97,8 @@ function jsonLd(page) {
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
     inLanguage: site.language,
     keywords: site.keywords.join(', '),
-    author: { '@id': `${site.url}/#author` },
+    author: peopleRefs,
+    creator: peopleRefs,
     codeRepository: site.repository,
     about: [
       { '@type': 'Taxon', name: 'Drosophila melanogaster', alternateName: 'common fruit fly', sameAs: 'https://en.wikipedia.org/wiki/Drosophila_melanogaster' },
@@ -139,7 +144,7 @@ function jsonLd(page) {
     dateModified: today(),
     ...(page.path === '/about.html' ? {
       headline: 'How the Fruit Fly Slot Machine works',
-      author: { '@id': `${site.url}/#author` },
+      author: peopleRefs,
       image: abs('/og-image.jpg'),
     } : {}),
     breadcrumb: {
@@ -150,7 +155,7 @@ function jsonLd(page) {
       ],
     },
   };
-  const graph = [website, person, app, webpage];
+  const graph = [website, ...people, app, webpage];
   if (page.path === '/about.html') {
     graph.push({
       '@type': 'FAQPage',
@@ -176,8 +181,8 @@ function head(page) {
     `<title>${esc(page.title)}</title>`,
     `<meta name="description" content="${esc(page.description)}" />`,
     `<meta name="keywords" content="${esc(site.keywords.join(', '))}" />`,
-    `<meta name="author" content="${esc(site.author.name)}" />`,
-    `<meta name="creator" content="${esc(site.author.name)}" />`,
+    `<meta name="author" content="${esc(authorNames)}" />`,
+    `<meta name="creator" content="${esc(authorNames)}" />`,
     `<meta name="robots" content="${robots}" />`,
     `<link rel="canonical" href="${url}" />`,
     `<meta name="theme-color" content="${site.themeColor}" />`,
@@ -219,7 +224,7 @@ function faqHtml() {
 
 function footer() {
   return [
-    `<p>© ${new Date().getFullYear()} ${esc(site.author.name)} · <a href="/">Watch it play</a> · <a href="/about.html">How it works</a> · <a href="/legal.html">Legal &amp; privacy</a> · <a href="${site.repository}" rel="noopener">Source code</a></p>`,
+    `<p>© ${new Date().getFullYear()} ${esc(authorNames)} · <a href="/">Watch it play</a> · <a href="/about.html">How it works</a> · <a href="/legal.html">Legal &amp; privacy</a> · <a href="${site.repository}" rel="noopener">Source code</a></p>`,
     '<p>Connectome: MaleCNS v1.0, FlyEM/HHMI Janelia, University of Cambridge, MRC LMB, Google Research (CC BY 4.0). Fly scan © etainproject, cabinet © local.yany (CC BY 4.0).</p>',
   ].join('\n');
 }
@@ -315,7 +320,7 @@ function llmsFull() {
     `- Watch it play: ${abs('/')}`,
     `- How it works: ${abs('/about.html')}`,
     `- Source code: ${site.repository}`,
-    `- Author: ${site.author.name} (${site.author.url})`,
+    ...authors.map((author) => `- Author: ${author.name} (${author.url})`),
     '',
   ].join('\n');
 }
@@ -345,8 +350,8 @@ function manifest() {
 function humans() {
   return [
     '/* TEAM */',
-    `  Made by: ${site.author.name}`,
-    `  Site: ${site.author.url}`,
+    `  Made by: ${authorNames}`,
+    ...authors.map((author) => `  Profile: ${author.url}`),
     '',
     '/* THANKS */',
     '  Connectome: MaleCNS v1.0 — FlyEM/HHMI Janelia, University of Cambridge, MRC LMB, Google Research',

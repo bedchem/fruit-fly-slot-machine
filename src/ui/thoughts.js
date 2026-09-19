@@ -95,6 +95,17 @@ const SITUATIONS = [
     ],
   },
 
+  // --- the value learned from its own credit history ----------------------
+  {
+    key: 'poor-return',
+    when: (m) => m.returnMemory.confidence >= 0.5 && m.returnMemory.signal < -0.5,
+    lines: [
+      'I keep putting credits in. Hardly any come back. Smaller stake.',
+      'This machine takes more than it gives. I need to hold something back.',
+      'I remember the numbers now. It is not paying enough to risk more.',
+    ],
+  },
+
   // --- the moods underneath ------------------------------------------------
   {
     key: 'streak',

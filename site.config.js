@@ -26,10 +26,11 @@ export default {
   locale: 'en_US',
   themeColor: '#e1d6c1',
 
-  author: {
-    name: 'Ryhox',
-    url: 'https://github.com/bedchem',
-  },
+  /** Keep every credited person explicit so people and crawlers find both profiles. */
+  authors: [
+    { name: 'ryhox', url: 'https://github.com/ryhox' },
+    { name: 'Nexor', url: 'https://github.com/plattnericus' },
+  ],
   repository: 'https://github.com/bedchem/fruit-fly-slot-machine',
 
   /**

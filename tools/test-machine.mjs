@@ -57,3 +57,24 @@ const m2 = new SlotMachine();
 m2.start();
 while (m2.phase !== PHASES.IDLE && cyc < 30) { m2.update(DT); cyc += DT; }
 console.log('full cycle back to idle:', cyc.toFixed(2), 's');
+
+// A learned return must affect money management, not merely explanatory copy.
+// Two otherwise identical flies get enough evidence for opposite conclusions;
+// the one with poor returns must protect its remaining credit.
+const poorReturn = new SlotMachine({ rng: () => 0.5 });
+poorReturn.staked = 12;
+poorReturn.won = 0;
+const poorBet = poorReturn.decideBet();
+const goodReturn = new SlotMachine({ rng: () => 0.5 });
+goodReturn.staked = 12;
+goodReturn.won = 36;
+const goodBet = goodReturn.decideBet();
+const returnMemoryOK = poorReturn.returnMemory.signal < -0.65
+  && poorReturn.betWhy.valueCap === 1
+  && poorBet === 1
+  && goodReturn.returnMemory.signal > 0.65
+  && goodBet > poorBet;
+console.log('return memory:', returnMemoryOK ? 'OK' : 'FAILED',
+  `poor ${poorBet} (${poorReturn.returnMemory.rate.toFixed(2)}×),`,
+  `good ${goodBet} (${goodReturn.returnMemory.rate.toFixed(2)}×)`);
+if (!returnMemoryOK) throw new Error('return memory did not protect credit after poor returns');

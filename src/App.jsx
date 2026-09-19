@@ -173,7 +173,10 @@ export default function App() {
 
         <div className="stage-overlay">
           <header className="masthead">
-            <h1>Fruit Fly Slot Machine</h1>
+            <h1>
+              <span className="title-full">Fruit Fly Slot Machine</span>
+              <span className="title-compact">Fruit Fly Slots</span>
+            </h1>
             <p className="lede">
               <mark>A real brain.</mark> Every dot is a neuron of <mark>a real male fruit fly</mark>, mapped synapse by synapse
               from electron microscopy by{' '}
@@ -185,8 +188,13 @@ export default function App() {
               What it does is how that real wiring responds in a fruit fly <mark>forced to gamble forever</mark>.
             </p>
             <p className="byline">
-              <a href={site.repository} target="_blank" rel="noopener" title="Source code on GitHub">
-                by Ryhox <GitHubIcon />
+              <span>by </span>
+              <a href="https://github.com/ryhox" target="_blank" rel="noopener" title="ryhox on GitHub">
+                ryhox <GitHubIcon />
+              </a>
+              <span> and </span>
+              <a href="https://github.com/plattnericus" target="_blank" rel="noopener" title="Nexor on GitHub">
+                Nexor <GitHubIcon />
               </a>
             </p>
           </header>
@@ -262,4 +270,3 @@ export default function App() {
     </div>
   );
 }
-

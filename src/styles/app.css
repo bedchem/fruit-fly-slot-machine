@@ -64,6 +64,7 @@ b, output, .roll { font-variant-numeric: tabular-nums; }
   letter-spacing: -0.02em;
   color: var(--ink);
 }
+.title-compact { display: none; }
 .masthead p {
   margin: 0.3rem 0 0;
   font-size: 0.88rem;
@@ -220,6 +221,97 @@ b, output, .roll { font-variant-numeric: tabular-nums; }
   text-align: right;
 }
 
+/* The meter intentionally keeps the bright clinical palette and strong type
+   of the supplied reference: it is a compact chart within this muted panel. */
+.cortisol-meter {
+  position: relative;
+  margin: 0.2rem 0;
+  padding: 0.65rem 0 0.7rem;
+  background: transparent;
+  text-align: center;
+  border-block: 1px solid var(--divider);
+}
+.cortisol-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.85rem;
+  padding: 0 0.15rem 0.3rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.cortisol-toggle span { text-align: left; }
+.cortisol-toggle b { margin-left: auto; }
+.cortisol-toggle:hover { color: var(--ink); background: transparent; }
+.cortisol-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.cortisol-toggle b { color: #1e3b6d; font-family: var(--mono); font-size: 0.63rem; font-weight: 500; }
+.cortisol-toggle i {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  /* Expanded points up; the default, collapsed state points down to invite
+     opening the meter. */
+  transform: rotate(-135deg) translate(-2px, 0);
+  transition: transform 160ms ease-out;
+}
+.cortisol-toggle[aria-expanded='false'] i { transform: rotate(45deg) translateY(-2px); }
+.cortisol-graphic { padding-top: 0.25rem; }
+.cortisol-meter svg {
+  display: block;
+  width: 100%;
+  max-width: 15.5rem;
+  height: auto;
+  margin: 0 auto;
+}
+.cortisol-level,
+.cortisol-name {
+  fill: #1e3b6d;
+  font-family: var(--sans);
+  font-weight: 850;
+  text-anchor: middle;
+}
+.cortisol-level { font-size: 18px; letter-spacing: -0.04em; }
+.cortisol-medium { font-size: 21px; }
+.cortisol-name { font-size: 29px; letter-spacing: -0.05em; }
+.cortisol-needle { transition: transform 180ms ease-out; }
+.cortisol-needle line,
+.cortisol-needle circle { fill: #385a8e; stroke: #1e3b6d; }
+.cortisol-needle line { stroke-width: 8; stroke-linecap: round; }
+.cortisol-needle circle { stroke-width: 0; }
+.cortisol-readout {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: -0.15rem 0 0;
+  color: #1e3b6d;
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cortisol-readout b {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.cortisol-note {
+  margin: 0.25rem auto 0;
+  max-width: 15rem;
+  color: var(--ink-3);
+  font-size: 0.63rem;
+}
+
 .note {
   margin: 0;
   font-size: 0.8rem;
@@ -231,8 +323,65 @@ b, output, .roll { font-variant-numeric: tabular-nums; }
 /* ---------- small screens ---------- */
 
 @media (max-width: 900px) {
-  .app { grid-template-columns: 1fr; grid-template-rows: 58vh auto; height: auto; }
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(25rem, 58svh) auto;
+    min-height: 100svh;
+    height: auto;
+    overflow: visible;
+  }
+  .stage { min-height: 25rem; }
+  .panel { overflow: visible; }
   .masthead p:not(.byline) { display: none; }
+}
+
+/* In landscape, keep the machine in the first viewport instead of forcing a
+   portrait-height scene before the controls and readout can be reached. */
+@media (max-width: 900px) and (max-height: 520px) {
+  .app { grid-template-rows: 100svh auto; }
+  .stage { min-height: 100svh; }
+}
+
+/* Phone is a different composition, not a squeezed desktop. The scene gets a
+   protected centre, while the title, live stake, and controls each retain a
+   clear edge and touch-sized targets. */
+@media (max-width: 560px) {
+  .app { grid-template-rows: minmax(30.5rem, 58svh) auto; }
+  .stage { min-height: 30.5rem; }
+  .stage-overlay { padding: 0.9rem; }
+  .masthead {
+    left: 0.9rem;
+    top: 0.9rem;
+    max-width: calc(100% - 12.7rem);
+  }
+  .masthead h1 { font-size: clamp(1.05rem, 5vw, 1.28rem); line-height: 1.08; }
+  .title-full { display: none; }
+  .title-compact { display: inline; }
+  .masthead .byline {
+    margin-top: 0.2rem;
+    font-size: 0.76rem;
+    line-height: 1.25;
+  }
+  .masthead .byline .pill-icon { display: none; }
+  .panel { padding: 1rem 0.9rem 1.35rem; gap: 1.1rem; }
+  .scope-bar { gap: 0.4rem; padding-bottom: 0.4rem; }
+  .scope-title { max-width: 10rem; }
+  .scope-rate { max-width: 10rem; font-size: 0.54rem; }
+  .scope-foot { font-size: 0.57rem; }
+  .vitals { gap: 0.7rem; }
+  .heart { grid-template-columns: 4.25rem 1fr; padding: 0.55rem 0.6rem; gap: 0.45rem; }
+  .heart-read b { font-size: 1.25rem; }
+  .vital { grid-template-columns: 5rem 1fr 2.3rem; gap: 0.45rem; }
+  .vital-label { font-size: 0.8rem; }
+  .cortisol-meter { padding: 0.55rem 0 0.6rem; }
+  .cortisol-meter svg { max-width: 14rem; }
+  .cortisol-toggle { min-height: 2.25rem; padding: 0 0.15rem 0.25rem; font-size: 0.72rem; }
+  .cortisol-note { font-size: 0.59rem; }
+  .memory-verdict { font-size: 0.8rem; }
+  .bank-row { grid-template-columns: 5.25rem 1fr; gap: 0.45rem; }
+  .ledger { gap: 0.65rem 0.35rem; padding: 0.7rem; }
+  .ledger-cell b { font-size: 0.92rem; }
+  .ledger-cell span { font-size: 0.6rem; }
 }
 
 /* ---------- hover explanations ---------- */
@@ -263,6 +412,7 @@ b, output, .roll { font-variant-numeric: tabular-nums; }
 .tiplayer.on { opacity: 1; visibility: visible; transform: translateY(0); }
 
 @media (prefers-reduced-motion: reduce) { .tiplayer { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cortisol-needle { transition: none; } }
 
 /* ---------- the payoff ---------- */
 
@@ -752,3 +902,57 @@ a.pill { text-decoration: none; }
 }
 .panel-foot .source:hover { color: var(--ink); }
 .panel-foot .pill-icon { width: 1.1em; height: 1.1em; color: currentColor; }
+
+/* These overlay components are defined later in the stylesheet than the
+   layout rules above, so their phone overrides live here to remain decisive. */
+@media (max-width: 560px) {
+  .bank {
+    right: 0.9rem;
+    top: 0.9rem;
+    min-width: 10.6rem;
+    padding: 0.55rem 0.65rem 0.65rem;
+    gap: 0.35rem;
+    border-radius: 0.8rem;
+  }
+  .credits b { font-size: 1.55rem; }
+  .credits span { font-size: 0.7rem; }
+  .stake { min-width: 9.3rem; gap: 0.22rem; }
+  .stake-head { gap: 0.35rem; }
+  .stake-verb, .stake-why { font-size: 0.66rem; }
+  .stake-why { max-width: 10rem; line-height: 1.25; }
+  .stake-pulls { gap: 0.42rem; margin-top: 0; }
+  .pull { font-size: 0.52rem; }
+  .pull i { height: 16px; }
+  .history { gap: 0.32rem; }
+  .history-label { font-size: 0.62rem; }
+  .runlog { gap: 2px; }
+  .runlog i { width: 3px; height: 11px; }
+  .runlog i.j, .runlog i.d { height: 15px; }
+
+  .dock-left { left: 0.9rem; bottom: 0.9rem; gap: 0.35rem; }
+  .dock-left .pill {
+    min-height: 2.75rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.86rem;
+  }
+  .pill.sound { min-width: 8.9rem; }
+
+  .slip {
+    top: 22%;
+    min-width: 0;
+    width: min(17rem, calc(100% - 2rem));
+    padding: 0.75rem 0.8rem 0.85rem;
+  }
+  .slip-reels .sym { width: 2.65rem; height: 2.65rem; }
+  .howto {
+    inset: 0.75rem;
+    width: auto;
+    max-height: none;
+    padding: 1rem 1.05rem 1.1rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .masthead { max-width: calc(100% - 1.8rem); }
+  .bank { top: 3.9rem; }
+}

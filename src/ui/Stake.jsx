@@ -15,7 +15,7 @@ import { MAX_BET, PHASES, betReason, stakeFor } from '../game/machine.js';
 const PULLS = [
   { key: 'chase', label: 'chase', tip: 'Low NPF. A deprived fly seeks reward harder, so a losing run pushes the stake up.' },
   { key: 'reward', label: 'reward', tip: 'The PAM cluster still firing from a payout: the last pull was worth making.' },
-  { key: 'memory', label: 'memory', tip: 'What the mushroom body has learned about this machine. It pushes the stake up if the machine has paid, down if it has punished — and red means down.' },
+  { key: 'memory', label: 'memory', tip: 'The mushroom body plus remembered return: it compares credits paid out with credits put in. Enough poor returns push the stake down; a well-paying session can push it up.' },
   { key: 'caution', label: 'caution', tip: 'The defensive state, a bad session and every time it has run dry — a fly in a poor state reads the odds pessimistically.' },
 ];
 
@@ -64,7 +64,7 @@ export function Stake({ machineRef, children }) {
     <div
       className="stake tip"
       ref={rootRef}
-      data-tip={`The fly picks its own stake, 1 to ${MAX_BET} credits, from its state at the moment it pulls. Wins pay three times the stake; three sevens pay twelve.`}
+      data-tip={`The fly picks its own stake, 1 to ${MAX_BET} credits, from its state at the moment it pulls. It combines mushroom-body learning with its remembered return — credits paid out versus credits put in — and protects credit after enough poor returns. Wins pay three times the stake; three sevens pay twelve.`}
     >
       <div className="stake-head">
         <span className="stake-verb" ref={verbRef}>leaning</span>

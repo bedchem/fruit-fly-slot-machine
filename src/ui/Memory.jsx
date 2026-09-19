@@ -17,23 +17,24 @@ export function MemoryPanel({ store, ready, machineRef }) {
   const verdictRef = useRef(null);
   const learnedRef = useRef(null);
   const barsRef = useRef([]);
+  const thinkerRef = useRef(null);
+  if (!thinkerRef.current) thinkerRef.current = new Thinker();
   const mbons = ready ? store.current.brain?.memory.mbons ?? [] : [];
   const approach = mbons.filter((mb) => mb.valence > 0);
   const avoid = mbons.filter((mb) => mb.valence <= 0);
 
   useEffect(() => {
-    if (!ready) return undefined;
-    const memory = store.current.brain?.memory;
-    if (!memory) return undefined;
-    const thinker = new Thinker();
     let raf = 0;
     const loop = () => {
       raf = requestAnimationFrame(loop);
+      const m = machineRef.current;
+      const memory = ready ? store.current.brain?.memory : null;
+      const text = m ? thinkerRef.current.read(m) : (ready ? '' : 'loading the connectome…');
+      if (m) m.currentThought = text;
+      if (verdictRef.current && verdictRef.current.textContent !== text) verdictRef.current.textContent = text;
+      if (!memory) return;
       const v = memory.value;
       if (markRef.current) markRef.current.style.setProperty('--x', String((v + 1) / 2));
-      const m = machineRef.current;
-      const text = m ? thinker.read(m) : '';
-      if (verdictRef.current && verdictRef.current.textContent !== text) verdictRef.current.textContent = text;
       if (learnedRef.current) learnedRef.current.textContent = `${Math.round(memory.learned * 100)}%`;
       for (const el of barsRef.current) {
         if (!el) continue;
@@ -82,7 +83,6 @@ export function MemoryPanel({ store, ready, machineRef }) {
         <span className="memory-verdict-label">Fly's thoughts:</span>{' '}
         <span ref={verdictRef}>{ready ? '' : 'loading the connectome…'}</span>
       </p>
-
       {ready && (
         <div className="memory-banks">
           <div className="bank-row">

@@ -6,6 +6,7 @@
  * looks like a heart trace that re-renders the DOM twelve times a second.
  */
 import { useEffect, useRef } from 'react';
+import { CortisolMeter } from './CortisolMeter.jsx';
 
 /**
  * What each signal is. Shown on hover, because the panel should be readable
@@ -123,7 +124,7 @@ export function Vitals({ machineRef }) {
       {row('octopamine', 'Octopamine')}
       {row('defensive', 'Defensive')}
       {row('npf', 'NPF')}
-
+      <CortisolMeter machineRef={machineRef} />
     </section>
   );
 }
