@@ -8,7 +8,7 @@
  */
 export default {
   /** The published address, no trailing slash. */
-  url: 'https://[your-domain.com]',
+  url: 'https://fly.pokyh.com',
 
   name: 'Fruit Fly Slot Machine',
   shortName: 'Fruit Fly Slots',
