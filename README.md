@@ -40,6 +40,20 @@ npm run dev
 The generated assets are committed, so `npm run dev` works straight away.
 `npm run assets` rebuilds them from the source models and the connectome dumps.
 
+### Docker
+
+Build and run the production container with the default port `3006`:
+
+```bash
+docker compose up --build
+```
+
+Set `PORT` to expose it on another host port, for example `8088`:
+
+```bash
+PORT=8088 docker compose up --build
+```
+
 ---
 
 ## What is real, and what is a model

@@ -40,7 +40,7 @@ export default {
    * art. 7). The email can be an address used only for this site.
    */
   operator: {
-    name: '[Your full name]',
+    name: 'Pokyh',
     email: 'contact@pokyh.com',
   },
 

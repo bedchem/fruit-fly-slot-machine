@@ -1,0 +1,6 @@
+services:
+  fruit-fly-slot-machine:
+    build: .
+    ports:
+      - "${PORT:-3006}:80"
+    restart: unless-stopped
