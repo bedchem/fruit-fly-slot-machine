@@ -12,6 +12,7 @@ import { Stake } from './ui/Stake.jsx';
 import { MemoryPanel, Ledger } from './ui/Memory.jsx';
 import { HowItWorks, HowItWorksButton } from './ui/HowItWorks.jsx';
 import site from '../site.config.js';
+import { Loader } from './ui/Loader.jsx';
 import { LegalIcon, GitHubIcon, SoundIcon, LabIcon } from './ui/icons.jsx';
 
 /** How long the "it comes round" card stays up. */
@@ -134,6 +135,7 @@ export default function CasinoApp() {
         <FlyScene machine={machine} onTick={onTick} />
 
         <div className="stage-overlay">
+          <Loader />
           <header className="masthead">
             <h1>
               <span className="title-full">Fruit Fly Slot Machine</span>

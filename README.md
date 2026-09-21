@@ -123,10 +123,22 @@ The fourth experiment, at `/scroll/`, has **two** flies, Drosi and Phila, side b
   - spiders, a swatter, a vinegar trap, a parasitoid wasp and the zapper's pull go into the looming detectors LPLC2/LC4, which reach the giant fibre DNp01. When it fires, the fly **flinches at a video**.
 - **The algorithm knows nothing about flies.** It measures watch time per kind of reel and serves more of what held attention. Threat reels drive PPL1 and octopamine, and an aroused fly watches longer, so **feeds drift towards doom on their own**. Two flies with different brains end up with different feeds. In a typical run one feed settles near 80% doom while the other stays mostly fruit.
 - **Messages are sent between the phones.** A reel that spikes dopamine or arousal gets sent to the other fly. Opening a friend's reel is rewarding. A reply is social reward for the sender, and "seen" with nothing else is a small sting.
-- **Brain sync** is the live correlation, across all 1,600 simulated cell types, of the two brains' activity above rest. It is the in-silico version of hyperscanning. In `tools/sim-scroll.mjs` it averages about 0.7 and rises to about 0.95 while both watch the same kind of reel.
+- **Brain sync** is inter-subject correlation, the measure hyperscanning studies use: for 13 regions, the six-second time course of activity is correlated between the two brains, then averaged. A sent reel is watched *together* when the other fly is free. In `tools/sim-scroll.mjs` sync averages about 0.2–0.3 and rises to about 0.3–0.45 during joint viewing. The effect is modest, but it is not inflated by the drive both brains share.
 - **The night** is set by the phone's light, which holds sleep off, so the battery usually gives out first. The morning brings a screen-time report, and the feed remembers the next night.
 
 
+
+### TikTok edits (optional, consent-based)
+
+The doomscroll feed can also serve real TikTok edits, listed in `src/game/tiktokEdits.js`. With the list empty, which is the default, nothing about TikTok appears anywhere.
+
+- **Adding edits:** paste full post URLs (`https://www.tiktok.com/@creator/video/…`) with the creator's handle, then run `node tools/check-tiktok-edits.mjs`. It asks TikTok's public oEmbed endpoint about each post and flags wrong URLs and mismatched handles.
+- **Playback:** only through TikTok's official embed player (`https://www.tiktok.com/player/v1/{id}`), muted and looping. Nothing is downloaded or re-hosted. Each video is credited and linked to its creator, and the panel lists every edit with a not-affiliated notice.
+- **Consent first:** before the visitor chooses *Allow TikTok videos*, the page makes **no request to TikTok at all**. Rejecting is as easy as accepting, and closing the notice counts as rejecting. The choice is kept in `localStorage` (`flylab.consent`) and can be changed with *Cookie settings* on the page or on the legal page, where the privacy policy has its own TikTok section. Withdrawing removes all players at once.
+- **Player errors:** a post that TikTok reports as unavailable (error 1001, for example when it was deleted or embedding is off) is dropped for good. Server and playback errors skip it just this once, and a blocked autoplay is ignored.
+- TikTok shows its **own** cookie notice inside the player the first time. That choice belongs to the visitor.
+
+## Run it locally
 
 ### Requirements
 

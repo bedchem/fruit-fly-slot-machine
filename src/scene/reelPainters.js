@@ -232,6 +232,31 @@ const PAINT = {
     ctx.beginPath(); ctx.moveTo(cx + s * 0.05, cy - s * 0.4); ctx.lineTo(cx + s * 0.2, cy - s * 0.7); ctx.stroke();
   },
 
+  /**
+   * A TikTok edit. The video itself cannot be painted into the 3D phone —
+   * it plays in TikTok's own player, in the panel — so the phone shows the
+   * edit's card: who made it and what it is, over a soft pink glow.
+   */
+  fan(ctx, t, W, H, r) {
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, '#3a1830'); g.addColorStop(1, '#f19cc3');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    for (let i = 0; i < 6; i++) {
+      const rr = ((t * 40 + i * 50) % 300);
+      ctx.beginPath(); ctx.arc(W / 2, H * 0.42, rr, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.font = `800 64px ${SANS}`;
+    ctx.fillText('♪', W / 2, H * 0.44);
+    ctx.font = `700 17px ${SANS}`;
+    ctx.fillText(REELS.fan.label, W / 2, H * 0.55);
+    ctx.font = `500 13px ${SANS}`;
+    ctx.fillText(r.edit ? `by ${r.edit.creator} on TikTok` : 'on TikTok', W / 2, H * 0.6);
+    ctx.textAlign = 'left';
+  },
+
   zapper(ctx, t, W, H, r) {
     ctx.fillStyle = '#07061a'; ctx.fillRect(0, 0, W, H);
     // the UV tube glows; a fly is drawn in; at the end, the snap
@@ -312,7 +337,7 @@ function chrome(ctx, f, duo, W, H) {
   }
   ctx.fillStyle = INK;
   ctx.font = `700 13px ${SANS}`;
-  ctx.fillText(c.creator, 14, H - 72);
+  ctx.fillText(r.edit ? r.edit.creator : c.creator, 14, H - 72);
   ctx.font = `400 14px ${SANS}`;
   ctx.fillText(c.label, 14, H - 50, W - 28);
   // progress

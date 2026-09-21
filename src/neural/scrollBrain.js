@@ -13,6 +13,8 @@
  *   moving stripes,      -> the elementary motion detectors, T4 and T5,
  *   a swarm                 all four directions
  *   a bug zapper         -> bright flickering light on the visual system
+ *   a TikTok edit        -> her music into JO-A/B, and reward that grows
+ *                           with the fly's love for her
  *   spider, swatter,     -> the looming detectors LPLC2 and LC4, which
  *   vinegar trap, wasp,     converge on the giant fibre DNp01, and PPL1
  *   the zapper coming in
@@ -74,6 +76,13 @@ class FlyBrain {
       if (kind === 'swarm') sim.drive(S.motion, 0.22 + 0.1 * Math.sin(f.reelT * 3));
       // the zapper's UV: a bright, flickering light on the whole visual system
       if (kind === 'zapper') sim.drive(P.visual, 0.08 + 0.06 * Math.abs(Math.sin(f.reelT * 9)));
+      // a TikTok edit: her music through Johnston's organ, a face on screen,
+      // and a pull of reward that grows as the fly falls for her
+      if (kind === 'fan') {
+        sim.drive(S.hearing, 0.35);
+        sim.drive(P.visual, 0.05);
+        sim.drive(P.reward, f.love * 0.08);
+      }
       sim.drive(S.loom, f.loom * 1.1);
       sim.drive(P.punish, f.loom * 0.35);
     }
