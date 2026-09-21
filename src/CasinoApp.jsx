@@ -12,51 +12,13 @@ import { Stake } from './ui/Stake.jsx';
 import { MemoryPanel, Ledger } from './ui/Memory.jsx';
 import { HowItWorks, HowItWorksButton } from './ui/HowItWorks.jsx';
 import site from '../site.config.js';
-
-/** A page with lines of text: the legal notice. */
-function LegalIcon() {
-  return (
-    <svg className="pill-icon" viewBox="0 0 20 20" aria-hidden="true">
-      <path d="M5 2.5h7l3.5 3.5v11.5H5z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.6" />
-      <path d="M12 2.5V6h3.5" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.6" />
-      <path d="M7.8 10h4.6M7.8 13h4.6" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
-    </svg>
-  );
-}
-
-/** The GitHub mark. */
-function GitHubIcon() {
-  return (
-    <svg className="pill-icon" viewBox="0 0 16 16" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
-      />
-    </svg>
-  );
-}
+import { LegalIcon, GitHubIcon, SoundIcon, LabIcon } from './ui/icons.jsx';
 
 /** How long the "it comes round" card stays up. */
 const REVIVE_CARD_MS = 4200;
 
-/** A speaker: sound waves when on, a cross when muted. */
-function SoundIcon({ muted }) {
-  return (
-    <svg className="pill-icon" viewBox="0 0 20 20" aria-hidden="true">
-      <path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.2" />
-      {muted ? (
-        <path d="M13 7.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
-      ) : (
-        <>
-          <path d="M13 7.3a3.6 3.6 0 0 1 0 5.4" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
-          <path d="M15.4 5a7 7 0 0 1 0 10" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
-        </>
-      )}
-    </svg>
-  );
-}
-
-export default function App() {
+/** The casino: the fly at the slot machine. One of the Fly Lab experiments. */
+export default function CasinoApp() {
   // The machine outlives every render; events are dispatched through a ref so
   // the handler can be redefined without rebuilding it.
   const machineRef = useRef(null);
@@ -215,6 +177,7 @@ export default function App() {
 
           {/* bottom left: sound, then Legal, then How it works */}
           <nav className="dock-left" aria-label="Controls">
+            <a className="pill info home" href="/"><LabIcon />Fly Lab</a>
             <button
               type="button"
               className={`pill sound ${muted ? 'off' : ''}`}

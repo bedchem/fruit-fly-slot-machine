@@ -143,7 +143,7 @@ function jsonLd(page) {
     primaryImageOfPage: abs('/og-image.jpg'),
     dateModified: today(),
     ...(page.path === '/about.html' ? {
-      headline: 'How the Fruit Fly Slot Machine works',
+      headline: 'How the Fly Lab experiments work',
       author: peopleRefs,
       image: abs('/og-image.jpg'),
     } : {}),
@@ -377,6 +377,34 @@ const GENERATED = {
   'humans.txt': ['text/plain', humans],
 };
 
+const isFile = (p) => { try { return fs.statSync(p).isFile(); } catch { return false; } };
+
+/**
+ * Middleware answering page requests for addresses that are not a page under
+ * `root`: a folder missing its slash is redirected, the rest get `page()`
+ * with a 404 status. Everything else passes through.
+ */
+function notFound(root, page) {
+  return async (req, res, next) => {
+    if (!wantsPage(req)) return next();
+    const url = decodeURIComponent(req.url.split('?')[0]);
+    if (isFile(path.join(root, url.endsWith('/') ? `${url}index.html` : url))) return next();
+    if (!url.endsWith('/') && isFile(path.join(root, url, 'index.html'))) {
+      res.statusCode = 301;
+      res.setHeader('Location', `${url}/${req.url.slice(url.length)}`);
+      return res.end();
+    }
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.end(await page());
+  };
+}
+
+/** A browser asking for a page (not a script, an image or a data file). */
+function wantsPage(req) {
+  return (req.method === 'GET' || req.method === 'HEAD') && (req.headers.accept ?? '').includes('text/html');
+}
+
 // ---------------------------------------------------------------- the plugin
 
 export default function sitePlugin() {
@@ -393,7 +421,9 @@ export default function sitePlugin() {
     transformIndexHtml: {
       order: 'pre',
       handler(html, ctx) {
-        const file = path.basename(ctx.filename);
+        // pages live in folders now (/casino/index.html), so match on the
+        // path from the project root rather than the bare file name
+        const file = path.relative(ROOT, ctx.filename).split(path.sep).join('/');
         const page = PAGES.find((p) => p.file === file) ?? {
           file, path: `/${file}`, title: `Not found | ${site.name}`, description: site.description, noindex: true,
         };
@@ -413,6 +443,22 @@ export default function sitePlugin() {
         res.setHeader('Content-Type', `${entry[0]}; charset=utf-8`);
         res.end(entry[1]());
       });
+      // After Vite's static files, before its HTML: a page that exists goes on
+      // to Vite, a folder without its slash is redirected, and anything else
+      // gets the site's 404 — the same answers nginx gives in production.
+      return () => {
+        server.middlewares.use(notFound(ROOT, async () => {
+          const raw = fs.readFileSync(path.join(ROOT, '404.html'), 'utf8');
+          return server.transformIndexHtml('/404.html', raw);
+        }));
+      };
+    },
+
+    configurePreviewServer(server) {
+      const dist = path.join(ROOT, 'dist');
+      return () => {
+        server.middlewares.use(notFound(dist, () => fs.readFileSync(path.join(dist, '404.html'))));
+      };
     },
 
     generateBundle() {

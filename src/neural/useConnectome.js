@@ -11,7 +11,8 @@ import { parseGraph, parseNeurons } from './simulation.js';
 import { Brain } from './brain.js';
 import graphMeta from './cnsGraph.js';
 
-export function useConnectome(machineRef) {
+/** `BrainClass` is the coupling to use: the casino's Brain, or the bar's. */
+export function useConnectome(machineRef, BrainClass = Brain) {
   const [ready, setReady] = useState(false);
   const store = useRef({ sim: null, brain: null, neurons: null, rate: null, rest: null, meta: graphMeta });
 
@@ -19,13 +20,13 @@ export function useConnectome(machineRef) {
     let alive = true;
     (async () => {
       const [gBuf, nBuf] = await Promise.all([
-        fetch('data/graph.bin').then((r) => r.arrayBuffer()),
-        fetch('data/neurons.bin').then((r) => r.arrayBuffer()),
+        fetch('/data/graph.bin').then((r) => r.arrayBuffer()),
+        fetch('/data/neurons.bin').then((r) => r.arrayBuffer()),
       ]);
       if (!alive) return;
       const graph = parseGraph(gBuf);
       const neurons = parseNeurons(nBuf);
-      const brain = new Brain(graph, graphMeta);
+      const brain = new BrainClass(graph, graphMeta);
       if (machineRef.current) brain.attach(machineRef.current);
       Object.assign(store.current, {
         brain, sim: brain.sim, rest: brain.rest, rate: brain.rate, neurons,
@@ -38,7 +39,7 @@ export function useConnectome(machineRef) {
       setReady(true);
     })().catch((err) => console.error('[connectome] failed to load', err));
     return () => { alive = false; };
-  }, [machineRef]);
+  }, [machineRef, BrainClass]);
 
   useEffect(() => {
     if (!ready) return undefined;

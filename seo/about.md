@@ -1,4 +1,6 @@
-# How the Fruit Fly Slot Machine works
+# How Fly Lab works
+
+**Fly Lab** is a set of experiments with one real fruit fly brain, each putting the same CT-scanned fly somewhere new. There are two so far: the [slot machine](/casino/) and the [bar](/bar/). Most of this page is about the first; the bar has [its own section](#at-the-bar).
 
 **Fruit Fly Slot Machine** is an interactive neuroscience piece that runs in the browser. A micro-CT scan of a real fruit fly (*Drosophila melanogaster*) sits on a bar stool and plays a one-armed bandit by itself. Beside it, 60,000 real neurons from the MaleCNS connectome are drawn at their measured positions and light up as it plays.
 
@@ -60,10 +62,23 @@ The readouts use signals that have actually been measured in this animal, not hu
 
 The fly's thoughts shown in words are ours; a fly has no words. Each line is chosen from its actual state (credits, losing streak, the last outcome, NPF, the defensive state and what it has learned), so the words translate numbers that are already on screen.
 
+## At the bar
+
+The second experiment puts the same fly, on the same stool, at a bar counter with a beer and a tin of nicotine pouches. Nobody controls it. It decides whether to drink, how many sips (1–5), whether to take a pouch and how strong (3–16 mg), and when to stop, from its state at that moment: neuropeptide F, dopamine, what its mushroom body has learned, the hangover, nicotine craving, and disinhibition.
+
+The drugs act on the wiring, not on the behaviour. Each is given a receptor, and the connectome already says which of the 1,600 simulated cell types release the transmitter that receptor answers to:
+
+- **Ethanol** strengthens every GABA synapse (GABA-A / Rdl potentiation) and weakens acetylcholine and glutamate synapses. Rising ethanol drives the PAM reward cluster, because flies find ethanol rewarding. The first sips are aversive through PPL1, and that fades. Past the sedation threshold the fly passes out. Rapid tolerance raises that threshold from night to night.
+- **Nicotine** strengthens every cholinergic synapse, which is 911 of the 1,600 types and most fast excitation in an insect brain. It lifts dopamine and builds dependence, and a falling level turns into craving. Too much at once saturates the network, and the fly has a seizure. Nicotine is an insecticide.
+- **The hangover** is what the night leaves behind, felt as the ethanol clears. Inhibition rebounds below normal, NPF drains, and PPL1 fires while the Kenyon cells still code the bar, so the mushroom body learns the morning after as well. Drinking again masks it, and a fly low on NPF takes that deal.
+
+The mechanisms come from the literature. The magnitudes and the human-scale units (mM body ethanol with per mille alongside, ng/mL nicotine) are the model's, chosen to be legible rather than fitted. No fly was served a beer.
+
 ## What it is not
 
 - It is not a recording of a real fly. The anatomy is measured; the dynamics are a model.
 - It is not a gambling site. There is no money, no betting and nothing to buy; the fly plays alone.
+- It does not promote alcohol or nicotine. The bar shows a fly passing out, poisoning itself and waking up hungover.
 - It is not affiliated with, or endorsed by, HHMI Janelia, Google, the University of Cambridge or the MRC LMB.
 
 ## Built with

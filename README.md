@@ -16,6 +16,17 @@
 
 ---
 
+## Fly Lab
+
+The site is **Fly Lab**: a hub at `/` with one tile per experiment, all built on the same fly and the same connectome.
+
+| Path | Experiment |
+| --- | --- |
+| `/casino/` | **Fruit Fly Slot Machine**, described below |
+| `/bar/` | **Fruit Fly at the Bar**, see [The bar](#the-bar) |
+
+New experiments get a page folder (`<name>/index.html`), an entry in `src/entries/`, a Vite input in `vite.config.js`, a row in `seo/content.js`, and a tile in `index.html`.
+
 ## The piece
 
 An adult *Drosophila melanogaster* micro-CT scan sits at a one-armed bandit and plays by itself. Its brain glows beside it: **60,001 neurons at their measured positions**, driven by a compact model over the **MaleCNS v1.0** connectome.
@@ -65,6 +76,20 @@ The next bet combines pursuit, recent reward, learned value, defensive caution, 
 
 The right rail exposes the state instead of hiding it: heart rate, dopamine, octopamine, defensive state, NPF, an expandable colour-coded **stress proxy**, mushroom-body learning, the fly’s thoughts, and a complete credit ledger. The experience is responsive: on a phone, the scene remains touch-safe and the information rail follows beneath it without clipped text or overlapping controls.
 
+## The bar
+
+The second experiment for the same fly, at `/bar/`. Both experiments are reached from the **Fly Lab** hub at `/`, a plain HTML page with a tile for each one. The hub loads no JavaScript, and each experiment page links back to it.
+
+At the bar the fly sits on the same stool at a counter with a beer and a tin of nicotine pouches. Nobody controls it. It decides whether to drink, how many sips (1–5), whether to take a pouch and how strong (3–16 mg), and when to stop. Those choices come from its state: neuropeptide F, dopamine, what its mushroom body has learned, the hangover, nicotine craving, and disinhibition.
+
+| What the drug does to the wiring | What it does to the fly |
+| --- | --- |
+| **Ethanol** strengthens every GABA synapse (GABA-A/Rdl potentiation) and weakens acetylcholine and glutamate ones. | Rising ethanol drives the PAM reward cluster. The first sips are aversive, and that fades. Past its sedation threshold it passes out. Rapid tolerance raises that threshold night by night. |
+| **Nicotine** strengthens every cholinergic synapse. That is 911 of the 1,600 simulated cell types. | It lifts dopamine and builds dependence, and a falling level turns into craving. Too much at once saturates the network, and the fly has a seizure. |
+| **Hangover** leaves GABA weaker than normal (rebound) and drives PPL1 while the Kenyon cells still code the bar. | NPF drains and the mushroom body learns the morning after. Drinking masks it, and a fly low on NPF takes that deal ("hair of the dog"). |
+
+The drugs act through a per-transmitter multiplier on the measured synapses (`src/neural/pharmacology.js`), using each cell type's predicted transmitter from MaleCNS. The mechanisms are the literature's. The magnitudes and the human-scale units (mM ethanol with ‰ alongside, ng/mL nicotine) are the model's, chosen to be legible rather than fitted.
+
 ## Run it locally
 
 ### Requirements
@@ -80,7 +105,7 @@ npm install
 npm run dev
 ```
 
-Vite prints the local URL (normally `http://localhost:5173`). The committed browser assets mean the application runs immediately after dependencies are installed.
+Vite prints the local URL (normally `http://localhost:5173`): the hub, with the experiments at `/casino/` and `/bar/`. The committed browser assets mean the application runs immediately after dependencies are installed.
 
 ### Production build
 
@@ -108,6 +133,9 @@ node tools/test-machine.mjs
 
 # Play a deterministic headless session
 node tools/sim-session.mjs 3 20260919
+
+# Several nights at the bar, headless: every decision, body level and memory
+node tools/sim-bar.mjs 12 1
 ```
 
 The game model is deterministic under a seed, which makes behavioural changes reviewable rather than anecdotal.
@@ -116,9 +144,11 @@ The game model is deterministic under a seed, which makes behavioural changes re
 
 ```text
 src/
-  scene/       Three.js scene, fly rig, cabinet, camera, reels, and lever
-  game/        deterministic slot-machine state machine and decision policy
-  neural/      connectome loading, rate model, learning, and visual scope
+  entries/     one entry per experiment page, mounted through mount.jsx
+  hub/         the Fly Lab hub's stylesheet (the hub itself is index.html)
+  scene/       Three.js scenes (casino and bar), fly rig, cabinet, counter, camera
+  game/        deterministic state machines and decision policies: machine.js, bar.js
+  neural/      connectome loading, rate model, learning, drug pharmacology, visual scope
   audio/       synthesized Web Audio feedback; no sampled soundtrack
   ui/          live readouts, stress meter, thoughts, memory, ledger, slips
 seo/           titles, canonical URLs, structured data, sitemap, llms files

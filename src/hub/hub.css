@@ -1,0 +1,157 @@
+/*
+ * Fly Lab, the hub: a wall of experiments to pick from. Laid out like a
+ * gallery, dressed like the rest of the site — the same beige surfaces,
+ * the same ink, the one orange accent, flat and without shadows.
+ */
+@import '@fontsource-variable/inter';
+@import '../styles/tokens.css';
+
+* { box-sizing: border-box; }
+
+html { background: var(--surface); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+/* ---------- the title ---------- */
+
+.lab-head {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 7vw, 5rem) 1.25rem 2.25rem;
+  text-align: center;
+}
+.lab-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  font-size: clamp(2.6rem, 1.6rem + 5vw, 4.4rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  text-decoration: none;
+  color: var(--ink);
+}
+.lab-mark:hover { color: var(--ink); }
+.lab-mark svg { width: 1.05em; height: 1.05em; flex: none; }
+.lab-lede {
+  margin: 1.1rem auto 0;
+  max-width: 34rem;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.lab-lede a { color: var(--ink); }
+.lab-lede mark {
+  padding: 0 0.2em;
+  border-radius: 3px;
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* ---------- the experiments ---------- */
+
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1.5rem;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 1.25rem 3rem;
+}
+
+.lab-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: var(--page);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background 0.15s, transform 0.15s;
+}
+a.lab-card:hover { background: var(--surface-hover); color: var(--ink); transform: translateY(-3px); }
+a.lab-card:active { transform: translateY(-1px); }
+a.lab-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.lab-thumb {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 400 / 260;
+  margin-bottom: 0.45rem;
+  border-radius: var(--radius-sm);
+  background: #efe7d7;
+}
+.lab-thumb.dark { background: #3b2d22; }
+.lab-thumb img { display: block; width: 100%; height: 100%; transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+a.lab-card:hover .lab-thumb img { transform: scale(1.04); }
+
+.lab-title {
+  padding: 0 0.25rem;
+  font-size: 1.12rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.lab-blurb {
+  padding: 0 0.25rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.lab-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; padding: 0.35rem 0.25rem 0; }
+.lab-tags i {
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.lab-tags i:last-child:not(:first-child) { background: var(--accent-soft); color: var(--accent); }
+
+/* the tile that is not there yet */
+.lab-card.soon { background: transparent; box-shadow: inset 0 0 0 2px var(--track); }
+.lab-thumb.empty {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--track);
+}
+.lab-thumb.empty b { font-size: 3rem; font-weight: 700; color: var(--track-2); }
+.lab-card.soon .lab-title { color: var(--ink-2); }
+.lab-card.soon .lab-blurb { color: var(--ink-3); }
+
+/* ---------- the footer ---------- */
+
+.lab-foot {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2.5rem;
+  border-top: 1px solid var(--divider);
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  text-align: center;
+}
+.lab-foot nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem 1.3rem; margin-bottom: 0.6rem; font-size: 0.9rem; }
+.lab-foot nav a { color: var(--ink-2); text-decoration: none; }
+.lab-foot nav a:hover { color: var(--ink); }
+.lab-foot p { margin: 0 auto; max-width: 40rem; }
+.lab-foot p a { color: var(--ink-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-card, .lab-thumb img { transition: none; }
+  a.lab-card:hover, a.lab-card:hover .lab-thumb img { transform: none; }
+}
