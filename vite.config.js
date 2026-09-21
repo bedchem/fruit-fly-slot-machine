@@ -4,6 +4,9 @@ import sitePlugin from './seo/vite-plugin-site.js';
 
 export default defineConfig({
   plugins: [react(), sitePlugin()],
+  // pages are real files, not client routes: an unknown address is a 404
+  // (served as 404.html by the site plugin), never the hub in disguise
+  appType: 'mpa',
   server: { port: 5173, open: true },
   build: {
     target: 'es2020',

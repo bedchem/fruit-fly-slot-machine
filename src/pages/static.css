@@ -143,3 +143,56 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-
 }
 .doc-foot p { margin: 0.3rem 0; }
 .doc-foot a { color: var(--ink-2); }
+
+/* ---------- the 404 ---------- */
+
+.lost { text-align: center; }
+.lost-art { display: block; width: min(100%, 26rem); height: auto; margin: 0.5rem auto 1.25rem; overflow: visible; }
+.lost-digits {
+  font-family: var(--sans);
+  font-size: 170px;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  fill: var(--ink);
+}
+/* the fly keeps going, a little */
+.lost-fly { animation: lostBuzz 1.6s ease-in-out infinite; transform-box: fill-box; }
+@keyframes lostBuzz {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 3px -4px; }
+}
+.lost p { max-width: 32rem; margin-left: auto; margin-right: auto; color: var(--ink-2); }
+.lost-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  max-width: 32rem;
+  margin: 1.75rem auto 1rem;
+}
+.lost-tile {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.55rem 0.55rem 0.75rem;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ink);
+  transition: background 0.15s, transform 0.15s;
+}
+.lost-tile:hover { background: var(--track); color: var(--ink); transform: translateY(-2px); }
+.lost-tile img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 400 / 260;
+  border-radius: var(--radius-sm);
+  background: #efe7d7;
+}
+.lost-tile.dark img { background: #3b2d22; }
+@media (prefers-reduced-motion: reduce) {
+  .lost-fly { animation: none; }
+  .lost-tile { transition: none; }
+  .lost-tile:hover { transform: none; }
+}

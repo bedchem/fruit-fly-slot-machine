@@ -20,9 +20,43 @@
       </nav>
     </header>
 
-    <main class="doc-main">
+    <main class="doc-main lost">
+      <!-- a 404 with a fly escaping out of the zero, along a dotted flight path -->
+      <svg class="lost-art" viewBox="0 0 420 200" role="img" aria-label="404, with a fruit fly flying out of the page">
+        <text x="12" y="168" class="lost-digits">4</text>
+        <text x="236" y="168" class="lost-digits">4</text>
+        <circle cx="178" cy="112" r="50" fill="none" stroke="#2b241c" stroke-width="22" />
+        <path d="M178 112 C 230 20, 300 40, 330 70 S 380 60, 402 22" fill="none" stroke="#978a75" stroke-width="2.4" stroke-dasharray="3 8" stroke-linecap="round" />
+        <g transform="translate(398 26) rotate(-35)">
+          <g class="lost-fly">
+            <ellipse cx="-7" cy="-9" rx="5" ry="12" transform="rotate(-40 -7 -9)" fill="#fff" fill-opacity="0.75" stroke="#c98a4c" stroke-width="1" />
+            <ellipse cx="7" cy="-9" rx="5" ry="12" transform="rotate(40 7 -9)" fill="#fff" fill-opacity="0.75" stroke="#c98a4c" stroke-width="1" />
+            <ellipse cx="0" cy="2" rx="5.5" ry="9" fill="#d9731f" />
+            <path d="M-5 1h10M-5 5h10" stroke="#a9541a" stroke-width="1.6" stroke-linecap="round" />
+            <circle cx="0" cy="-9" r="5" fill="#e3872f" />
+            <circle cx="-2.8" cy="-10" r="2.3" fill="#b8321f" />
+            <circle cx="2.8" cy="-10" r="2.3" fill="#b8321f" />
+          </g>
+        </g>
+      </svg>
+
       <h1>This page flew off.</h1>
-      <p>There is nothing at this address. The fly is still in the lab, though.</p>
+      <p>
+        There is nothing at this address — whatever was here got out of the lab. The fly itself is still
+        where you left it, in one of the experiments.
+      </p>
+
+      <div class="lost-links">
+        <a class="lost-tile" href="/casino/">
+          <img src="/lab/casino.svg" alt="" width="400" height="260" />
+          <span>Fruit Fly Slot Machine</span>
+        </a>
+        <a class="lost-tile dark" href="/bar/">
+          <img src="/lab/bar.svg" alt="" width="400" height="260" />
+          <span>Fruit Fly at the Bar</span>
+        </a>
+      </div>
+
       <p><a class="cta" href="/">Back to Fly Lab</a></p>
     </main>
 
