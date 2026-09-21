@@ -39,7 +39,11 @@ function segmentPath(index) {
  * label is treated as a familiar human shorthand; the needle is driven by the
  * app's actual defensive/arousal model rather than presented as a measurement.
  */
-export function CortisolMeter({ machineRef }) {
+/**
+ * `label` and `idPrefix` let more than one meter share a page — the
+ * doomscroll has one per fly.
+ */
+export function CortisolMeter({ machineRef, label = 'Cortisol meter', idPrefix = 'cortisol' }) {
   // The panel stays calm by default; the one-line live summary remains useful
   // until a visitor explicitly opens the full gauge.
   const [open, setOpen] = useState(false);
@@ -60,7 +64,8 @@ export function CortisolMeter({ machineRef }) {
           + machine.octopamine * 0.31
           + streak * 0.15
           + (machine.brokeStage ? 0.22 : 0)
-          + (machine.hangover ?? 0) * 0.2,
+          + (machine.hangover ?? 0) * 0.2
+          + (machine.stressExtra ?? 0),
         );
         // Left is low; the arrow sweeps clockwise into the red high range.
         const degrees = 180 - level * 180;
@@ -80,22 +85,22 @@ export function CortisolMeter({ machineRef }) {
   }, [machineRef]);
 
   return (
-    <section className={`cortisol-meter ${open ? 'is-open' : 'is-collapsed'}`} aria-labelledby="cortisol-title">
+    <section className={`cortisol-meter ${open ? 'is-open' : 'is-collapsed'}`} aria-labelledby={`${idPrefix}-title`}>
       <button
         className="cortisol-toggle"
         type="button"
         aria-expanded={open}
-        aria-controls="cortisol-graphic"
+        aria-controls={`${idPrefix}-graphic`}
         onClick={() => setOpen((value) => !value)}
       >
-        <span id="cortisol-title">Cortisol meter</span>
+        <span id={`${idPrefix}-title`}>{label}</span>
         <b ref={summaryRef}>Low · 8%</b>
         <i aria-hidden="true" />
       </button>
-      <div id="cortisol-graphic" className="cortisol-graphic" hidden={!open}>
-        <svg viewBox="0 0 360 250" role="img" aria-labelledby="cortisol-graphic-title cortisol-description">
-          <title id="cortisol-graphic-title">Cortisol level</title>
-          <desc id="cortisol-description">A live low-to-high stress meter driven by the fly's defensive and arousal state.</desc>
+      <div id={`${idPrefix}-graphic`} className="cortisol-graphic" hidden={!open}>
+        <svg viewBox="0 0 360 250" role="img" aria-labelledby={`${idPrefix}-graphic-title ${idPrefix}-description`}>
+          <title id={`${idPrefix}-graphic-title`}>Cortisol level</title>
+          <desc id={`${idPrefix}-description`}>A live low-to-high stress meter driven by the fly's defensive and arousal state.</desc>
           <g className="cortisol-arc" aria-hidden="true">
             {COLORS.map((color, index) => <path key={color} d={segmentPath(index)} fill={color} />)}
           </g>

@@ -25,6 +25,7 @@ The site is **Fly Lab**: a hub at `/` with one tile per experiment, all built on
 | `/casino/` | **Fruit Fly Slot Machine**, described below |
 | `/bar/` | **Fruit Fly at the Bar**, see [The bar](#the-bar) |
 | `/trade/` | **Fruit Fly Trading Desk**, see [The trading desk](#the-trading-desk) |
+| `/scroll/` | **Two Flies Doomscrolling**, see [Doomscrolling](#doomscrolling) |
 
 New experiments get a page folder (`<name>/index.html`), an entry in `src/entries/`, a Vite input in `vite.config.js`, a row in `seo/content.js`, and a tile in `index.html`.
 
@@ -109,7 +110,23 @@ What makes it more than a bot is **how the fly reads the chart**:
 
 The market is synthetic and seeded (`?seed=42` replays one exactly), and the money is paper. Nothing here is a real market or investment advice.
 
-## Run it locally
+## Doomscrolling
+
+The fourth experiment, at `/scroll/`, has **two** flies, Drosi and Phila, side by side at night. Each has its **own brain**: two rate models run over the same wiring, with two separate mushroom bodies. They scroll a feed of reels and send each other the ones that hit. Nobody controls either of them.
+
+- **There are ten kinds of reel**, five pleasant and five threatening, all things a fly's nervous system cares about. Each is fed into the pathway it would use:
+  - rotting fruit goes into the olfactory receptor neurons
+  - sugar goes into the gustatory neurons
+  - wing song goes into Johnston's organ (JO-A/B)
+  - moving stripes and a swarm go into the T4/T5 motion detectors
+  - a bug zapper's UV goes onto the whole visual system
+  - spiders, a swatter, a vinegar trap, a parasitoid wasp and the zapper's pull go into the looming detectors LPLC2/LC4, which reach the giant fibre DNp01. When it fires, the fly **flinches at a video**.
+- **The algorithm knows nothing about flies.** It measures watch time per kind of reel and serves more of what held attention. Threat reels drive PPL1 and octopamine, and an aroused fly watches longer, so **feeds drift towards doom on their own**. Two flies with different brains end up with different feeds. In a typical run one feed settles near 80% doom while the other stays mostly fruit.
+- **Messages are sent between the phones.** A reel that spikes dopamine or arousal gets sent to the other fly. Opening a friend's reel is rewarding. A reply is social reward for the sender, and "seen" with nothing else is a small sting.
+- **Brain sync** is the live correlation, across all 1,600 simulated cell types, of the two brains' activity above rest. It is the in-silico version of hyperscanning. In `tools/sim-scroll.mjs` it averages about 0.7 and rises to about 0.95 while both watch the same kind of reel.
+- **The night** is set by the phone's light, which holds sleep off, so the battery usually gives out first. The morning brings a screen-time report, and the feed remembers the next night.
+
+
 
 ### Requirements
 
@@ -162,6 +179,10 @@ node tools/sim-trade.mjs --league 8 8
 
 # Can the foreleg reach both trading buttons?
 node tools/check-trade-reach.mjs
+
+# Two flies doomscrolling, headless: sends, flinches, dead phones, morning reports, brain sync
+node tools/sim-scroll.mjs 6 1
+node tools/check-scroll-reach.mjs
 ```
 
 The game model is deterministic under a seed, which makes behavioural changes reviewable rather than anecdotal.
@@ -172,9 +193,9 @@ The game model is deterministic under a seed, which makes behavioural changes re
 src/
   entries/     one entry per experiment page, mounted through mount.jsx
   hub/         the Fly Lab hub's stylesheet (the hub itself is index.html)
-  scene/       Three.js scenes (casino, bar, trading desk), fly rig, props, cameras
+  scene/       Three.js scenes (casino, bar, trading desk, doomscroll), fly rig, props, cameras
   game/        deterministic state machines and decision policies: machine.js, bar.js,
-               trader.js and the seeded market it trades, market.js
+               trader.js and the seeded market it trades, market.js, and scroll.js
   neural/      connectome loading, rate model, learning, drug pharmacology, visual scope
   audio/       synthesized Web Audio feedback; no sampled soundtrack
   ui/          live readouts, stress meter, thoughts, memory, ledger, slips

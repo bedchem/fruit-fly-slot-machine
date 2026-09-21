@@ -1,6 +1,6 @@
 # How Fly Lab works
 
-**Fly Lab** is a set of experiments with one real fruit fly brain, each putting the same CT-scanned fly somewhere new. There are three so far: the [slot machine](/casino/), the [bar](/bar/) and the [trading desk](/trade/). Most of this page is about the first; the bar and the desk have their own sections, [at the bar](#at-the-bar) and [at the trading desk](#at-the-trading-desk).
+**Fly Lab** is a set of experiments with one real fruit fly brain, each putting the same CT-scanned fly somewhere new. There are four so far: the [slot machine](/casino/), the [bar](/bar/), the [trading desk](/trade/) and [two flies doomscrolling](/scroll/). Most of this page is about the first; the others have their own sections further down.
 
 **Fruit Fly Slot Machine** is an interactive neuroscience piece that runs in the browser. A micro-CT scan of a real fruit fly (*Drosophila melanogaster*) sits on a bar stool and plays a one-armed bandit by itself. Beside it, 60,000 real neurons from the MaleCNS connectome are drawn at their measured positions and light up as it plays.
 
@@ -83,6 +83,20 @@ The fly does not get the price as a number; it gets the chart as motion. The new
 Following that signal is the trading version of the optomotor response, the reflex by which a fly turns with the motion around it. A crash is different. A red bar that grows fast on screen is a looming stimulus, and it drives LPLC2 and LC4. Those converge on the giant fibre, DNp01, the fly's command neuron for escape. If the giant fibre crosses threshold in the simulation, the fly flees the market and sells everything, whatever it had planned.
 
 Realised profit drives the reward cluster PAM and realised loss drives PPL1, so the mushroom body learns what being in this market is worth. On top of that the fly shows biases people have names for: it sells winners early while dopamine is up, holds losers until the loss hurts more than admitting it, and sizes up after a losing run when NPF is low. A buy-and-hold account and a coin-flip trader run alongside it with the same money, fees and moments of decision. The fly usually wins most of its trades and still often lags buy-and-hold.
+
+## Two flies doomscrolling
+
+The fourth experiment puts two flies side by side at night, each with a phone and each with its own brain: two rate models over the same measured wiring, with two mushroom bodies that learn separately. They scroll a feed of reels and send each other the ones that hit.
+
+There are ten kinds of reel, five pleasant and five threatening, all things a fly's nervous system has an opinion on. Each goes in through the pathway a fly would really use. Rotting fruit drives the olfactory receptor neurons, and sugar drives the gustatory neurons. A courtship wing song drives Johnston's organ, the antennal neurons tuned to near-field sound. A field of moving stripes and a wheeling swarm drive the T4 and T5 motion detectors, and a bug zapper's UV glow drives the whole visual system. A spider, a swatter, a vinegar trap, a parasitoid wasp and the zapper's pull are looming stimuli: they drive LPLC2 and LC4, which reach the giant fibre DNp01. When the giant fibre fires, the fly flinches at a video.
+
+The feed's algorithm knows nothing about flies. It measures how long each kind of reel was watched and serves more of whatever held attention. Threat reels drive the punishment cluster and octopamine, and an aroused fly watches longer, so the feeds drift towards doom without anyone deciding they should. Because the two brains differ in state and history, the two feeds drift differently.
+
+A reel that spikes a fly's dopamine or arousal gets sent to the other. Opening a reel from a friend is rewarding in itself. A reply is social reward for the sender, and being left on "seen" is a small sting. Replies make sending more likely.
+
+Brain sync is measured live: the correlation, across all 1,600 simulated cell types, of each brain's activity above its own resting level. Different reels pull the two apart; the same reel, sent from one to the other, pulls them together.
+
+The phone's light holds sleep off, and usually the battery gives out first. In the morning there is a screen-time report, and the next night's feed starts where the last one ended.
 
 ## What it is not
 
