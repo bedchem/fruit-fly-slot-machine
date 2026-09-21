@@ -25,7 +25,10 @@ const today = () => new Date().toISOString().slice(0, 10);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const abs = (p) => site.url + p;
 const authors = site.authors?.length ? site.authors : [site.author];
-const authorNames = authors.map(({ name }) => name).join(' and ');
+/** "a", "a and b", "a, b and c" */
+const listNames = (names) => (names.length < 3 ? names.join(' and ')
+  : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`);
+const authorNames = listNames(authors.map(({ name }) => name));
 const authorId = (author) => `${site.url}/#author-${encodeURIComponent(author.name.toLowerCase())}`;
 
 /** Placeholders usable in any HTML page or in about.md. */
@@ -224,7 +227,7 @@ function faqHtml() {
 
 function footer() {
   return [
-    `<p>© ${new Date().getFullYear()} ${esc(authorNames)} · <a href="/">Watch it play</a> · <a href="/about.html">How it works</a> · <a href="/legal.html">Legal &amp; privacy</a> · <a href="${site.repository}" rel="noopener">Source code</a></p>`,
+    `<p>© ${new Date().getFullYear()} ${esc(authorNames)} · <a href="/">Fly Lab</a> · <a href="/about.html">How it works</a> · <a href="/legal.html">Legal &amp; privacy</a> · <a href="${site.repository}" rel="noopener">Source code</a></p>`,
     '<p>Connectome: MaleCNS v1.0, FlyEM/HHMI Janelia, University of Cambridge, MRC LMB, Google Research (CC BY 4.0). Fly scan © etainproject, cabinet © local.yany (CC BY 4.0).</p>',
   ].join('\n');
 }

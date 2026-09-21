@@ -119,7 +119,7 @@ function Lights({ bar, dopamineRef }) {
   );
 }
 
-function StudioProbe() {
+export function StudioProbe() {
   const { gl, scene } = useThree();
   useEffect(() => {
     const pmrem = new THREE.PMREMGenerator(gl);
@@ -171,7 +171,7 @@ function Counter() {
 }
 
 /** A plain bar stool under the fly, where the casino's stool stood. */
-function Stool() {
+export function Stool() {
   const [x, , z] = STOOL.origin;
   const seatY = STOOL.seatCenter[1];
   const r = STOOL.seatRadius;

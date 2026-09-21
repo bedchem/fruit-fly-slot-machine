@@ -15,13 +15,13 @@ export default {
   tagline: 'Experiments with a real fruit fly brain.',
   description:
     'Experiments with a real fruit fly brain: a CT-scanned fly and 60,000 real neurons from the '
-    + 'MaleCNS connectome, put at a slot machine and at a bar. It decides everything itself — '
+    + 'MaleCNS connectome, put at a slot machine, at a bar and at a trading desk. It decides everything itself — '
     + 'its stakes, its drinks, when to stop — and its mushroom body learns from what happens.',
   keywords: [
     'fruit fly', 'Drosophila melanogaster', 'connectome', 'MaleCNS', 'FlyEM',
     'neuroscience simulation', 'brain simulation in the browser', 'mushroom body',
     'dopamine', 'reward learning', 'gambling', 'slot machine', 'ethanol', 'nicotine',
-    'hangover', 'three.js', 'WebGL',
+    'hangover', 'paper trading', 'motion vision', 'giant fiber', 'three.js', 'WebGL',
   ],
   language: 'en',
   locale: 'en_US',
@@ -31,6 +31,7 @@ export default {
   authors: [
     { name: 'ryhox', url: 'https://github.com/ryhox' },
     { name: 'Nexor', url: 'https://github.com/plattnericus' },
+    { name: 'peramanu', url: 'https://github.com/peramanu' },
   ],
   repository: 'https://github.com/bedchem/fruit-fly-slot-machine',
 

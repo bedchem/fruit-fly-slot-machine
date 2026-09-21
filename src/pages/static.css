@@ -164,9 +164,9 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-
 .lost p { max-width: 32rem; margin-left: auto; margin-right: auto; color: var(--ink-2); }
 .lost-links {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
   gap: 1rem;
-  max-width: 32rem;
+  max-width: 40rem;
   margin: 1.75rem auto 1rem;
 }
 .lost-tile {
@@ -191,6 +191,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-
   background: #efe7d7;
 }
 .lost-tile.dark img { background: #3b2d22; }
+.lost-tile.navy img { background: #161b24; }
 @media (prefers-reduced-motion: reduce) {
   .lost-fly { animation: none; }
   .lost-tile { transition: none; }
