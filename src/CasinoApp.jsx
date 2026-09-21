@@ -154,9 +154,13 @@ export default function CasinoApp() {
               <a href="https://github.com/ryhox" target="_blank" rel="noopener" title="ryhox on GitHub">
                 ryhox <GitHubIcon />
               </a>
-              <span> and </span>
+              <span>, </span>
               <a href="https://github.com/plattnericus" target="_blank" rel="noopener" title="Nexor on GitHub">
                 Nexor <GitHubIcon />
+              </a>
+              <span> and </span>
+              <a href="https://github.com/peramanu" target="_blank" rel="noopener" title="peramanu on GitHub">
+                peramanu <GitHubIcon />
               </a>
             </p>
           </header>

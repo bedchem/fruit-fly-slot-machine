@@ -12,7 +12,7 @@ export const PAGES = [
     title: 'Fly Lab: experiments with a real fruit fly brain',
     description:
       'One CT-scanned fruit fly, 60,000 real neurons from the MaleCNS connectome, and a different place '
-      + 'to put it each time: a slot machine, a bar. Nobody controls it — you watch what the wiring does.',
+      + 'to put it each time: a slot machine, a bar, a trading desk. Nobody controls it — you watch what the wiring does.',
     changefreq: 'monthly',
     priority: '1.0',
   },
@@ -33,6 +33,16 @@ export const PAGES = [
     description:
       'A real fruit fly CT scan drinks beer through a straw and takes nicotine pouches while both drugs act '
       + 'on the MaleCNS connectome. It decides how much, when to stop, and wakes up with the hangover.',
+    changefreq: 'monthly',
+    priority: '0.9',
+  },
+  {
+    file: 'trade/index.html',
+    path: '/trade/',
+    title: 'Fruit Fly Trading Desk: a real fly brain paper-trades | Fly Lab',
+    description:
+      'A real fruit fly CT scan paper-trades banana futures: the chart drives its own motion detectors, '
+      + 'the MaleCNS connectome decides which way it leans, and a crash fires its escape reflex.',
     changefreq: 'monthly',
     priority: '0.9',
   },
@@ -98,6 +108,6 @@ export const FAQ = [
   },
   {
     q: 'Who made the Fruit Fly Slot Machine?',
-    a: 'It was made by ryhox and Nexor. The source code is open on GitHub.',
+    a: 'It was made by ryhox, Nexor and peramanu. The source code is open on GitHub.',
   },
 ];

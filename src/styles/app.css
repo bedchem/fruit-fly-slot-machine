@@ -962,12 +962,12 @@ a.pill { text-decoration: none; }
 /* ---------- the bar ---------- */
 
 /* the bar is a dark room: the title block sits on it in light ink */
-.venue-bar .masthead h1 { color: #f6ead6; }
-.venue-bar .masthead p { color: #d9c7aa; }
-.venue-bar .masthead .lede a { color: #f6ead6; }
-.venue-bar .masthead .lede mark { color: #1d140c; background: #e9a456; }
-.venue-bar .masthead .byline, .venue-bar .masthead .byline a { color: #cbb795; }
-.venue-bar .masthead .byline a:hover { color: #fff; }
+:is(.venue-bar, .venue-dark) .masthead h1 { color: #f6ead6; }
+:is(.venue-bar, .venue-dark) .masthead p { color: #d9c7aa; }
+:is(.venue-bar, .venue-dark) .masthead .lede a { color: #f6ead6; }
+:is(.venue-bar, .venue-dark) .masthead .lede mark { color: #1d140c; background: #e9a456; }
+:is(.venue-bar, .venue-dark) .masthead .byline, :is(.venue-bar, .venue-dark) .masthead .byline a { color: #cbb795; }
+:is(.venue-bar, .venue-dark) .masthead .byline a:hover { color: #fff; }
 
 .barbank { min-width: 15rem; }
 .bar-clock { display: flex; align-items: baseline; gap: 0.45rem; }
@@ -1041,4 +1041,106 @@ a.pill { text-decoration: none; }
 .venue-bar .slip { top: auto; bottom: var(--gutter); }
 @media (max-width: 560px) {
   .venue-bar .slip { bottom: 4.2rem; max-width: calc(100% - 1.8rem); min-width: 0; }
+}
+
+/* ---------- the trading desk ---------- */
+
+.venue-trade .slip { top: auto; bottom: var(--gutter); }
+.tradebank { min-width: 16rem; max-width: 18rem; }
+.trade-equity { display: grid; justify-items: end; }
+.trade-equity b { font-size: 1.7rem; font-weight: 600; line-height: 1; letter-spacing: -0.03em; }
+.trade-equity span { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-2); }
+.trade-equity span[data-sign='neg'] { color: var(--alarm); }
+.trade-equity span[data-sign='pos'] { color: #2f8a4f; }
+.trade-mini { display: block; width: 100%; height: auto; aspect-ratio: 512 / 170; border-radius: var(--radius-sm); }
+.trade-pos { margin: 0; font-family: var(--mono); font-size: 0.68rem; color: var(--ink-2); text-align: right; }
+
+/* the position: eleven cells, short on the left, long on the right */
+.pos-cells { display: grid; grid-template-columns: repeat(11, 1fr); gap: 3px; width: 100%; }
+.pos-cells i { height: 12px; border-radius: 3px; background: var(--track); }
+.pos-cells i.zero { background: var(--track-2); }
+.pos-cells i.want { box-shadow: inset 0 0 0 1.5px var(--ink-2); }
+.pos-cells i.long.held { background: #3fbf6a; }
+.pos-cells i.short.held { background: var(--alarm); }
+.stake[data-state='committed'] .pos-cells i.want:not(.held) { box-shadow: inset 0 0 0 2px var(--accent); }
+.tradebank .stake-pulls { flex-wrap: wrap; justify-content: flex-end; row-gap: 0.3rem; }
+.pull-follow i::after { background: #3f8f5c; }
+.pull-follow[data-sign='neg'] i::after { background: var(--alarm); }
+.pull-greed i::after { background: var(--accent); }
+
+.tradelog i.w { background: #3fbf6a; }
+.tradelog i.l { background: var(--alarm); }
+.tradelog i.o { background: var(--track-2); height: 10px; }
+.tradelog i.p { background: transparent; box-shadow: inset 0 0 0 1.5px var(--alarm); height: 21px; }
+.tradelog i.x { background: #7c1d12; height: 21px; }
+
+/* what it sees */
+.vision { display: flex; flex-direction: column; gap: 0.6rem; }
+.vision-track { background: linear-gradient(90deg, rgba(207, 74, 47, 0.35), var(--track) 50%, rgba(63, 191, 106, 0.4)); }
+.vision-val { font-family: var(--mono); font-size: 0.7rem; font-weight: 500; min-width: 2.6rem; text-align: right; }
+.vision-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+.vision-col { display: flex; flex-direction: column; gap: 0.25rem; }
+.vision-col > span { font-size: 0.7rem; color: var(--ink-3); }
+.vision-cell { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.4rem; }
+.vision-cell i {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--c) calc(var(--v, 0) * 100%), var(--track) 0);
+}
+.vision-cell.up { --c: #3fbf6a; }
+.vision-cell.down { --c: var(--alarm); }
+.vision-cell em { font-family: var(--mono); font-size: 0.64rem; font-style: normal; color: var(--ink-2); min-width: 4.2rem; }
+.vital.gf .vital-track { position: relative; overflow: visible; }
+.vital.gf .vital-track i { background: var(--alarm); }
+/* the escape threshold: 0.75 on a scale to 1.5 */
+.vital.gf .vital-track s { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+
+/* does a fly beat the market? */
+.league { display: flex; flex-direction: column; gap: 0.6rem; }
+.league-rows { display: flex; flex-direction: column; gap: 0.35rem; }
+.league-row { display: grid; grid-template-columns: 5.6rem 1fr 4.6rem; align-items: center; gap: 0.6rem; }
+.league-row span { font-size: 0.85rem; }
+.league-row.fly span { font-weight: 600; }
+.league-row output { font-family: var(--mono); font-size: 0.74rem; text-align: right; }
+.league-row[data-sign='neg'] output { color: var(--alarm); }
+.league-bar { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; }
+.league-bar i { display: block; height: 100%; width: calc(var(--v, 0) * 100%); background: #3f8f5c; border-radius: 4px; }
+.league-row[data-sign='neg'] .league-bar i { background: var(--alarm); }
+.league-row.fly .league-bar i { background: var(--accent); }
+.league-row.fly[data-sign='neg'] .league-bar i { background: #a2381f; }
+.league-stats { grid-template-columns: repeat(3, 1fr); }
+
+.tradeslip.win .stamp { color: #2f8a4f; }
+.tradeslip.loss .stamp, .tradeslip.panic .stamp { color: var(--alarm); }
+.tradeslip.open .stamp { color: var(--ink-2); }
+
+.news-toast {
+  position: absolute;
+  left: 50%;
+  top: var(--gutter);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(26rem, calc(100% - 2 * var(--gutter) - 40rem));
+  min-width: 14rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #1b130b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
+  animation: slipIn 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.news-toast b { margin-right: 0.35rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+
+@media (max-width: 1280px) {
+  .news-toast { top: auto; bottom: calc(var(--gutter) + 4rem); max-width: 24rem; }
+}
+@media (max-width: 560px) {
+  .tradebank { min-width: 0; max-width: 11.5rem; }
+  .trade-equity b { font-size: 1.25rem; }
+  .tradebank .trade-mini { display: none; }
+  .tradebank .stake-pulls { display: none; }
+  .venue-trade .slip { bottom: 4.2rem; max-width: calc(100% - 1.8rem); min-width: 0; }
+  .news-toast { bottom: 14.5rem; max-width: calc(100% - 1.8rem); min-width: 0; }
 }

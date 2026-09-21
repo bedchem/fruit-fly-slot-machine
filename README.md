@@ -24,6 +24,7 @@ The site is **Fly Lab**: a hub at `/` with one tile per experiment, all built on
 | --- | --- |
 | `/casino/` | **Fruit Fly Slot Machine**, described below |
 | `/bar/` | **Fruit Fly at the Bar**, see [The bar](#the-bar) |
+| `/trade/` | **Fruit Fly Trading Desk**, see [The trading desk](#the-trading-desk) |
 
 New experiments get a page folder (`<name>/index.html`), an entry in `src/entries/`, a Vite input in `vite.config.js`, a row in `seo/content.js`, and a tile in `index.html`.
 
@@ -90,6 +91,24 @@ At the bar the fly sits on the same stool at a counter with a beer and a tin of 
 
 The drugs act through a per-transmitter multiplier on the measured synapses (`src/neural/pharmacology.js`), using each cell type's predicted transmitter from MaleCNS. The mechanisms are the literature's. The magnitudes and the human-scale units (mM ethanol with ‰ alongside, ng/mL nicotine) are the model's, chosen to be legible rather than fitted.
 
+## The trading desk
+
+The third experiment, at `/trade/`. The fly sits at a desk in front of six screens and paper-trades **$BNNA** (banana futures) by pressing a BUY and a SELL button with its right foreleg. It holds anything from five units short to five units long. Nobody controls it.
+
+The six screens are the price chart, the news wire, its P&L race against the market, the order book, the whole session with every fill it made, and its own brain, live. The price chart in the middle of the top row is the one fed to its eyes. Its gaze wanders to the others, to the wire when a headline breaks and to the race after a fill.
+
+What makes it more than a bot is **how the fly reads the chart**:
+
+- **It sees the trend.** The chart drives the real vertical motion detectors of the optic lobe: T4c/T5c for upward motion and T4d/T5d for downward. The trend it trades on is read further downstream, from the cell types its own wiring makes direction-selective. `TraderBrain` finds those types at start-up by probing the connectome. On MaleCNS it picks **LPi34, Tlp14 and LPC2** for upward motion and **VS, LPi43 and LPT100** for downward. VS cells prefer downward motion in real flies too.
+- **Momentum is a reflex.** Flies turn with wide-field motion (the optomotor response). The same pull decides which way it leans.
+- **A crash is a loom.** A red bar growing fast on screen drives the looming detectors LPLC2 and LC4. Those converge on the giant fibre DNp01, the escape command neuron. When DNp01 crosses threshold in the simulation, the fly panic-sells everything.
+- **Its biases emerge.** It sells winners early while dopamine is up (the disposition effect) and holds losers until the loss hurts more than admitting it (loss aversion). After a losing run, low NPF makes it size up. Realised profits drive PAM and losses drive PPL1, so its mushroom body learns the market.
+- **It is benchmarked.** Buy-and-hold and a coin-flip trader get the same $10,000, the same fees and the same decision moments.
+
+`node tools/sim-trade.mjs --league 8 8` plays eight seeded markets. In a typical run the fly **wins 60–80% of its closes yet beats buy-and-hold in only about half the markets**, because it keeps selling winners early. It beats the coin in most of them.
+
+The market is synthetic and seeded (`?seed=42` replays one exactly), and the money is paper. Nothing here is a real market or investment advice.
+
 ## Run it locally
 
 ### Requirements
@@ -136,6 +155,13 @@ node tools/sim-session.mjs 3 20260919
 
 # Several nights at the bar, headless: every decision, body level and memory
 node tools/sim-bar.mjs 12 1
+
+# Trading, headless: every order and why; --league compares fly, buy-and-hold and a coin
+node tools/sim-trade.mjs 8 1
+node tools/sim-trade.mjs --league 8 8
+
+# Can the foreleg reach both trading buttons?
+node tools/check-trade-reach.mjs
 ```
 
 The game model is deterministic under a seed, which makes behavioural changes reviewable rather than anecdotal.
@@ -146,8 +172,9 @@ The game model is deterministic under a seed, which makes behavioural changes re
 src/
   entries/     one entry per experiment page, mounted through mount.jsx
   hub/         the Fly Lab hub's stylesheet (the hub itself is index.html)
-  scene/       Three.js scenes (casino and bar), fly rig, cabinet, counter, camera
-  game/        deterministic state machines and decision policies: machine.js, bar.js
+  scene/       Three.js scenes (casino, bar, trading desk), fly rig, props, cameras
+  game/        deterministic state machines and decision policies: machine.js, bar.js,
+               trader.js and the seeded market it trades, market.js
   neural/      connectome loading, rate model, learning, drug pharmacology, visual scope
   audio/       synthesized Web Audio feedback; no sampled soundtrack
   ui/          live readouts, stress meter, thoughts, memory, ledger, slips
@@ -170,6 +197,6 @@ Before deploying, replace the remaining host and privacy-policy placeholders in 
 - **Connectome:** [MaleCNS v1.0](https://male-cns.janelia.org/) by FlyEM/HHMI Janelia, University of Cambridge, MRC LMB, and Google Research — CC BY 4.0.
 - **Fruit fly model:** [Drosophila adult fruit fly CT scan](https://sketchfab.com/3d-models/drosophila-adult-fruit-fly-ct-scan-ad29b897bd2b4e27bb04ab9d31baa117) by etainproject — CC BY 4.0.
 - **Slot-machine model:** [Pillar Slots](https://sketchfab.com/3d-models/pillar-slots-91e255e5a95745f4857607b388421ee1) by local.yany — CC BY 4.0.
-- **Project authors:** [ryhox](https://github.com/ryhox) and [Nexor](https://github.com/plattnericus).
+- **Project authors:** [ryhox](https://github.com/ryhox), [Nexor](https://github.com/plattnericus) and [peramanu](https://github.com/peramanu).
 
 The project code is released under the [MIT License](LICENSE). Asset and dataset licenses remain those of their respective creators.

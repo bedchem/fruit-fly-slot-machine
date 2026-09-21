@@ -21,6 +21,7 @@ export default defineConfig({
         main: 'index.html',
         casino: 'casino/index.html',
         bar: 'bar/index.html',
+        trade: 'trade/index.html',
         about: 'about.html',
         legal: 'legal.html',
         notFound: '404.html',

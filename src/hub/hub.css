@@ -95,6 +95,7 @@ a.lab-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px
   background: #efe7d7;
 }
 .lab-thumb.dark { background: #3b2d22; }
+.lab-thumb.navy { background: #161b24; }
 .lab-thumb img { display: block; width: 100%; height: 100%; transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
 a.lab-card:hover .lab-thumb img { transform: scale(1.04); }
 
@@ -120,7 +121,7 @@ a.lab-card:hover .lab-thumb img { transform: scale(1.04); }
   font-weight: 500;
   color: var(--ink-2);
 }
-.lab-tags i:last-child:not(:first-child) { background: var(--accent-soft); color: var(--accent); }
+.lab-tags i.new { background: var(--accent-soft); color: var(--accent); }
 
 /* the tile that is not there yet */
 .lab-card.soon { background: transparent; box-shadow: inset 0 0 0 2px var(--track); }
