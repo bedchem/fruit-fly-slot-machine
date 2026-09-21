@@ -15,6 +15,7 @@ import {
 } from './ui/TradePanels.jsx';
 import { LegalIcon, GitHubIcon, SoundIcon, LabIcon } from './ui/icons.jsx';
 import site from '../site.config.js';
+import { Loader } from './ui/Loader.jsx';
 
 const SLIP_MS = 2400;
 const NEWS_MS = 6000;
@@ -117,6 +118,7 @@ export default function TradeApp() {
         <TradeScene trader={trader} store={cnsStore} onTick={onTick} />
 
         <div className="stage-overlay">
+          <Loader />
           <header className="masthead">
             <h1>
               <span className="title-full">Fruit Fly Trading Desk</span>

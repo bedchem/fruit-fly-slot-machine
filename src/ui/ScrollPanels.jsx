@@ -10,6 +10,8 @@
 import { useEffect, useRef } from 'react';
 import { REELS, CATS, PHASES } from '../game/scroll.js';
 import { ScrollThinker } from './scrollThoughts.js';
+import { TikTokPlayer, EditCredit } from './TikTokConsent.jsx';
+import { EDITS, EDIT_SUBJECT } from '../game/tiktokEdits.js';
 
 function useFrameLoop(ref, fn) {
   const fnRef = useRef(fn);
@@ -88,8 +90,18 @@ export function ScrollBank({ duoRef }) {
 
 // ------------------------------------------------------------ side panel
 
-/** Both phones, copied from the canvases the 3D phones are painted from. */
-export function Phones({ duoRef, canvasRefs }) {
+/**
+ * Both phones, copied from the canvases the 3D phones are painted from. A
+ * fly on a TikTok edit (with the visitor's consent) gets TikTok's player laid
+ * over its screen, and the credit underneath.
+ */
+export function Phones({
+  duoRef, canvasRefs, playing = [null, null], soundOn = false, listen = 0, onListen = () => {},
+  expanded = null, onExpand = () => {},
+}) {
+  // the one phone you hear: the open one, else the chosen one if it is on an
+  // edit, else whichever is — and never two at once
+  const heard = expanded !== null ? -1 : playing[listen] ? listen : playing[1 - listen] ? 1 - listen : -1;
   const refs = useRef([]);
   const statusRefs = useRef([]);
   useFrameLoop(duoRef, (d) => {
@@ -104,8 +116,33 @@ export function Phones({ duoRef, canvasRefs }) {
     <section className="phones">
       {['Drosi', 'Phila'].map((n, i) => (
         <figure className="phone-view" key={n}>
-          <canvas ref={(el) => { refs.current[i] = el; }} width="270" height="560" aria-label={`${n}'s phone`} />
-          <figcaption><b>{n}</b> <span ref={(el) => { statusRefs.current[i] = el; }}>—</span></figcaption>
+          <div className="phone-screen">
+            <canvas ref={(el) => { refs.current[i] = el; }} width="270" height="560" aria-label={`${n}'s phone`} />
+            {playing[i] && expanded !== i && (
+              <TikTokPlayer duo={duoRef.current} reel={playing[i]} audible={soundOn && heard === i} />
+            )}
+            {playing[i] && expanded !== i && (
+              <button type="button" className="phone-expand" onClick={() => onExpand(i)} aria-label={`Watch ${n}'s edit large`}>
+                watch large
+              </button>
+            )}
+            {expanded === i && <p className="phone-away">playing large above</p>}
+          </div>
+          <figcaption>
+            <b>{n}</b> <span ref={(el) => { statusRefs.current[i] = el; }}>—</span>
+            {playing[i] && (
+              <button
+                type="button"
+                className={`listen ${soundOn && heard === i ? 'on' : ''}`}
+                aria-pressed={soundOn && heard === i}
+                onClick={() => onListen(i)}
+                title={soundOn ? `Hear ${n}'s phone` : 'Turn sound on to hear the edits'}
+              >
+                {soundOn && heard === i ? 'listening' : 'listen'}
+              </button>
+            )}
+          </figcaption>
+          {playing[i] && <EditCredit reel={playing[i]} />}
         </figure>
       ))}
     </section>
@@ -143,7 +180,9 @@ export function Feeds({ duoRef }) {
         </div>
       ))}
       <div className="feed-legend">
-        {CATS.map((c) => <span key={c}><i style={{ background: REELS[c].color }} />{c}</span>)}
+        {CATS.filter((c) => !REELS[c].external || EDITS.length).map((c) => (
+          <span key={c}><i style={{ background: REELS[c].color }} />{REELS[c].external ? 'TikTok edits' : c}</span>
+        ))}
       </div>
     </section>
   );
@@ -158,6 +197,8 @@ export function Pair({ duoRef }) {
     ['fear', 'Defensive', 'Builds with every spider and swatter, and with a feed that is mostly doom.'],
     ['npf', 'NPF', 'Satisfaction. Replies top it up; being left on seen and a frightening feed drain it.'],
     ['sleepPressure', 'Sleepy', 'Sleep pressure. The phone\'s light holds it off; the battery usually gives out first.'],
+    // only when there are TikTok edits to fall for
+    ...(EDITS.length ? [['love', 'Love', `How far it has fallen for ${EDIT_SUBJECT}: it grows with every edit watched, with dopamine behind it, and fades only slowly.`]] : []),
   ];
   useFrameLoop(duoRef, (d) => {
     d.flies.forEach((f, i) => {

@@ -27,6 +27,8 @@
  * Two flies that keep replying to each other end up in reel ping-pong.
  */
 
+import { EDIT_SUBJECT } from './tiktokEdits.js';
+
 export const REELS = {
   fruit: { label: 'rotting banana ASMR', creator: '@ferment.daily', kind: 'treat', reward: 0.75, threat: 0, habit: 0.14, color: '#e7b53c' },
   courtship: { label: 'he sang for her (wing song)', creator: '@maleCNS', kind: 'treat', reward: 0.6, threat: 0, habit: 0.12, color: '#d86ea0' },
@@ -38,8 +40,16 @@ export const REELS = {
   swarm: { label: 'the swarm moves as one', creator: '@lek.life', kind: 'treat', reward: 0.5, threat: 0, habit: 0.11, color: '#6fb58a' },
   wasp: { label: 'she is looking for your kids', creator: '@leptopilina', kind: 'threat', reward: 0, threat: 0.75, habit: 0.04, color: '#e0b21c' },
   zapper: { label: 'go towards the light', creator: '@bug.zapper', kind: 'threat', reward: 0.25, threat: 0.6, habit: 0.05, color: '#7d6cf0' },
+  // Real TikTok edits, played through TikTok's own embed player — only when
+  // the visitor has allowed TikTok and edits are listed in tiktokEdits.js.
+  // Music and a face they come to love: high reward, and it hardly wears off.
+  fan: { label: `${EDIT_SUBJECT} edit`, creator: 'TikTok', kind: 'treat', reward: 0.85, threat: 0, habit: 0.02, color: '#f19cc3', external: true },
 };
 export const CATS = Object.keys(REELS);
+/** The reels drawn from primitives: the feed without TikTok. */
+export const OWN_CATS = CATS.filter((c) => !REELS[c].external);
+/** The feed with TikTok allowed: the edits only. */
+const FAN_ONLY = CATS.filter((c) => REELS[c].external);
 export const NAMES = ['Drosi', 'Phila'];
 
 export const PHASES = {
@@ -74,21 +84,31 @@ export function makeRng(seed = 1) {
  * has no idea what a spider is.
  */
 export class Feed {
-  constructor(rng) {
+  constructor(rng, duo) {
     this.rng = rng;
+    this.duo = duo;
     this.expected = Object.fromEntries(CATS.map((c) => [c, 3.2]));
     this.served = [];
   }
 
+  /**
+   * What it may serve. With the visitor's consent the feed is the TikTok
+   * edits and nothing else; without it — or if TikTok will play none of
+   * them — the reels drawn here stand in, so the page works either way and
+   * saying no costs nothing.
+   */
+  get available() { return this.duo?.fanEnabled ? FAN_ONLY : OWN_CATS; }
+
   next() {
+    const cats = this.available;
     let cat;
-    if (this.rng() < 0.1) cat = CATS[Math.floor(this.rng() * CATS.length)];
+    if (this.rng() < 0.1) cat = cats[Math.floor(this.rng() * cats.length)];
     else {
       const temp = 0.9;
-      const w = CATS.map((c) => Math.exp(this.expected[c] / temp));
+      const w = cats.map((c) => Math.exp(this.expected[c] / temp));
       let x = this.rng() * w.reduce((a, b) => a + b, 0);
-      cat = CATS[CATS.length - 1];
-      for (let i = 0; i < CATS.length; i++) { x -= w[i]; if (x <= 0) { cat = CATS[i]; break; } }
+      cat = cats[cats.length - 1];
+      for (let i = 0; i < cats.length; i++) { x -= w[i]; if (x <= 0) { cat = cats[i]; break; } }
     }
     this.served.push(cat);
     if (this.served.length > FEED_MEMORY) this.served.shift();
@@ -109,16 +129,20 @@ export class Feed {
   }
 
   /** The category it currently believes holds this fly best. */
-  get favourite() { return CATS.reduce((a, b) => (this.expected[b] > this.expected[a] ? b : a)); }
+  get favourite() { return this.available.reduce((a, b) => (this.expected[b] > this.expected[a] ? b : a)); }
 }
 
 let reelId = 0;
-function makeReel(cat, rng, from = null) {
+function makeReel(cat, rng, duo, from = null) {
+  // a TikTok edit carries the post it plays; its length arrives from the
+  // player once it starts, until then a typical edit's
+  const edit = cat === 'fan' ? duo.nextEdit() : null;
   return {
     id: ++reelId,
     cat,
     from,
-    dur: 4 + rng() * 3,
+    edit,
+    dur: edit ? 12 : 4 + rng() * 3,
     likes: Math.round(800 + rng() * 90000),
     seed: rng() * 1000,
   };
@@ -131,11 +155,11 @@ export class Scroller {
     this.index = index;
     this.name = NAMES[index];
     this.rng = rng;
-    this.feed = new Feed(rng);
+    this.feed = new Feed(rng, duo);
 
     this.phase = PHASES.WATCHING;
     this.t = 0;
-    this.reel = makeReel(this.feed.next(), rng);
+    this.reel = makeReel(this.feed.next(), rng, duo);
     this.reelT = 0;
     this.peakDa = 0;
     this.peakOcto = 0;
@@ -158,6 +182,10 @@ export class Scroller {
     this.battery = 100 - index * 9;
     this.collapse = 0;
     this.lossStreak = 0;              // read by the shared stress gauge
+    /** 0..1: how far it has fallen for the star of the TikTok edits. */
+    this.love = 0;
+    /** Per TikTok edit: seconds watched and times sent — the ranking in the panel. Kept across nights. */
+    this.editStats = {};
 
     // what the brain is fed this frame
     this.rewardPulse = 0;
@@ -235,6 +263,7 @@ export class Scroller {
 
   updateWatching(dt, dtMin) {
     this.reelT += dt;
+    if (this.reel.cat === 'fan') this.love = clamp01(this.love + dt * 0.012 * (0.5 + this.dopamine));
     this.grip += (0.35 - this.grip) * Math.min(1, dt * 3);   // holding, thumb near the screen
     this.swipe += (0 - this.swipe) * Math.min(1, dt * 6);
     this.tap += (0 - this.tap) * Math.min(1, dt * 6);
@@ -280,6 +309,7 @@ export class Scroller {
   /** What watching that reel taught the feed, and what it does next with it. */
   finishReel(watched) {
     const r = this.reel;
+    if (r.edit) this.statFor(r.edit).watched += watched;
     const c = REELS[r.cat];
     this.reels += 1;
     if (!r.from) this.feed.learn(r.cat, watched);
@@ -318,6 +348,7 @@ export class Scroller {
       const r = this.pendingShare;
       this.pendingShare = null;
       this.sent += 1;
+      if (r.edit) this.statFor(r.edit).sent += 1;
       // "look at this": if the other one is free, both watch it now, together;
       // if it is busy — sending something itself, or on another friend reel —
       // it waits in the queue and gets watched later, alone
@@ -335,7 +366,7 @@ export class Scroller {
 
   nextReel() {
     const fromFriend = this.inbox.shift();
-    this.reel = fromFriend ?? makeReel(this.feed.next(), this.rng);
+    this.reel = fromFriend ?? makeReel(this.feed.next(), this.rng, this.duo);
     this.reelT = 0;
     this.loops = 0;
     this.peakDa = 0;
@@ -425,7 +456,30 @@ export class Scroller {
     this.nextReel();
   }
 
+  statFor(edit) {
+    this.editStats[edit.id] ??= { edit, watched: 0, sent: 0 };
+    return this.editStats[edit.id];
+  }
+
+  /** The edits it has spent longest on, most first. */
+  topEdits(n = 3) {
+    return Object.values(this.editStats).sort((a, b) => b.watched - a.watched).slice(0, n);
+  }
+
+  /**
+   * The current reel can no longer be shown — the visitor withdrew consent,
+   * or TikTok could not play the post. It goes, without teaching the feed
+   * anything, and so do any queued edits that can no longer play.
+   */
+  dropReel() {
+    this.inbox = this.inbox.filter((r) => r.cat !== 'fan' || this.duo.canPlay(r.edit));
+    if (this.reel.cat !== 'fan' || this.duo.canPlay(this.reel.edit)) return;
+    if (this.phase === PHASES.WATCHING) this.nextReel();
+    else if (this.phase === PHASES.SHARING) { this.pendingShare = null; this.phase = PHASES.SWIPING; this.t = 0; }
+  }
+
   updateBody(dt, dtMin) {
+    this.love = Math.max(0, this.love - dtMin * 0.0006);
     if (this.awake) {
       this.sleepPressure += dtMin / (14 * 60);
       this.collapse = Math.max(0, this.collapse - dt / 2);
@@ -489,10 +543,63 @@ export class Duo {
     this.morning = null;              // the report, between nights
     this.morningT = 0;
     this.exchanged = 0;
+    /** The TikTok edits in play: only when the visitor allowed TikTok. */
+    this.fanEnabled = false;
+    this.edits = [];
+    this.editCursor = 0;
+    this.brokenEdits = new Set();
     this.lastEvent = null;
   }
 
   emit(type, detail) { this.lastEvent = { type, at: this.now(), detail }; this.onEvent(type, detail); }
+
+  /**
+   * Switches the TikTok edits on or off. On needs both the visitor's consent
+   * and at least one listed edit; off takes them out of every feed at once,
+   * including any on screen.
+   */
+  setFan(edits, allowed) {
+    this.edits = edits.filter((e) => !this.brokenEdits.has(e.id));
+    this.fanEnabled = !!allowed && this.edits.length > 0;
+    for (const f of this.flies) {
+      f.dropReel();
+      // switched on: whatever was playing gives way to the edits at once
+      if (this.fanEnabled && f.phase === PHASES.WATCHING && f.reel.cat !== 'fan') {
+        f.inbox = f.inbox.filter((r) => r.cat === 'fan');
+        f.nextReel();
+      }
+    }
+  }
+
+  canPlay(edit) { return !!edit && this.fanEnabled && !this.brokenEdits.has(edit.id); }
+
+  /** The next edit to serve: the list in turn, skipping any TikTok would not play. */
+  nextEdit() {
+    const list = this.edits.filter((e) => !this.brokenEdits.has(e.id));
+    if (!list.length) return null;
+    const e = list[this.editCursor % list.length];
+    this.editCursor += 1;
+    return e;
+  }
+
+  /** The player could not show a post (removed, private, embedding off): never again. */
+  markBroken(id) {
+    this.brokenEdits.add(id);
+    if (!this.edits.some((e) => !this.brokenEdits.has(e.id))) this.fanEnabled = false;
+    for (const f of this.flies) f.dropReel();
+  }
+
+  /** TikTok could not play this one reel right now: move on, without marking the post. */
+  skipReel(reelId) {
+    for (const f of this.flies) if (f.reel.id === reelId && f.phase === PHASES.WATCHING) f.nextReel();
+  }
+
+  /** The player knows the real length of an edit once it plays. */
+  setEditDuration(reelId, seconds) {
+    for (const f of this.flies) {
+      if (f.reel.id === reelId && Number.isFinite(seconds) && seconds > 1) f.reel.dur = Math.min(60, Math.max(4, seconds));
+    }
+  }
 
   get clock() {
     const m = Math.floor(this.minute) % (24 * 60);

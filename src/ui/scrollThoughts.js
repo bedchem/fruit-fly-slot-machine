@@ -44,6 +44,14 @@ const SITUATIONS = [
   { key: 'swarm', urgent: false, when: (f) => f.reel.cat === 'swarm', lines: ['They all turn at once. How do they KNOW.', 'I want to be in a swarm. I am on a stool.'] },
   { key: 'wasp', urgent: true, when: (f) => f.reel.cat === 'wasp' && f.reelT > 2, lines: ['Not the wasp. Anything but the wasp.', 'She is so close. She is SO close.'] },
   { key: 'zapper', urgent: false, when: (f) => f.reel.cat === 'zapper', lines: ['The light is so pretty. I know. I KNOW.', "Don't go in the light. Don't go in the li—"] },
+  {
+    key: 'fan', urgent: true, when: (f) => f.reel.cat === 'fan' && f.reelT > 0.5,
+    lines: [
+      (f) => (f.love > 0.5 ? 'I would give up sugar for her. Not all sugar. Some sugar.' : 'Wait. Who is she. Why is she so good.'),
+      () => 'Rewatching. Rewatching again.',
+      (f) => (f.reel.from ? `${f.friend.name} gets it. ${f.friend.name} GETS it.` : `Sending this to ${f.friend.name} immediately.`),
+    ],
+  },
   { key: 'calm', urgent: false, when: () => true, lines: ['One more.', 'Just checking something.', 'Scroll. Scroll. Scroll.'] },
 ];
 

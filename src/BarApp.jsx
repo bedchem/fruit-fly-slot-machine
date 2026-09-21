@@ -13,6 +13,7 @@ import { BarThinker } from './ui/barThoughts.js';
 import { BarBank, BarBody, BarTab, ActionSlip, DownCard, WakeCard, BarHowItWorks } from './ui/BarPanels.jsx';
 import { LegalIcon, GitHubIcon, SoundIcon, LabIcon } from './ui/icons.jsx';
 import site from '../site.config.js';
+import { Loader } from './ui/Loader.jsx';
 
 /** How long the slip after an action, and the morning card, stay up. */
 const SLIP_MS = 2600;
@@ -111,6 +112,7 @@ export default function BarApp() {
         <BarScene bar={bar} onTick={onTick} />
 
         <div className="stage-overlay">
+          <Loader />
           <header className="masthead">
             <h1>
               <span className="title-full">Fruit Fly at the Bar</span>

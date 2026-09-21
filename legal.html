@@ -87,17 +87,69 @@
   <h3>What this site does not do</h3>
 
   <ul>
-    <li>No cookies, and no similar technologies such as local storage for tracking.</li>
-    <li>No analytics, no advertising, no social media plugins, no tracking pixels.</li>
-    <li>No third-party requests: fonts, 3D models and connectome data are all served from this site.</li>
+    <li>This site sets no cookies and uses no local storage for tracking.</li>
+    <li>No analytics, no advertising, no tracking pixels.</li>
     <li>
-      The simulation runs entirely in your browser. Nothing about what you watch or click is sent anywhere.
+      No third-party requests by default: fonts, 3D models and connectome data are all served from this site.
+      The only exception is optional and off until you switch it on: TikTok videos in the doomscroll
+      experiment (<a href="#tiktok">see below</a>).
+    </li>
+    <li>
+      The simulations run entirely in your browser. Nothing about what you watch or click is sent to us.
     </li>
   </ul>
 
   <p>
-    Because no cookies or trackers are used, there is no cookie banner.
+    That is why there is no site-wide cookie banner. You are asked only on the one page where TikTok content
+    can appear, and only if you want to see it.
   </p>
+
+  <h3 id="tiktok">TikTok videos in the doomscroll experiment (only with your consent)</h3>
+
+  <p>
+    The doomscroll experiment can show real TikTok videos (fan edits about %SITE.editSubject%) through TikTok's
+    official embedded player. Until you choose <em>Allow TikTok videos</em>, nothing is loaded from TikTok: no
+    player, no script, no connection. The experiment works fully without it.
+  </p>
+
+  <p>
+    If you allow it, your browser connects directly to TikTok's servers when a video is shown. TikTok then
+    receives technical data such as your IP address, browser and device information and the address of this
+    page, and TikTok may store or read cookies and similar information on your device, including for its own
+    analytics and advertising. What TikTok does with these data is decided by TikTok: see TikTok's
+    <a href="https://www.tiktok.com/legal/page/eea/privacy-policy/en" rel="noopener">privacy policy</a> and
+    <a href="https://www.tiktok.com/legal/page/global/cookie-policy/en" rel="noopener">cookie policy</a>. The
+    provider for users in the European Economic Area is TikTok Technology Limited, 10 Earlsfort Terrace,
+    Dublin D02 T380, Ireland. TikTok may transfer data to countries outside the EU.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Legal basis:</strong> your consent (art. 6(1)(a) GDPR; for storing and reading information on your
+      device, art. 122 of the Italian Privacy Code implementing art. 5(3) of the ePrivacy Directive).
+    </li>
+    <li>
+      <strong>Who is responsible:</strong> for making the connection to TikTok by embedding the player, we and
+      TikTok may be jointly responsible (see CJEU, C-40/17 <em>Fashion ID</em>). For everything TikTok does with
+      the data afterwards, TikTok alone is responsible. You can exercise your rights with us or with TikTok.
+    </li>
+    <li>
+      <strong>Withdrawing:</strong> you can withdraw your consent at any time, as easily as you gave it, with the
+      button below or with <em>Cookie settings</em> on the experiment page. Players are removed immediately. Cookies
+      TikTok has already set are under TikTok's control; you can delete them in your browser settings.
+      Withdrawing does not affect what happened before.
+    </li>
+    <li>
+      <strong>Your choice itself</strong> is saved in your browser's local storage under the key
+      <code>flylab.consent</code>: only the answer and when you gave it. This is strictly necessary to respect
+      your choice and is never sent to us or anyone else. Clearing your browser data removes it.
+    </li>
+  </ul>
+
+  <div id="consent-controls" class="consent-controls">
+    <p class="muted">Your choice can be changed here once JavaScript is available.</p>
+  </div>
+  <script type="module" src="/src/consent/manage.js"></script>
 
   <h3>Server logs</h3>
 
@@ -145,7 +197,6 @@
       <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>.
     </li>
 
-```
 <li>
   Fruit fly CT scan ©
   <a
@@ -167,13 +218,21 @@
 <li>
   Inter and JetBrains Mono typefaces, SIL Open Font License 1.1.
 </li>
-```
 
   </ul>
 
   <p>
     This project is not affiliated with, or endorsed by, HHMI Janelia, Google, the University of Cambridge or
     the MRC Laboratory of Molecular Biology. All names belong to their respective owners.
+  </p>
+
+  <p>
+    TikTok videos shown in the doomscroll experiment remain the work and property of their creators and of the
+    rights holders of the music and footage in them; each is credited and linked where it plays. They are shown
+    only through TikTok's own embedded player, under TikTok's terms, and are not downloaded, copied or re-hosted
+    here. Fly Lab is not affiliated with, or endorsed by, %SITE.editSubject%, her record labels, the creators of
+    the edits, or TikTok. If you are a creator or rights holder and want a video removed, write to
+    <a href="mailto:%SITE.operator.email%">%SITE.operator.email%</a> and it will be taken out promptly.
   </p>
 </main>
 

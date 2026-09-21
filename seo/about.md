@@ -94,7 +94,9 @@ The feed's algorithm knows nothing about flies. It measures how long each kind o
 
 A reel that spikes a fly's dopamine or arousal gets sent to the other. Opening a reel from a friend is rewarding in itself. A reply is social reward for the sender, and being left on "seen" is a small sting. Replies make sending more likely.
 
-Brain sync is measured live: the correlation, across all 1,600 simulated cell types, of each brain's activity above its own resting level. Different reels pull the two apart; the same reel, sent from one to the other, pulls them together.
+Brain sync is measured live as inter-subject correlation, the measure hyperscanning studies use between people watching the same film: for a dozen brain regions, the time course of activity over the last six seconds is correlated between the two flies, then averaged. Different reels pull the two apart. A sent reel, watched together while the other fly is free, pulls them into step.
+
+If edits are configured, the feed can also serve real TikTok fan edits, but only after the visitor allows TikTok. They play through TikTok's own embedded player, credited to their creators, and nothing loads from TikTok before that choice. The privacy policy has the details.
 
 The phone's light holds sleep off, and usually the battery gives out first. In the morning there is a screen-time report, and the next night's feed starts where the last one ended.
 
