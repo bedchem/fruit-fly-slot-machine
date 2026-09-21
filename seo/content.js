@@ -12,7 +12,7 @@ export const PAGES = [
     title: 'Fly Lab: experiments with a real fruit fly brain',
     description:
       'One CT-scanned fruit fly, 60,000 real neurons from the MaleCNS connectome, and a different place '
-      + 'to put it each time: a slot machine, a bar, a trading desk. Nobody controls it — you watch what the wiring does.',
+      + 'to put it each time: a slot machine, a bar, a trading desk, a phone. Nobody controls it — you watch what the wiring does.',
     changefreq: 'monthly',
     priority: '1.0',
   },
@@ -43,6 +43,16 @@ export const PAGES = [
     description:
       'A real fruit fly CT scan paper-trades banana futures: the chart drives its own motion detectors, '
       + 'the MaleCNS connectome decides which way it leans, and a crash fires its escape reflex.',
+    changefreq: 'monthly',
+    priority: '0.9',
+  },
+  {
+    file: 'scroll/index.html',
+    path: '/scroll/',
+    title: 'Two Flies Doomscrolling: real fly brains on a feed | Fly Lab',
+    description:
+      'Two real fruit fly brains, simulated on the MaleCNS connectome, scroll reels at night and send each other '
+      + 'the ones that hit. The algorithm only measures watch time, and drifts them towards doom.',
     changefreq: 'monthly',
     priority: '0.9',
   },

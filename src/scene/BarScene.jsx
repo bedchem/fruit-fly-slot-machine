@@ -170,9 +170,10 @@ function Counter() {
   );
 }
 
-/** A plain bar stool under the fly, where the casino's stool stood. */
-export function Stool() {
-  const [x, , z] = STOOL.origin;
+/** A plain bar stool under the fly, where the casino's stool stood; `offset` moves it for a second fly. */
+export function Stool({ offset = [0, 0, 0] }) {
+  const x = STOOL.origin[0] + offset[0];
+  const z = STOOL.origin[2] + offset[2];
   const seatY = STOOL.seatCenter[1];
   const r = STOOL.seatRadius;
   return (

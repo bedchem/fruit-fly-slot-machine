@@ -71,8 +71,10 @@ export const REST_HAND = HAND;
  * (the bar decides that itself); otherwise it watches the reels and the lever.
  * `mouthRef`, if given, is filled every frame with the mouthparts' world
  * position after the head has turned — what the proboscis grows out of.
+ * `pose` places the fly; it defaults to the seat on the casino's stool, and a
+ * second fly is the same pose moved along the floor.
  */
-export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mouthLocal }) {
+export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mouthLocal, pose = FLY }) {
   const { scene } = useGLTF('/models/fly.glb');
   const groupRef = useRef();
   const uniforms = useRef(null);
@@ -168,8 +170,8 @@ export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mo
     const sway = (machine?.sway ?? 0) * alive;
     const fit = machine?.seizureFit ?? 0;
     const convulse = fit * (Math.sin(t * 47) * 0.02 + Math.sin(t * 29.3) * 0.015);
-    g.position.y = FLY.position[1] + breathe + tremor - slump * 0.012 + fit * Math.sin(t * 38) * 0.006;
-    g.rotation.y = FLY.rotationY + (Math.sin(t * 0.47) * 0.012 + arousal * Math.sin(t * 9.7) * 0.008) * alive
+    g.position.y = pose.position[1] + breathe + tremor - slump * 0.012 + fit * Math.sin(t * 38) * 0.006;
+    g.rotation.y = pose.rotationY + (Math.sin(t * 0.47) * 0.012 + arousal * Math.sin(t * 9.7) * 0.008) * alive
       + sway * Math.sin(t * 0.9) * 0.05 + convulse;
     g.rotation.z = (Math.sin(t * 0.83) * 0.006 + fear * Math.sin(t * 5.3) * 0.012) * alive + slump * SLUMP_ROLL
       + sway * (Math.sin(t * 0.61) * 0.07 + Math.sin(t * 1.37) * 0.025) + convulse * 1.3;
@@ -178,7 +180,7 @@ export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mo
     const lean = (machine?.grip ?? 0) * -(machine?.pullProgress ?? 0);
     // at the bar it bends over the straw
     const stoop = (machine?.lean ?? 0) * 0.07;
-    g.rotation.x = FLY.pitch + lean * 0.06 + stoop - fear * alive * 0.055 - slump * SLUMP_PITCH;
+    g.rotation.x = pose.pitch + lean * 0.06 + stoop - fear * alive * 0.055 - slump * SLUMP_PITCH;
 
     const u = uniforms.current?.current;
     if (!u) return;
@@ -220,12 +222,12 @@ export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mo
     // ease from the rest pose to the knob as the fly commits to the handle
     tmp.target.copy(tmp.rest).lerp(tmp.local, grip);
 
-    const pose = solveLegIK([tmp.target.x, tmp.target.y, tmp.target.z]);
-    u.uBoneA.value.set(pose.q1[0], pose.q1[1], pose.q1[2], pose.q1[3]);
-    u.uBoneB.value.set(pose.q2[0], pose.q2[1], pose.q2[2], pose.q2[3]);
-    u.uKnee.value.set(pose.knee[0], pose.knee[1], pose.knee[2]);
+    const leg = solveLegIK([tmp.target.x, tmp.target.y, tmp.target.z]);
+    u.uBoneA.value.set(leg.q1[0], leg.q1[1], leg.q1[2], leg.q1[3]);
+    u.uBoneB.value.set(leg.q2[0], leg.q2[1], leg.q2[2], leg.q2[3]);
+    u.uKnee.value.set(leg.knee[0], leg.knee[1], leg.knee[2]);
 
-    if (import.meta.env.DEV && pose.overextended && !Fly._warned) {
+    if (import.meta.env.DEV && leg.overextended && !Fly._warned) {
       Fly._warned = true;
       console.warn('[fly] foreleg cannot reach the knob — check FLY.scale / FLY.position in layout.js', {
         reach: REACH, needed: tmp.target.distanceTo(new THREE.Vector3(...SHOULDER)),
@@ -242,9 +244,9 @@ export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mo
        tools/preview.mjs and layout.js build their matrices in. */
     <group
       ref={groupRef}
-      position={FLY.position}
-      rotation={[FLY.pitch, FLY.rotationY, 0, 'YXZ']}
-      scale={FLY.scale}
+      position={pose.position}
+      rotation={[pose.pitch, pose.rotationY, 0, 'YXZ']}
+      scale={pose.scale}
     >
       <primitive object={model.root} />
     </group>
