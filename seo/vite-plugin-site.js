@@ -143,7 +143,7 @@ function jsonLd(page) {
     primaryImageOfPage: abs('/og-image.jpg'),
     dateModified: today(),
     ...(page.path === '/about.html' ? {
-      headline: 'How the Fruit Fly Slot Machine works',
+      headline: 'How the Fly Lab experiments work',
       author: peopleRefs,
       image: abs('/og-image.jpg'),
     } : {}),
@@ -393,7 +393,9 @@ export default function sitePlugin() {
     transformIndexHtml: {
       order: 'pre',
       handler(html, ctx) {
-        const file = path.basename(ctx.filename);
+        // pages live in folders now (/casino/index.html), so match on the
+        // path from the project root rather than the bare file name
+        const file = path.relative(ROOT, ctx.filename).split(path.sep).join('/');
         const page = PAGES.find((p) => p.file === file) ?? {
           file, path: `/${file}`, title: `Not found | ${site.name}`, description: site.description, noindex: true,
         };

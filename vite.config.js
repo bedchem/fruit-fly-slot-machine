@@ -9,9 +9,15 @@ export default defineConfig({
     target: 'es2020',
     chunkSizeWarningLimit: 1200,
     rollupOptions: {
-      // the piece itself, plus the static pages search engines and people read
+      // the hub, the experiments, plus the static pages search engines and people read
+      // three.js and React in one cached chunk, shared by both venues
+      output: {
+        manualChunks: (id) => (id.includes('node_modules') ? 'vendor' : undefined),
+      },
       input: {
         main: 'index.html',
+        casino: 'casino/index.html',
+        bar: 'bar/index.html',
         about: 'about.html',
         legal: 'legal.html',
         notFound: '404.html',

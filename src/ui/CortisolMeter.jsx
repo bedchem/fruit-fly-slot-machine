@@ -53,13 +53,14 @@ export function CortisolMeter({ machineRef }) {
     const tick = () => {
       const machine = machineRef.current;
       if (machine) {
-        const streak = clamp01(machine.lossStreak / 6);
+        const streak = clamp01((machine.lossStreak ?? 0) / 6);
         const level = clamp01(
           0.08
           + machine.fear * 0.46
           + machine.octopamine * 0.31
           + streak * 0.15
-          + (machine.brokeStage ? 0.22 : 0),
+          + (machine.brokeStage ? 0.22 : 0)
+          + (machine.hangover ?? 0) * 0.2,
         );
         // Left is low; the arrow sweeps clockwise into the red high range.
         const degrees = 180 - level * 180;

@@ -10,17 +10,18 @@ export default {
   /** The published address, no trailing slash. */
   url: 'https://fly.pokyh.com',
 
-  name: 'Fruit Fly Slot Machine',
-  shortName: 'Fruit Fly Slots',
-  tagline: 'A Drosophila CT scan plays a one-armed bandit, on its own.',
+  name: 'Fly Lab',
+  shortName: 'Fly Lab',
+  tagline: 'Experiments with a real fruit fly brain.',
   description:
-    'A real fruit fly CT scan plays a slot machine while 60,000 real neurons from the '
-    + 'MaleCNS connectome light up beside it. It picks its own stakes, learns in its '
-    + 'mushroom body that the machine is bad — and keeps playing anyway.',
+    'Experiments with a real fruit fly brain: a CT-scanned fly and 60,000 real neurons from the '
+    + 'MaleCNS connectome, put at a slot machine and at a bar. It decides everything itself — '
+    + 'its stakes, its drinks, when to stop — and its mushroom body learns from what happens.',
   keywords: [
     'fruit fly', 'Drosophila melanogaster', 'connectome', 'MaleCNS', 'FlyEM',
     'neuroscience simulation', 'brain simulation in the browser', 'mushroom body',
-    'dopamine', 'reward learning', 'gambling', 'slot machine', 'three.js', 'WebGL',
+    'dopamine', 'reward learning', 'gambling', 'slot machine', 'ethanol', 'nicotine',
+    'hangover', 'three.js', 'WebGL',
   ],
   language: 'en',
   locale: 'en_US',

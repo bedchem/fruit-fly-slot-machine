@@ -719,6 +719,8 @@ a.pill { text-decoration: none; }
 .pill.off .pill-icon { color: var(--ink-3); }
 .pill.info::before { content: none; }
 .pill.info[aria-expanded='true'] { background: var(--surface-2); }
+/* the way back to the hub leads the dock */
+.pill.home { font-weight: 600; }
 
 /* ---------- how it works ---------- */
 
@@ -726,10 +728,10 @@ a.pill { text-decoration: none; }
   position: absolute;
   left: var(--gutter);
   /* opens above the bottom-left dock, next to the button that opened it */
-  bottom: calc(var(--gutter) + 8.8rem);
+  bottom: calc(var(--gutter) + 11.8rem);
   width: min(34rem, calc(100% - 2rem));
   /* never taller than the space between the title block and the buttons */
-  max-height: calc(100% - var(--gutter) - 8.8rem - 14rem);
+  max-height: calc(100% - var(--gutter) - 11.8rem - 14rem);
   overflow-y: auto;
   padding: 1.2rem 1.35rem 1.3rem;
   background: var(--surface);
@@ -955,4 +957,88 @@ a.pill { text-decoration: none; }
 @media (max-width: 360px) {
   .masthead { max-width: calc(100% - 1.8rem); }
   .bank { top: 3.9rem; }
+}
+
+/* ---------- the bar ---------- */
+
+/* the bar is a dark room: the title block sits on it in light ink */
+.venue-bar .masthead h1 { color: #f6ead6; }
+.venue-bar .masthead p { color: #d9c7aa; }
+.venue-bar .masthead .lede a { color: #f6ead6; }
+.venue-bar .masthead .lede mark { color: #1d140c; background: #e9a456; }
+.venue-bar .masthead .byline, .venue-bar .masthead .byline a { color: #cbb795; }
+.venue-bar .masthead .byline a:hover { color: #fff; }
+
+.barbank { min-width: 15rem; }
+.bar-clock { display: flex; align-items: baseline; gap: 0.45rem; }
+.bar-clock b {
+  font-family: var(--mono);
+  font-size: 1.6rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.bar-clock span { font-size: 0.78rem; color: var(--ink-3); }
+.bar-levels { display: flex; gap: 1.1rem; }
+.bar-level { display: grid; justify-items: end; row-gap: 0.1rem; }
+.bar-level b { font-size: 1.35rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+.bar-level b[data-level='mid'] { color: var(--accent); }
+.bar-level b[data-level='high'] { color: var(--alarm); }
+.bar-level span { font-size: 0.68rem; color: var(--ink-3); }
+.bar-level small { font-family: var(--mono); font-size: 0.66rem; color: var(--ink-2); }
+.bar-pulls { flex-wrap: wrap; justify-content: flex-end; max-width: 15rem; row-gap: 0.3rem; }
+.pull-hair i::after, .pull-craving i::after { background: var(--ink-2); }
+
+.barlog i.b { background: var(--accent); }
+.barlog i.b.s1 { height: 8px; }
+.barlog i.b.s2 { height: 11px; }
+.barlog i.b.s3 { height: 15px; }
+.barlog i.b.s4 { height: 18px; }
+.barlog i.b.s5 { height: 21px; }
+.barlog i.p { background: #fbf7ee; box-shadow: inset 0 0 0 1px var(--ink-3); }
+.barlog i.d { background: var(--ink); height: 21px; }
+.barlog i.z { background: var(--ink-3); height: 10px; }
+.barlog i.x { background: var(--alarm); height: 21px; }
+
+.barbody .memory-title { margin-bottom: -0.1rem; }
+.barbody .vital-ethanol .vital-track i { background: var(--accent); }
+.barbody .vital-nicotine .vital-track i { background: #5b7fa6; }
+.barbody .vital-hangover .vital-track i { background: var(--alarm); }
+.synapses {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+.synapses b { font-family: var(--mono); font-size: 0.66rem; font-weight: 500; color: var(--ink-2); }
+
+.barslip .slip-stake { margin: 0; }
+.barslip.pouch .stamp { color: #36597f; }
+.barslip.beer .stamp { color: var(--accent); }
+.bar-down.seizure .stamp { color: var(--alarm); }
+.bar-down.asleep .stamp, .bar-down.passed-out .stamp { color: var(--ink-2); }
+.bar-zzz { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--ink-3); }
+.bar-zzz span { display: inline-block; font-weight: 700; animation: zzz 2.4s ease-in-out infinite; }
+.bar-zzz span:nth-child(2) { animation-delay: 0.3s; font-size: 1.1em; }
+.bar-zzz span:nth-child(3) { animation-delay: 0.6s; font-size: 1.25em; }
+.bar-zzz em { font-family: var(--mono); font-style: normal; margin-left: 0.4rem; }
+@keyframes zzz {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .bar-zzz span { animation: none; } }
+
+@media (max-width: 560px) {
+  .barbank { min-width: 0; }
+  .bar-clock b { font-size: 1.25rem; }
+  .bar-level b { font-size: 1.1rem; }
+  .bar-pulls { max-width: 11rem; }
+}
+
+/* in the bar the cards land low, over the counter, clear of the title */
+.venue-bar .slip { top: auto; bottom: var(--gutter); }
+@media (max-width: 560px) {
+  .venue-bar .slip { bottom: 4.2rem; max-width: calc(100% - 1.8rem); min-width: 0; }
 }

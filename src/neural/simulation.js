@@ -11,12 +11,13 @@
  *
  * W comes from tools/build-graph.mjs: summed synapse counts per postsynaptic
  * cell, signed by the predicted transmitter. Nothing about which region lights
- * up is written down anywhere — the only thing the game injects is current into
- * the real sensory populations, and where that current spreads is whatever the
+ * up is written down anywhere — the only things the bar changes are current into
+ * the real sensory populations and, while a drug is in the body, how strongly
+ * synapses of a given transmitter land, and where that current spreads is whatever the
  * wiring does with it.
  *
  * What is NOT claimed: this is a rate model, not a spiking one, run on a
- * type-collapsed graph, and no one has recorded a fly playing a slot machine.
+ * type-collapsed graph, and no one has recorded a fly drinking at a bar.
  * The anatomy is measured; the dynamics on top of it are a model.
  */
 
@@ -74,6 +75,13 @@ export class ConnectomeSim {
     this.rate = new Float32Array(this.K).fill(this.baseline);
     this.input = new Float32Array(this.K);
     this.next = new Float32Array(this.K);
+    /**
+     * Per presynaptic type: how strongly its synapses land, relative to the
+     * measured wiring. 1 everywhere unless a drug is acting on the receptors
+     * that type's transmitter uses (pharmacology.js).
+     */
+    this.preScale = new Float32Array(this.K).fill(1);
+    this.scaled = new Float32Array(this.K);
     this.acc = 0;
   }
 
@@ -105,12 +113,13 @@ export class ConnectomeSim {
   }
 
   tick(h) {
-    const { K, offsets, indices, weights, rate, input, next } = this;
+    const { K, offsets, indices, weights, rate, input, next, preScale, scaled } = this;
     const k = h / this.tau;
+    for (let j = 0; j < K; j++) scaled[j] = rate[j] * preScale[j];
     for (let i = 0; i < K; i++) {
       let sum = 0;
       const end = offsets[i + 1];
-      for (let p = offsets[i]; p < end; p++) sum += weights[p] * rate[indices[p]];
+      for (let p = offsets[i]; p < end; p++) sum += weights[p] * scaled[indices[p]];
       const drive = sum * this.gain + input[i] + this.baseline;
       next[i] = rate[i] + (phi(drive) - rate[i]) * k;
     }

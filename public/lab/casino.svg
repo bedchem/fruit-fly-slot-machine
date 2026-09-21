@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <title>A fruit fly on a stool at a slot machine</title>
+  <defs>
+    <!-- the fly, sitting upright and facing right; origin at its seat -->
+    <g id="fly">
+      <ellipse cx="-16" cy="-52" rx="11" ry="34" transform="rotate(-18 -16 -52)" fill="#fff" fill-opacity="0.45" stroke="#c98a4c" stroke-width="1.2"/>
+      <path d="M-4 -30 L-14 0 M2 -30 L6 2" stroke="#b25d1a" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <ellipse cx="-2" cy="-22" rx="16" ry="24" fill="#d9731f"/>
+      <path d="M-16 -26 Q-2 -22 13 -28 M-17 -16 Q-2 -12 14 -18 M-15 -6 Q-2 -3 12 -8" stroke="#a9541a" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="4" cy="-56" rx="15" ry="14" fill="#e3872f"/>
+      <circle cx="17" cy="-76" r="11" fill="#e3872f"/>
+      <circle cx="22" cy="-78" r="6.5" fill="#b8321f"/>
+      <path d="M22 -86 l6 -8" stroke="#b25d1a" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="-6" cy="-60" rx="9" ry="26" transform="rotate(-22 -6 -60)" fill="#fff" fill-opacity="0.55" stroke="#c98a4c" stroke-width="1.2"/>
+    </g>
+  </defs>
+  <rect width="400" height="260" fill="#efe7d7"/>
+  <ellipse cx="200" cy="232" rx="170" ry="16" fill="#d3c6ac"/>
+  <!-- the cabinet -->
+  <g transform="translate(-128 0)">
+    <rect x="198" y="40" width="112" height="190" rx="14" fill="#5d5a58"/>
+    <rect x="206" y="30" width="96" height="22" rx="10" fill="#6f6b68"/>
+    <circle cx="254" cy="24" r="7" fill="#e84f9a"/>
+    <rect x="210" y="64" width="88" height="74" rx="8" fill="#7b3fa0"/>
+    <rect x="218" y="78" width="22" height="44" rx="4" fill="#fbf7ee"/>
+    <rect x="243" y="78" width="22" height="44" rx="4" fill="#fbf7ee"/>
+    <rect x="268" y="78" width="22" height="44" rx="4" fill="#fbf7ee"/>
+    <circle cx="229" cy="100" r="6" fill="#cf4a2f"/>
+    <text x="254" y="108" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="700" fill="#de7a22" text-anchor="middle">7</text>
+    <circle cx="279" cy="100" r="6" fill="#cf4a2f"/>
+    <rect x="214" y="150" width="80" height="10" rx="5" fill="#3f3d3b"/>
+    <rect x="214" y="170" width="80" height="44" rx="6" fill="#4b4947"/>
+    <!-- the lever, pulled down -->
+    <path d="M310 118 L336 118 L336 92" stroke="#9a9794" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="336" cy="86" r="10" fill="#de7a22"/>
+  </g>
+  <!-- the stool -->
+  <rect x="276" y="150" width="8" height="78" fill="#2b241c"/>
+  <ellipse cx="280" cy="228" rx="30" ry="6" fill="#2b241c"/>
+  <rect x="244" y="140" width="72" height="14" rx="7" fill="#2b241c"/>
+  <!-- the fly, facing the machine, one foreleg on the knob -->
+  <g transform="translate(284 142) scale(-1 1)">
+    <use href="#fly"/>
+  </g>
+  <path d="M276 90 Q240 70 214 86" stroke="#b25d1a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M278 100 Q250 112 232 128" stroke="#b25d1a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- a coin, for luck that will not come -->
+  <circle cx="342" cy="222" r="9" fill="#e9b04e"/>
+  <circle cx="342" cy="222" r="5" fill="none" stroke="#c98a2a" stroke-width="1.5"/>
+</svg>

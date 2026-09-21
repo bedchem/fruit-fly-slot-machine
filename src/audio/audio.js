@@ -370,8 +370,75 @@ export class Sound {
     this.ambient.o.frequency.setTargetAtTime(212 + a * 95, t, 0.12);
   }
 
+  // ---- the bar's voice ------------------------------------------------------
+
+  /** Head down to the straw: a soft creak of chitin. */
+  lean() { this.burst({ freq: 1400, q: 1.5, gain: 0.05, dur: 0.05 }); }
+
+  /** One sip: a wet pull through the straw, a little lower each time. */
+  sip(n = 1) {
+    this.burst({ freq: 900 - n * 60, q: 3, gain: 0.16, dur: 0.16, type: 'bandpass', decay: 2 });
+    this.tone({ at: 0.05, freq: 330 - n * 18, to: 190 - n * 10, dur: 0.14, gain: 0.07, type: 'sine' });
+  }
+
+  /** The bartender pours another: a rising column of noise. */
+  pour() {
+    if (!this.ready || this.muted) return;
+    for (let i = 0; i < 18; i++) {
+      this.burst({ at: i * 0.07, freq: 500 + i * 70, q: 2.5, gain: 0.08, dur: 0.09, type: 'bandpass' });
+    }
+    this.tone({ at: 1.3, freq: 2400, dur: 0.25, gain: 0.05, type: 'sine' });
+  }
+
+  /** The tin's lid and a pouch lifted out. */
+  tin() {
+    this.burst({ freq: 3200, q: 8, gain: 0.12, dur: 0.03 });
+    this.tone({ freq: 1800, dur: 0.08, gain: 0.04, type: 'triangle' });
+  }
+
+  /** Tucked in: a soft pat, and a small bright tingle for the strong ones. */
+  tuck(mg = 6) {
+    this.burst({ freq: 600, q: 1, gain: 0.08, dur: 0.06 });
+    const n = Math.round(mg / 4);
+    for (let i = 0; i < n; i++) this.tone({ at: 0.1 + i * 0.05, freq: 2400 + i * 300, dur: 0.06, gain: 0.02, type: 'sine' });
+  }
+
+  /** Falling over: a long slide down. */
+  passout() {
+    this.tone({ freq: 330, to: 70, dur: 1.8, gain: 0.1, type: 'triangle', attack: 0.05 });
+    this.burst({ at: 1.2, freq: 180, q: 1, gain: 0.18, dur: 0.2 });
+    this.snore();
+  }
+
+  /** Snoring on the stool, until stopSnore(). */
+  snore() {
+    if (!this.ready || this.muted || this.snoring) return;
+    const beat = () => {
+      this.tone({ freq: 70, to: 95, dur: 1.1, gain: 0.05, type: 'sawtooth', attack: 0.4 });
+      this.burst({ at: 1.3, freq: 700, q: 0.8, gain: 0.03, dur: 0.5, decay: 4 });
+    };
+    beat();
+    this.snoring = setInterval(beat, 3200);
+  }
+
+  stopSnore() {
+    if (this.snoring) clearInterval(this.snoring);
+    this.snoring = null;
+  }
+
+  /** Nicotine poisoning: every channel at once, then nothing. */
+  seizure() {
+    if (!this.ready || this.muted) return;
+    for (let i = 0; i < 26; i++) {
+      this.burst({ at: i * 0.1, freq: 800 + Math.random() * 3000, q: 6, gain: 0.1, dur: 0.05 });
+      this.tone({ at: i * 0.1, freq: 200 + Math.random() * 600, dur: 0.08, gain: 0.03, type: 'square' });
+    }
+    this.tone({ at: 2.6, freq: 180, to: 40, dur: 2.2, gain: 0.1, type: 'sine' });
+  }
+
   setMuted(m) {
     this.muted = m;
+    if (m) this.stopSnore();
     if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.85, this.now(), 0.05);
   }
 }

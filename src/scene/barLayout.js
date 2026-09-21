@@ -1,0 +1,75 @@
+/**
+ * Where everything in the bar sits. The fly and its stool are exactly where
+ * the casino puts them (layout.js) — the fly's seated pose was solved against
+ * that stool — and the counter is built where the slot pillar stood.
+ *
+ * World frame, one unit a metre: Y up, the floor on Y = 0. The counter runs
+ * along Z; the fly sits on its +X side and faces -X, over the counter.
+ */
+import { flyToWorld } from './layout.js';
+
+/**
+ * The mouthparts, in the fly's own model space: the underside of the front of
+ * the head, where the proboscis folds away. Measured off the scan: the
+ * lowest, frontmost part of the head.
+ */
+export const MOUTH_LOCAL = [0.02, 0.585, 0.66];
+export const MOUTH = flyToWorld(MOUTH_LOCAL);
+
+/** The bar counter: a slab whose near edge the fly sits at. */
+export const COUNTER = {
+  top: 1.30,
+  thickness: 0.06,
+  front: 0.86,      // X of the near edge, the fly's side
+  back: 0.26,
+  zMin: -2.6,
+  zMax: 2.2,
+};
+
+/**
+ * The glass, on the counter right in front of the fly, with a straw bent
+ * over to its mouth: flies drink through the proboscis, not from a rim.
+ */
+export const GLASS = {
+  base: [0.66, COUNTER.top, -0.07],
+  height: 0.16,
+  radiusTop: 0.043,
+  radiusBottom: 0.034,
+};
+
+/** The pouch tin, on the counter under the right foreleg. */
+export const TIN = {
+  center: [0.77, COUNTER.top, -0.30],
+  radius: 0.036,
+  height: 0.021,
+};
+
+/** Where the tarsus closes on a pouch: the top of the open tin. */
+export const TIN_GRIP = [TIN.center[0] + 0.012, TIN.center[1] + TIN.height + 0.006, TIN.center[2] + 0.004];
+
+/**
+ * Where a pouch gets tucked: just under the mouthparts, a touch to the right —
+ * the fly's version of under the lip.
+ */
+export const TUCK = flyToWorld([MOUTH_LOCAL[0] - 0.05, MOUTH_LOCAL[1] - 0.04, MOUTH_LOCAL[2] - 0.02]);
+
+/**
+ * The end of the straw: a little in front of and below the mouthparts, so the
+ * proboscis has somewhere to reach. The straw is bent to arrive here.
+ */
+export const STRAW_TIP = (() => {
+  const m = flyToWorld(MOUTH_LOCAL);
+  return [m[0] - 0.075, m[1] - 0.085, m[2] + 0.01];
+})();
+
+/**
+ * The shot: down the length of the counter from the fly's right, so the
+ * face, the proboscis on the straw, the glass and the tin are all in view,
+ * with the stool under it and the back bar alongside.
+ */
+export const BAR_CAMERA = {
+  position: [0.02, 2.3, -3.15],
+  target: [0.78, 1.52, -0.1],
+  fov: 36,
+};
+

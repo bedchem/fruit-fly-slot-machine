@@ -9,28 +9,48 @@ export const PAGES = [
   {
     file: 'index.html',
     path: '/',
-    title: 'Fruit Fly Slot Machine: a real fly brain that gambles',
+    title: 'Fly Lab: experiments with a real fruit fly brain',
     description:
-      'A real fruit fly CT scan plays a slot machine while 60,000 neurons from the MaleCNS '
-      + 'connectome light up. It picks its own stakes, learns the machine is bad, and plays on.',
+      'One CT-scanned fruit fly, 60,000 real neurons from the MaleCNS connectome, and a different place '
+      + 'to put it each time: a slot machine, a bar. Nobody controls it — you watch what the wiring does.',
     changefreq: 'monthly',
     priority: '1.0',
   },
   {
+    file: 'casino/index.html',
+    path: '/casino/',
+    title: 'Fruit Fly Slot Machine: a real fly brain that gambles | Fly Lab',
+    description:
+      'A real fruit fly CT scan plays a slot machine while 60,000 neurons from the MaleCNS '
+      + 'connectome light up. It picks its own stakes, learns the machine is bad, and plays on.',
+    changefreq: 'monthly',
+    priority: '0.9',
+  },
+  {
+    file: 'bar/index.html',
+    path: '/bar/',
+    title: 'Fruit Fly at the Bar: a real fly brain on beer and nicotine | Fly Lab',
+    description:
+      'A real fruit fly CT scan drinks beer through a straw and takes nicotine pouches while both drugs act '
+      + 'on the MaleCNS connectome. It decides how much, when to stop, and wakes up with the hangover.',
+    changefreq: 'monthly',
+    priority: '0.9',
+  },
+  {
     file: 'about.html',
     path: '/about.html',
-    title: 'How it works: a fruit fly connectome simulation | Fruit Fly Slot Machine',
+    title: 'How it works: a fruit fly connectome simulation | Fly Lab',
     description:
-      'How the Fruit Fly Slot Machine works: the MaleCNS connectome, a rate model over '
-      + '151.9 million measured synapses, mushroom-body learning from dopamine, and what is real.',
+      'How the Fly Lab experiments work: the MaleCNS connectome, a rate model over 151.9 million measured '
+      + 'synapses, mushroom-body learning from dopamine, drugs acting on transmitters, and what is real.',
     changefreq: 'monthly',
     priority: '0.8',
   },
   {
     file: 'legal.html',
     path: '/legal.html',
-    title: 'Legal notice and privacy | Fruit Fly Slot Machine',
-    description: 'Legal notice, privacy policy and licences for the Fruit Fly Slot Machine.',
+    title: 'Legal notice and privacy | Fly Lab',
+    description: 'Legal notice, privacy policy and licences for Fly Lab.',
     changefreq: 'yearly',
     priority: '0.2',
     noindex: false,

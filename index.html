@@ -4,39 +4,63 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!--site:head-->
-    <style>
-      /* the loading screen: what shows before the app starts, and all that a
-         crawler which does not run JavaScript ever sees */
-      html, body { margin: 0; background: #e1d6c1; }
-      .prerender {
-        min-height: 100vh; box-sizing: border-box; display: grid; place-content: center;
-        gap: 0.6rem; padding: 2rem; max-width: 40rem; margin: 0 auto;
-        font: 15px/1.55 system-ui, -apple-system, 'Segoe UI', sans-serif; color: #2b241c;
-      }
-      .prerender h1 { margin: 0; font-size: 1.9rem; letter-spacing: -0.02em; }
-      .prerender p { margin: 0; color: #6c604f; }
-      .prerender .loading { color: #978a75; font-size: 0.85rem; }
-      .prerender a { color: #2b241c; }
-    </style>
+    <link rel="stylesheet" href="/src/hub/hub.css" />
   </head>
   <body>
-    <div id="root">
-      <main class="prerender">
-        <h1>Fruit Fly Slot Machine</h1>
-        <p>
-          A real fruit fly CT scan sits on a bar stool and plays a one-armed bandit by itself, while
-          60,000 real neurons from the MaleCNS connectome light up beside it. It picks its own stakes,
-          learns in its mushroom body that the machine is bad for it, and keeps playing anyway.
-        </p>
-        <p class="loading">Loading the fly and its brain…</p>
-        <p><a href="/about.html">How it works</a> · <a href="/legal.html">Legal &amp; privacy</a></p>
-      </main>
-    </div>
-    <noscript>
-      <p style="text-align:center;font-family:system-ui,sans-serif;color:#2b241c">
-        This piece needs JavaScript and WebGL. You can still read <a href="/about.html">how it works</a>.
+    <header class="lab-head">
+      <a class="lab-mark" href="/" aria-label="Fly Lab">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <ellipse cx="17" cy="22" rx="9" ry="15" transform="rotate(-35 17 22)" fill="#fff" fill-opacity="0.6" stroke="#c98a4c" stroke-width="1.4" />
+          <ellipse cx="31" cy="22" rx="9" ry="15" transform="rotate(35 31 22)" fill="#fff" fill-opacity="0.6" stroke="#c98a4c" stroke-width="1.4" />
+          <ellipse cx="24" cy="30" rx="7" ry="12" fill="#d9731f" />
+          <path d="M18 29h12M18 34h12" stroke="#a9541a" stroke-width="2.2" stroke-linecap="round" />
+          <circle cx="24" cy="15" r="6.5" fill="#e3872f" />
+          <circle cx="20.5" cy="13.5" r="3" fill="#b8321f" />
+          <circle cx="27.5" cy="13.5" r="3" fill="#b8321f" />
+        </svg>
+        Fly Lab
+      </a>
+      <p class="lab-lede">
+        Experiments with <mark>a real fruit fly brain</mark>. One micro-CT scanned fly, 60,000 neurons from the
+        <a href="https://male-cns.janelia.org/" target="_blank" rel="noopener">MaleCNS connectome</a>, and a
+        different place to put it each time. <mark>Nobody controls it</mark> — you watch what the wiring does.
       </p>
-    </noscript>
-    <script type="module" src="/src/main.jsx"></script>
+    </header>
+
+    <main class="lab-grid" aria-label="Experiments">
+      <a class="lab-card" href="/casino/">
+        <span class="lab-thumb"><img src="/lab/casino.svg" alt="" width="400" height="260" /></span>
+        <span class="lab-title">Fruit Fly Slot Machine</span>
+        <span class="lab-blurb">It picks its own stakes, learns the machine is bad for it, and keeps playing.</span>
+        <span class="lab-tags"><i>gambling</i><i>dopamine</i><i>learning</i></span>
+      </a>
+
+      <a class="lab-card" href="/bar/">
+        <span class="lab-thumb dark"><img src="/lab/bar.svg" alt="" width="400" height="260" /></span>
+        <span class="lab-title">Fruit Fly at the Bar</span>
+        <span class="lab-blurb">Beer through a straw, nicotine pouches from the tin. It decides how much — and wakes up with the hangover.</span>
+        <span class="lab-tags"><i>ethanol</i><i>nicotine</i><i>new</i></span>
+      </a>
+
+      <div class="lab-card soon" aria-label="More experiments coming">
+        <span class="lab-thumb empty" aria-hidden="true"><b>?</b></span>
+        <span class="lab-title">Next experiment</span>
+        <span class="lab-blurb">The fly is being moved somewhere else. Soon.</span>
+      </div>
+    </main>
+
+    <footer class="lab-foot">
+      <nav aria-label="Site">
+        <a href="/about.html">How it works</a>
+        <a href="/legal.html">Legal &amp; privacy</a>
+        <a href="%SITE.repository%" target="_blank" rel="noopener">Open source on GitHub</a>
+      </nav>
+      <p>
+        by <a href="https://github.com/ryhox" target="_blank" rel="noopener">ryhox</a> and
+        <a href="https://github.com/plattnericus" target="_blank" rel="noopener">Nexor</a>.
+        Connectome: MaleCNS v1.0, FlyEM / HHMI Janelia, Univ. of Cambridge, MRC LMB and Google Research (CC BY 4.0).
+        Fly: CT scan by etainproject (CC BY 4.0).
+      </p>
+    </footer>
   </body>
 </html>

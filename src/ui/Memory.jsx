@@ -12,13 +12,14 @@
 import { useEffect, useRef } from 'react';
 import { Thinker } from './thoughts.js';
 
-export function MemoryPanel({ store, ready, machineRef }) {
+/** `ThinkerClass` picks the inner monologue: the casino's or the bar's. */
+export function MemoryPanel({ store, ready, machineRef, ThinkerClass = Thinker }) {
   const markRef = useRef(null);
   const verdictRef = useRef(null);
   const learnedRef = useRef(null);
   const barsRef = useRef([]);
   const thinkerRef = useRef(null);
-  if (!thinkerRef.current) thinkerRef.current = new Thinker();
+  if (!thinkerRef.current) thinkerRef.current = new ThinkerClass();
   const mbons = ready ? store.current.brain?.memory.mbons ?? [] : [];
   const approach = mbons.filter((mb) => mb.valence > 0);
   const avoid = mbons.filter((mb) => mb.valence <= 0);
