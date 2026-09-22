@@ -2,7 +2,7 @@
  * Two flies doomscrolling, headless: the real feed, the real messages, two
  * real brains, stepped at 60 fps on a simulated clock.
  *
- *   node tools/sim-scroll.mjs [minutes=6] [seed=1] [--quiet]
+ *   node tools/sim-scroll.mjs [minutes=6] [seed=1] [--quiet] [--fan]
  *
  * One line per event — reels sent and answered, flinches, dead phones, sleep —
  * and a summary per night: screen time, how far each feed drifted towards
@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Duo, REELS } from '../src/game/scroll.js';
+import { EDITS } from '../src/game/tiktokEdits.js';
 import { parseGraph } from '../src/neural/simulation.js';
 import { DuoBrain } from '../src/neural/scrollBrain.js';
 import meta from '../src/neural/cnsGraph.js';
@@ -54,6 +55,7 @@ const duo = new Duo({
   },
 });
 brain.attach(duo);
+if (args.includes('--fan')) duo.setFan(EDITS, true);
 
 const dt = 1 / 60;
 const frames = Math.round(minutes * 60 / dt);

@@ -5,12 +5,13 @@
  * Nothing here contacts TikTok until the visitor clicks "Allow TikTok
  * videos". Before that there is no iframe, no script, no preconnect — only
  * this notice. After it, each edit plays in TikTok's own embed player
- * (tiktokEdits.js), muted and looping, with the creator credited and linked
+ * (tiktokEdits.js), with the creator credited and linked
  * underneath. Withdrawing removes every player at once.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { currentConsent, setConsent, onConsentChange, consentDate } from '../consent/consent.js';
 import { playerUrl, EDIT_SUBJECT } from '../game/tiktokEdits.js';
+import { PHASES } from '../game/scroll.js';
 
 export const TIKTOK = 'tiktok';
 const TIKTOK_ORIGIN = 'https://www.tiktok.com';
@@ -92,6 +93,8 @@ export function TikTokPlayer({ duo, reel, audible = false }) {
   }, [audible, command]);
 
   useEffect(() => {
+    ready.current = false;
+    let autoplayRetried = false;
     const onMessage = (e) => {
       if (e.origin !== TIKTOK_ORIGIN || e.source !== frame.current?.contentWindow) return;
       const msg = typeof e.data === 'string' ? safeParse(e.data) : e.data;
@@ -102,14 +105,20 @@ export function TikTokPlayer({ duo, reel, audible = false }) {
         command('play');
       }
       if (msg.type === 'onCurrentTime' && msg.value) duo.setEditDuration(reel.id, msg.value.duration);
+      if (msg.type === 'onStateChange' && msg.value === 0) duo.finishEdit(reel.id);
       if (msg.type === 'onPlayerError') {
         // 1001: no such post, or its creator does not allow embedding — never
         // again. 2001/3001: TikTok could not serve or play it this time — skip
-        // it now. 3002: the browser blocked autoplay — not a fault of the
-        // post; the player shows its play button and the fly watches on.
+        // it now. 3002: retry muted once, since some browsers only allow
+        // silent autoplay. It is not a fault of the post.
         const code = msg.value?.errorCode;
         if (code === 1001) duo.markBroken(reel.edit.id);
         else if (code === 2001 || code === 3001) duo.skipReel(reel.id);
+        else if (code === 3002 && !autoplayRetried) {
+          autoplayRetried = true;
+          command('mute');
+          command('play');
+        }
       }
     };
     window.addEventListener('message', onMessage);
@@ -125,6 +134,29 @@ export function TikTokPlayer({ duo, reel, audible = false }) {
       allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
       referrerPolicy="strict-origin-when-cross-origin"
     />
+  );
+}
+
+/** The actual video moves with the fly's swipe, in both phone views. */
+export function TikTokFeedPlayer({ duo, index, reel, audible = false }) {
+  const track = useRef(null);
+  useEffect(() => {
+    let raf;
+    const animate = () => {
+      const fly = duo.flies[index];
+      const swipe = fly.reel.id === reel.id && fly.phase === PHASES.SWIPING ? fly.swipe : 0;
+      track.current?.style.setProperty('--swipe', String(swipe));
+      raf = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => cancelAnimationFrame(raf);
+  }, [duo, index, reel.id]);
+  return (
+    <div className="tiktok-feed" ref={track}>
+      <div className="tiktok-feed-item" key={reel.id}>
+        <TikTokPlayer duo={duo} reel={reel} audible={audible} />
+      </div>
+    </div>
   );
 }
 

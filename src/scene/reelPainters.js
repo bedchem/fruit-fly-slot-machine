@@ -238,13 +238,17 @@ const PAINT = {
    * edit's card: who made it and what it is, over a soft pink glow.
    */
   fan(ctx, t, W, H, r) {
+    // A distinct card for each post, so the 3D phones visibly change with the
+    // real videos in the panel. The same shared post keeps the same colours.
+    const variant = Number(r.edit?.id?.slice(-5) ?? 0);
+    const hue = 310 + variant % 55;
     const g = ctx.createLinearGradient(0, 0, W, H);
-    g.addColorStop(0, '#3a1830'); g.addColorStop(1, '#f19cc3');
+    g.addColorStop(0, `hsl(${hue}, 45%, 16%)`); g.addColorStop(1, `hsl(${hue}, 70%, 72%)`);
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = 'rgba(255,255,255,0.12)';
     for (let i = 0; i < 6; i++) {
       const rr = ((t * 40 + i * 50) % 300);
-      ctx.beginPath(); ctx.arc(W / 2, H * 0.42, rr, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(W * (0.3 + (variant % 5) * 0.1), H * 0.42, rr, 0, Math.PI * 2); ctx.fill();
     }
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';

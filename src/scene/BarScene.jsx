@@ -11,14 +11,15 @@ import { Suspense, forwardRef, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree, advance } from '@react-three/fiber';
 import { ContactShadows, AdaptiveDpr, PerspectiveCamera } from '@react-three/drei';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as THREE from 'three';
 import { Fly } from './Fly.jsx';
 import { STOOL, flyToWorld } from './layout.js';
 import { HAND } from './flyRig.js';
 import {
-  BAR_CAMERA, COUNTER, GLASS, TIN, STRAW_TIP, MOUTH_LOCAL, MOUTH,
+  BAR_CAMERA, COUNTER, GLASS, TIN, TIN_GRIP, STRAW_TIP, MOUTH_LOCAL, MOUTH, LIP_OFFSET,
 } from './barLayout.js';
-import { PHASES } from '../game/bar.js';
+import { PHASES, POUCH_WEAR_MIN } from '../game/bar.js';
 import { sound } from '../audio/audio.js';
 
 // render a frame by hand from the console while developing: a hidden tab gets
@@ -33,35 +34,47 @@ const MAX_EMPTIES = 9;
 const MAX_SPENT = 12;
 
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
+/** Where it looks while a pouch goes in: up and out over the counter, not at its own chin. */
+const LOOK_AHEAD = [GLASS.base[0] - 0.3, GLASS.base[1] + 0.42, GLASS.base[2] - 0.05];
 
 // ------------------------------------------------------------------ the rig
 
-function Rig({ bar, gripTargetRef, dopamineRef, lookRef, onTick }) {
+function Rig({ bar, gripTargetRef, dopamineRef, lookRef, mouthRef, onTick }) {
   const { camera, scene } = useThree();
   const base = useMemo(() => new THREE.Vector3(...BAR_CAMERA.position), []);
   const look = useMemo(() => new THREE.Vector3(...BAR_CAMERA.target), []);
+  const gaze = useMemo(() => ({ want: new THREE.Vector3(), at: new THREE.Vector3(), out: [0, 0, 0], ready: false }), []);
   const uiClock = useRef(0);
 
   useFrame((state, dt) => {
+    // last frame's mouth, after the head turned: where a pouch goes in
+    if (mouthRef.current) bar.setMouth(mouthRef.current);
     bar.update(dt);
     gripTargetRef.current = bar.grip > 0.001 ? bar.handTarget : REST_HAND_WORLD;
     dopamineRef.current = bar.dopamine;
 
     // where the head goes: the straw while drinking, the pouch while carrying
-    // it, otherwise a slow wander between the glass and the room
+    // it — but up and away once it is at the mouth, or the head would chase
+    // its own chin — otherwise a slow wander between the glass and the room.
+    // The head turns towards it rather than snapping.
     const t = state.clock.elapsedTime;
-    if (bar.lean > 0.05 && bar.phase === PHASES.SIPPING) lookRef.current = STRAW_TIP;
-    else if (bar.grip > 0.3) lookRef.current = bar.handTarget;
+    const s = bar.phase === PHASES.POUCH ? bar.pouchStage : null;
+    const atMouth = s === 'tuck' || s === 'release' || (s === 'lift' && bar.stageK > 0.45);
+    if (bar.lean > 0.05 && bar.phase === PHASES.SIPPING) gaze.want.set(...STRAW_TIP);
+    else if (atMouth) gaze.want.set(...LOOK_AHEAD);
+    else if (bar.grip > 0.3) gaze.want.set(...bar.handTarget);
     else {
       const w = Math.sin(t * 0.13) * 0.5 + 0.5;
-      lookRef.current = [
-        GLASS.base[0] - 0.6 * w, GLASS.base[1] + 0.12 + 0.35 * w, GLASS.base[2] + (Math.sin(t * 0.21) * 0.6),
-      ];
+      gaze.want.set(GLASS.base[0] - 0.6 * w, GLASS.base[1] + 0.12 + 0.35 * w, GLASS.base[2] + (Math.sin(t * 0.21) * 0.6));
     }
+    if (!gaze.ready) { gaze.at.copy(gaze.want); gaze.ready = true; }
+    gaze.at.lerp(gaze.want, 1 - Math.exp(-dt * 8));
+    gaze.out[0] = gaze.at.x; gaze.out[1] = gaze.at.y; gaze.out[2] = gaze.at.z;
+    lookRef.current = gaze.out;
 
     sound.setArousal(bar.arousal, bar.collapse);
 
-    // the camera drinks too: past a few mM the room starts to float
+    // the camera drinks too: past about half a per mille the room starts to float
     const drunk = bar.sway;
     const shake = bar.shake;
     camera.position.set(
@@ -415,33 +428,169 @@ function Empties({ bar }) {
 // ------------------------------------------------------------ the pouches
 
 const POUCH_SIZE = [0.03, 0.007, 0.016];
+/** One soft pillow, shared by every pouch in the bar: rounded, not a brick. */
+const POUCH_GEO = new RoundedBoxGeometry(...POUCH_SIZE, 3, 0.0032);
+const FRESH = new THREE.Color('#f3efe6');
+const USED = new THREE.Color('#a88a5c');
+/** Pouches in a tin; after the last one there is a new tin. */
+const TIN_COUNT = 7;
+/** Where the pouch sits on the tarsus, and how it is held there. */
+const HOLD = [0, -0.003, 0];
+const CARRY_Q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.35, 0.9, 0.25));
+/** A second pouch in sits just behind the first. */
+const STACK = [0.002, -0.008, -0.006];
+const SPIT_S = 0.75;
+const SPIT_POOL = 3;
+const SPARKS = 16;
 
-const PouchMesh = forwardRef(function PouchMesh({ color = '#f4f1ea', ...props }, ref) {
+/**
+ * The fresh pouches, fanned out in the open tin — ordered so the one nearest
+ * the tarsus goes first. Positions are world space, rotations quaternions.
+ */
+const TIN_SLOTS = (() => {
+  const [cx, cy, cz] = TIN.center;
+  const slots = Array.from({ length: TIN_COUNT }, (_, i) => {
+    const a = (i / TIN_COUNT) * Math.PI * 2;
+    return {
+      pos: [cx + Math.cos(a) * 0.017, cy + TIN.height + 0.004, cz + Math.sin(a) * 0.017],
+      rot: [0.25, -a, 0],
+    };
+  });
+  const d = (s) => Math.hypot(s.pos[0] - TIN_GRIP[0], s.pos[2] - TIN_GRIP[2]);
+  return slots.sort((a, b) => d(a) - d(b)).map((s) => ({
+    ...s, q: new THREE.Quaternion().setFromEuler(new THREE.Euler(...s.rot)),
+  }));
+})();
+
+/** The spent pile on the napkin. */
+const spentSlot = (i) => {
+  const [x, y, z] = TIN.center;
+  return [x - 0.075 + (i % 4) * 0.022, y + 0.006 + Math.floor(i / 8) * 0.006, z - 0.16 + Math.floor(i / 4) * 0.025];
+};
+
+const PouchMesh = forwardRef(function PouchMesh({ used = false, ...props }, ref) {
   return (
-    <mesh ref={ref} castShadow {...props}>
-      <boxGeometry args={POUCH_SIZE} />
-      <meshStandardMaterial color={color} roughness={0.95} />
+    <mesh ref={ref} geometry={POUCH_GEO} castShadow {...props}>
+      <meshStandardMaterial color={used ? USED : FRESH} roughness={used ? 0.55 : 0.95} />
     </mesh>
   );
 });
 
-function Tin({ bar }) {
+/** Under the lip, where the mouth is this frame. */
+const lipPoint = (mouth, out) => out.set(
+  mouth[0] + LIP_OFFSET[0] + HOLD[0], mouth[1] + LIP_OFFSET[1] + HOLD[1], mouth[2] + LIP_OFFSET[2] + HOLD[2],
+);
+
+/**
+ * The tin, and every pouch's life: fanned out in the tin, lifted out onto the
+ * tarsus, carried up, tucked in under the lip (where it follows the head and
+ * slowly turns brown), and spat onto the napkin when it is spent.
+ */
+function Tin({ bar, mouthRef }) {
   const [x, y, z] = TIN.center;
-  const spent = useRef([]);
+  const lid = useRef();
+  const fresh = useRef([]);
   const inHand = useRef();
-  const tucked = useRef();
+  const tucked = useRef([]);
+  const spent = useRef([]);
+  const flyingRefs = useRef([]);
+  const flights = useRef([]);
+  const spentSeen = useRef(null);
+  const landed = useRef({});
+  const scratch = useMemo(() => ({ a: new THREE.Vector3(), b: new THREE.Vector3() }), []);
+
   useFrame((state) => {
-    if (inHand.current) {
-      inHand.current.visible = bar.pouchInHand;
+    const now = state.clock.elapsedTime;
+    const mouth = mouthRef.current ?? MOUTH;
+    const { a, b } = scratch;
+
+    if (lid.current) lid.current.rotation.z = 1.9 * bar.tinLid;
+
+    // the tin empties one pouch at a time
+    const taken = (bar.pouchCount % TIN_COUNT) + (bar.pouchInHand ? 1 : 0);
+    fresh.current.forEach((m, i) => { if (m) m.visible = i >= taken; });
+
+    // on the tarsus: lifted from its slot during the pinch, then carried flat
+    const hand = inHand.current;
+    if (hand) {
+      hand.visible = bar.pouchInHand;
       if (bar.pouchInHand) {
-        inHand.current.position.set(...bar.handTarget);
-        inHand.current.rotation.set(0.3, state.clock.elapsedTime * 0.2, 0.2);
+        const slot = TIN_SLOTS[bar.pouchCount % TIN_COUNT];
+        const h = bar.handTarget;
+        b.set(h[0] + HOLD[0], h[1] + HOLD[1], h[2] + HOLD[2]);
+        if (bar.pouchStage === 'pinch') {
+          const k = bar.stageK * bar.stageK * (3 - 2 * bar.stageK);
+          a.set(...slot.pos);
+          hand.position.lerpVectors(a, b, k);
+          hand.quaternion.slerpQuaternions(slot.q, CARRY_Q, k);
+        } else {
+          hand.position.copy(b);
+          hand.quaternion.copy(CARRY_Q);
+        }
       }
     }
-    const n = Math.min(MAX_SPENT, bar.pouchCount - bar.pouches.length);
-    spent.current.forEach((m, i) => { if (m) m.visible = i < n; });
-    if (tucked.current) tucked.current.visible = bar.pouches.length > 0 && !bar.down;
+
+    // in: the newest right under the lip, an older one just behind it
+    const n = bar.pouches.length;
+    tucked.current.forEach((m, i) => {
+      if (!m) return;
+      const p = bar.pouches[i];
+      m.visible = !!p;
+      if (!p) return;
+      const back = n - 1 - i;
+      lipPoint(mouth, m.position);
+      m.position.x += STACK[0] * back;
+      m.position.y += STACK[1] * back;
+      m.position.z += STACK[2] * back;
+      m.quaternion.copy(CARRY_Q);
+      // it soaks through as it gives up its nicotine
+      m.material.color.lerpColors(FRESH, USED, clamp01(p.age / POUCH_WEAR_MIN));
+    });
+
+    // spent: each new one is spat out and tumbles onto the napkin
+    const total = bar.pouchCount - bar.pouches.length;
+    if (spentSeen.current === null || total < spentSeen.current) {
+      spentSeen.current = total;
+      flights.current = [];
+      landed.current = {};
+    }
+    while (spentSeen.current < total) {
+      const idx = spentSeen.current++;
+      lipPoint(mouth, a);
+      flights.current.push({ slot: idx % MAX_SPENT, from: a.toArray(), t0: now + flights.current.length * 0.18 });
+    }
+    flights.current = flights.current.filter((f) => {
+      if (now - f.t0 < SPIT_S) return true;
+      landed.current[f.slot] = now;
+      return false;
+    });
+    flyingRefs.current.forEach((m, i) => {
+      if (!m) return;
+      const f = flights.current[i];
+      const k = f ? (now - f.t0) / SPIT_S : -1;
+      m.visible = k >= 0 && k < 1;
+      if (!m.visible) return;
+      const to = spentSlot(f.slot);
+      // out and a little up, then gravity
+      const up = 0.09;
+      m.position.set(
+        f.from[0] + (to[0] - f.from[0]) * k,
+        f.from[1] + up * k - (up + f.from[1] - to[1]) * k * k,
+        f.from[2] + (to[2] - f.from[2]) * k,
+      );
+      const spin = (1 - k) * 7;
+      m.rotation.set(spin, f.slot * 0.9 + spin * 0.6, spin * 0.4);
+    });
+    const onPile = Math.min(MAX_SPENT, total - flights.current.length);
+    spent.current.forEach((m, i) => {
+      if (!m) return;
+      m.visible = i < onPile;
+      const since = now - (landed.current[i] ?? -9);
+      const hop = since < 0.3 ? 0.007 * Math.abs(Math.sin(since * Math.PI / 0.15)) * (1 - since / 0.3) : 0;
+      m.position.y = spentSlot(i)[1] + hop;
+    });
   });
+
   return (
     <group>
       <group position={[x, y, z]}>
@@ -454,22 +603,21 @@ function Tin({ bar }) {
           <cylinderGeometry args={[TIN.radius * 0.93, TIN.radius * 0.93, 0.001, 40]} />
           <meshStandardMaterial color="#e8e3d6" roughness={0.9} />
         </mesh>
-        {/* the lid, flipped open behind it */}
-        <group position={[-TIN.radius, TIN.height, 0]} rotation={[0, 0, 1.9]}>
+        {/* the lid, on its hinge at the back: the foreleg flips it, a spring shuts it */}
+        <group ref={lid} position={[-TIN.radius, TIN.height, 0]}>
           <mesh position={[TIN.radius, 0.006, 0]} castShadow>
             <cylinderGeometry args={[TIN.radius * 1.02, TIN.radius * 1.02, 0.012, 40]} />
             <meshStandardMaterial color="#e2e8ef" roughness={0.3} metalness={0.5} />
           </mesh>
+          <mesh position={[TIN.radius, 0.0122, 0]}>
+            <cylinderGeometry args={[TIN.radius * 0.72, TIN.radius * 0.72, 0.0006, 40]} />
+            <meshStandardMaterial color="#1d3c63" roughness={0.4} metalness={0.3} />
+          </mesh>
         </group>
-        {/* fresh pouches, in a ring */}
-        {Array.from({ length: 7 }, (_, i) => {
-          const a = (i / 7) * Math.PI * 2;
-          return (
-            <PouchMesh key={i} position={[Math.cos(a) * 0.017, TIN.height + 0.004, Math.sin(a) * 0.017]}
-              rotation={[0.25, -a, 0]} />
-          );
-        })}
       </group>
+      {TIN_SLOTS.map((s, i) => (
+        <PouchMesh key={i} ref={(el) => { fresh.current[i] = el; }} position={s.pos} quaternion={s.q} />
+      ))}
       {/* spent ones, on a napkin */}
       <mesh position={[x - 0.04, y + 0.001, z - 0.13]} receiveShadow>
         <boxGeometry args={[0.12, 0.002, 0.12]} />
@@ -478,17 +626,73 @@ function Tin({ bar }) {
       {Array.from({ length: MAX_SPENT }, (_, i) => (
         <PouchMesh
           key={i}
+          used
           ref={(el) => { spent.current[i] = el; }}
-          color="#bba27a"
           visible={false}
-          position={[x - 0.075 + (i % 4) * 0.022, y + 0.006 + Math.floor(i / 8) * 0.006, z - 0.16 + Math.floor(i / 4) * 0.025]}
+          position={spentSlot(i)}
           rotation={[0, i * 0.9, 0]}
         />
       ))}
+      {Array.from({ length: SPIT_POOL }, (_, i) => (
+        <PouchMesh key={i} used ref={(el) => { flyingRefs.current[i] = el; }} visible={false} />
+      ))}
       <PouchMesh ref={inHand} visible={false} />
-      {/* the one under its "lip" rides where the pouch was tucked */}
-      <PouchMesh ref={tucked} visible={false} position={MOUTH} />
+      {[0, 1].map((i) => <PouchMesh key={i} ref={(el) => { tucked.current[i] = el; }} visible={false} />)}
     </group>
+  );
+}
+
+/**
+ * The hit: a few bright specks drifting up from the lip as a pouch goes in,
+ * more for the strong ones. Nicotine is felt at once, and this is that.
+ */
+function Tingle({ bar, mouthRef }) {
+  const mesh = useRef();
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const origin = useMemo(() => new THREE.Vector3(), []);
+  const sparks = useRef([]);
+  const seen = useRef(null);
+  useFrame((state) => {
+    const now = state.clock.elapsedTime;
+    if (seen.current === null || bar.pouchCount < seen.current) {
+      seen.current = bar.pouchCount;
+      sparks.current = [];
+    }
+    if (bar.pouchCount > seen.current) {
+      seen.current = bar.pouchCount;
+      lipPoint(mouthRef.current ?? MOUTH, origin);
+      const count = Math.round(SPARKS * bar.tingle);
+      sparks.current = Array.from({ length: count }, (_, i) => {
+        const a = (i / count) * Math.PI * 2 + Math.random();
+        return {
+          t0: now + Math.random() * 0.25,
+          from: origin.toArray(),
+          v: [Math.cos(a) * 0.05, 0.06 + Math.random() * 0.06, Math.sin(a) * 0.05],
+          life: 0.7 + Math.random() * 0.5,
+        };
+      });
+    }
+    if (!mesh.current) return;
+    for (let i = 0; i < SPARKS; i++) {
+      const s = sparks.current[i];
+      const age = s ? now - s.t0 : -1;
+      if (!s || age < 0 || age > s.life) {
+        dummy.scale.setScalar(0);
+      } else {
+        const k = age / s.life;
+        dummy.position.set(s.from[0] + s.v[0] * age, s.from[1] + s.v[1] * age, s.from[2] + s.v[2] * age);
+        dummy.scale.setScalar(Math.sin(k * Math.PI) * (0.7 + 0.3 * Math.sin(age * 40 + i)));
+      }
+      dummy.updateMatrix();
+      mesh.current.setMatrixAt(i, dummy.matrix);
+    }
+    mesh.current.instanceMatrix.needsUpdate = true;
+  });
+  return (
+    <instancedMesh ref={mesh} args={[null, null, SPARKS]} frustumCulled={false}>
+      <octahedronGeometry args={[0.0028, 0]} />
+      <meshBasicMaterial color="#fff4d6" toneMapped={false} />
+    </instancedMesh>
   );
 }
 
@@ -549,14 +753,13 @@ function World({ bar, onTick }) {
   return (
     <>
       <Lights bar={bar} dopamineRef={dopamineRef} />
-      <Rig bar={bar} gripTargetRef={gripTargetRef} dopamineRef={dopamineRef} lookRef={lookRef} onTick={onTick} />
+      <Rig bar={bar} gripTargetRef={gripTargetRef} dopamineRef={dopamineRef} lookRef={lookRef} mouthRef={mouthRef} onTick={onTick} />
       <Counter />
       <Stool />
       <BackBar />
       <Tap />
       <Glass bar={bar} />
       <Empties bar={bar} />
-      <Tin bar={bar} />
       <Fly
         machine={bar}
         gripTargetRef={gripTargetRef}
@@ -565,6 +768,8 @@ function World({ bar, onTick }) {
         mouthRef={mouthRef}
         mouthLocal={MOUTH_LOCAL}
       />
+      <Tin bar={bar} mouthRef={mouthRef} />
+      <Tingle bar={bar} mouthRef={mouthRef} />
       <Proboscis bar={bar} mouthRef={mouthRef} />
       <ContactShadows position={[0, 0.002, 0]} opacity={0.5} scale={12} blur={2.4} far={4} resolution={1024} color="#140c06" />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>

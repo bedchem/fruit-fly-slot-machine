@@ -58,7 +58,7 @@ const SITUATIONS = [
   {
     key: 'pouch-strong', urgent: true,
     when: (m, r) => r?.kind === 'pouch' && r.mg >= 11,
-    lines: ['The strong one. I\'m a strong fly.', 'Sixteen milligrams? Sure. Why not. What\'s a milligram.'],
+    lines: ['The strong one. I\'m a strong fly.', 'That many milligrams? Sure. Why not. What\'s a milligram.'],
   },
   {
     key: 'pouch', urgent: true,
@@ -83,9 +83,9 @@ const SITUATIONS = [
     lines: ['My heart is doing a drum solo.', 'I can hear my own wings. I\'m not flying.', 'Sweaty. Can a fly sweat? I\'m doing it.'],
   },
   {
-    key: 'hair',
+    key: 'relief',
     when: (m) => m.hangover > 0.3 && m.bac > 2,
-    lines: ['There it is. The headache\'s going. Just a little more.', 'Hair of the dog. I read that somewhere. Do dogs have hair?'],
+    lines: ['There it is. The headache\'s going. Just a little more.', 'One drink for the headache. That always works. Right?'],
   },
   {
     key: 'hungover',
@@ -93,13 +93,13 @@ const SITUATIONS = [
     lines: [
       'Don\'t look at the glass. Don\'t look at the glass.',
       'Everything tastes like regret.',
-      'Octopamine through the roof and not in the fun way.',
+      'My heart is racing and my head hurts.',
     ],
   },
   {
     key: 'wasted',
     when: (m) => m.sedation > 0.35,
-    lines: ['I love this bar. I love this stool. I love you, stool.', 'Is the counter moving or is it me. It\'s me.', 'Whose proboscis is this?'],
+    lines: ['I love this bar. I love this stool. I love you, stool.', 'Is the counter moving or is it me. It\'s me.', 'Whose legs are these?'],
   },
   {
     key: 'drunk',
@@ -114,7 +114,7 @@ const SITUATIONS = [
   {
     key: 'craving',
     when: (m) => m.craving > 0.3,
-    lines: ['Where did I put the tin.', 'Just one pouch. To take the edge off.', 'Something\'s missing. Something small and white.'],
+    lines: ['Where did I put the tin.', 'Just one pouch. Then I\'ll feel normal again.', 'Something\'s missing. Something small and white.'],
   },
   {
     key: 'deprived',
@@ -129,7 +129,7 @@ const SITUATIONS = [
   {
     key: 'learned-good',
     when: (m) => m.memory > 0.35,
-    lines: ['This bar gets me.', 'My mushroom body says yes. Loudly.'],
+    lines: ['This bar gets me.', 'Everything in my head says yes. Loudly.'],
   },
   {
     key: 'calm',

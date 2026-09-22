@@ -8,9 +8,9 @@
  * other experiments.
  */
 import { useEffect, useRef } from 'react';
-import { REELS, CATS, PHASES } from '../game/scroll.js';
+import { REELS, CATS, PHASES, NAMES } from '../game/scroll.js';
 import { ScrollThinker } from './scrollThoughts.js';
-import { TikTokPlayer, EditCredit } from './TikTokConsent.jsx';
+import { TikTokFeedPlayer, EditCredit } from './TikTokConsent.jsx';
 import { EDITS, EDIT_SUBJECT } from '../game/tiktokEdits.js';
 
 function useFrameLoop(ref, fn) {
@@ -33,7 +33,7 @@ const pct = (x) => `${Math.round(x * 100)}%`;
 const hm = (min) => `${Math.floor(min / 60)}h ${String(Math.round(min % 60)).padStart(2, '0')}m`;
 
 const STATUS = {
-  [PHASES.WATCHING]: (f) => (f.reel.from ? `watching ${f.reel.from}'s reel` : `watching ${f.reel.cat}`),
+  [PHASES.WATCHING]: (f) => (f.reel.from ? `watching ${f.reel.from}'s reel` : f.reel.edit ? `watching ${f.reel.edit.creator}` : `watching ${f.reel.cat}`),
   [PHASES.SWIPING]: () => 'swiping',
   [PHASES.SHARING]: (f) => `sending to ${f.friend.name}`,
   [PHASES.DEAD]: () => 'phone died',
@@ -75,7 +75,7 @@ export function ScrollBank({ duoRef }) {
         <b ref={syncValRef}>0%</b>
       </div>
       <div className="batteries">
-        {['Drosi', 'Phila'].map((n, i) => (
+        {NAMES.map((n, i) => (
           <div className="battery" key={n} ref={(el) => { batRefs.current[i] = el; }}>
             <span>{n}</span><div className="battery-track"><i /></div><output>100%</output>
           </div>
@@ -114,12 +114,12 @@ export function Phones({
   });
   return (
     <section className="phones">
-      {['Drosi', 'Phila'].map((n, i) => (
+      {NAMES.map((n, i) => (
         <figure className="phone-view" key={n}>
           <div className="phone-screen">
             <canvas ref={(el) => { refs.current[i] = el; }} width="270" height="560" aria-label={`${n}'s phone`} />
             {playing[i] && expanded !== i && (
-              <TikTokPlayer duo={duoRef.current} reel={playing[i]} audible={soundOn && heard === i} />
+              <TikTokFeedPlayer duo={duoRef.current} index={i} reel={playing[i]} audible={soundOn && heard === i} />
             )}
             {playing[i] && expanded !== i && (
               <button type="button" className="phone-expand" onClick={() => onExpand(i)} aria-label={`Watch ${n}'s edit large`}>
@@ -170,7 +170,7 @@ export function Feeds({ duoRef }) {
       <span className="memory-title tip" tabIndex={0} data-tip="The last two dozen reels each feed served. The algorithm only measures how long each kind was watched and serves more of what held attention. Threat reels drive octopamine, and an aroused fly watches longer — so feeds drift towards doom on their own.">
         What the algorithm feeds them
       </span>
-      {['Drosi', 'Phila'].map((n, i) => (
+      {NAMES.map((n, i) => (
         <div className="feed" key={n} ref={(el) => { refs.current[i] = el; }}>
           <div className="feed-head"><b>{n}</b><span className="feed-doom">0% doom</span></div>
           <div className="feed-bar">
@@ -211,7 +211,7 @@ export function Pair({ duoRef }) {
   });
   return (
     <section className="pair">
-      <div className="pair-head"><span /><b>Drosi</b><b>Phila</b></div>
+      <div className="pair-head"><span /><b>{NAMES[0]}</b><b>{NAMES[1]}</b></div>
       <div className="pair-row"><span className="vital-label">Heart</span>
         {[0, 1].map((i) => <output key={i} className="vital-value" ref={(el) => { refs.current[`heart${i}`] = el; }}>268</output>)}
       </div>
@@ -229,9 +229,9 @@ export function Pair({ duoRef }) {
 export function Thread({ thread }) {
   const items = thread.slice(-8).reverse();
   const text = (m) => {
-    const from = m.from === 0 ? 'Drosi' : 'Phila';
-    const to = m.from === 0 ? 'Phila' : 'Drosi';
-    if (m.kind === 'reel') return <><b>{from}</b> sent {to} a reel <i>{m.cat}</i></>;
+    const from = NAMES[m.from];
+    const to = NAMES[1 - m.from];
+    if (m.kind === 'reel') return <><b>{from}</b> sent {to} {m.edit ? <>a {EDIT_SUBJECT} edit <i>by {m.edit.creator}</i></> : <>a reel <i>{m.cat}</i></>}</>;
     if (m.kind === 'seen') return <><b>{from}</b> <span className="seen">seen</span></>;
     return <><b>{from}</b> {m.kind}</>;
   };
@@ -262,7 +262,7 @@ export function Thoughts({ duoRef }) {
   });
   return (
     <section className="thoughts">
-      {['Drosi', 'Phila'].map((n, i) => (
+      {NAMES.map((n, i) => (
         <p className="memory-verdict" key={n}>
           <span className="memory-verdict-label">{n}:</span>{' '}
           <span ref={(el) => { refs.current[i] = el; }} />
@@ -327,7 +327,7 @@ export function ScrollHowItWorks({ open, onClose }) {
       <dl>
         <dt>Two brains</dt>
         <dd>
-          Drosi and Phila each run their own rate model over the same measured wiring, with their own mushroom
+          {NAMES[0]} and {NAMES[1]} each run their own rate model over the same measured wiring, with their own mushroom
           bodies. Nobody controls either of them.
         </dd>
         <dt>The reels</dt>

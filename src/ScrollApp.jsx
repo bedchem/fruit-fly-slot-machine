@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollScene } from './scene/ScrollScene.jsx';
-import { Duo } from './game/scroll.js';
+import { Duo, NAMES } from './game/scroll.js';
 import { sound } from './audio/audio.js';
 import { Connectome } from './neural/Connectome.jsx';
 import { useConnectome } from './neural/useConnectome.js';
@@ -133,13 +133,13 @@ export default function ScrollApp() {
             </h1>
             {fanMode ? (
               <p className="lede">
-                <mark>Two real brains, one crush.</mark> Drosi and Phila scroll {EDIT_SUBJECT} edits on TikTok and send
-                each other the ones that hit. Her songs reach them through Johnston&apos;s organ, dopamine does the
-                rest, and <mark>every edit makes them fall a little further</mark>. Click a phone to watch along.
+                <mark>Two real brains, one crush.</mark> {NAMES[0]} and {NAMES[1]} scroll {EDIT_SUBJECT} edits on TikTok and send
+                each other their favourites. Each phone gets a different mix of videos, and <mark>they keep swiping
+                for the next one</mark>. Watch along below, or open an edit large.
               </p>
             ) : (
               <p className="lede">
-                <mark>Two real brains, one feed.</mark> Drosi and Phila scroll reels made of things a fly&apos;s nervous
+                <mark>Two real brains, one feed.</mark> {NAMES[0]} and {NAMES[1]} scroll reels made of things a fly&apos;s nervous
                 system cares about, send each other the ones that hit, and flinch at spiders through their real giant
                 fibre. The algorithm only measures watch time — and <mark>drifts them towards doom</mark>.
               </p>
@@ -204,18 +204,19 @@ export default function ScrollApp() {
         {fanMode ? <Favourites duoRef={duoRef} /> : <Feeds duoRef={duoRef} />}
         <div className="scopes">
           <div>
-            <span className="scope-owner">Drosi&apos;s brain</span>
+            <span className="scope-owner">{NAMES[0]}&apos;s brain</span>
             <Connectome machineRef={duoRef} store={cnsStore} ready={cnsReady} height={170} />
           </div>
           <div>
-            <span className="scope-owner">Phila&apos;s brain</span>
+            <span className="scope-owner">{NAMES[1]}&apos;s brain</span>
             <Connectome machineRef={duoRef} store={storeB} ready={cnsReady && !!storeB.current.sim} height={170} />
           </div>
         </div>
         <Pair duoRef={duoRef} />
         <div className="cortisols">
-          <CortisolMeter machineRef={flyRefs[0]} label="Cortisol · Drosi" idPrefix="cortisol-drosi" />
-          <CortisolMeter machineRef={flyRefs[1]} label="Cortisol · Phila" idPrefix="cortisol-phila" />
+          {NAMES.map((n, i) => (
+            <CortisolMeter key={n} machineRef={flyRefs[i]} label={`Cortisol · ${n}`} idPrefix={`cortisol-${n.toLowerCase()}`} />
+          ))}
         </div>
         <Thread thread={ui.thread} />
         <Thoughts duoRef={duoRef} />

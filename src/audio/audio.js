@@ -396,6 +396,18 @@ export class Sound {
     this.tone({ freq: 1800, dur: 0.08, gain: 0.04, type: 'triangle' });
   }
 
+  /** The lid snapping shut on its spring. */
+  lidShut() {
+    this.burst({ freq: 2600, q: 6, gain: 0.08, dur: 0.025 });
+    this.tone({ freq: 1250, dur: 0.05, gain: 0.025, type: 'triangle' });
+  }
+
+  /** A spent pouch spat out, landing on the napkin a moment later: a damp pat. */
+  spit() {
+    this.burst({ freq: 1500, q: 2, gain: 0.03, dur: 0.04 });
+    this.burst({ at: 0.72, freq: 420, q: 0.8, gain: 0.07, dur: 0.07 });
+  }
+
   /** Tucked in: a soft pat, and a small bright tingle for the strong ones. */
   tuck(mg = 6) {
     this.burst({ freq: 600, q: 1, gain: 0.08, dur: 0.06 });

@@ -42,7 +42,9 @@ export default function BarApp() {
       case 'refill': sound.pour?.(); break;
       case 'reach': sound.reach(); break;
       case 'tin': sound.tin?.(); break;
+      case 'lid': sound.lidShut?.(); break;
       case 'tuck': sound.tuck?.(detail.mg); break;
+      case 'spent': sound.spit?.(); break;
       case 'passout': sound.passout?.(); break;
       case 'sleep': sound.snore?.(); break;
       case 'seizure': sound.seizure?.(); break;

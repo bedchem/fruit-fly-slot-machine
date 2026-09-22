@@ -88,9 +88,9 @@ At the bar the fly sits on the same stool at a counter with a beer and a tin of 
 | --- | --- |
 | **Ethanol** strengthens every GABA synapse (GABA-A/Rdl potentiation) and weakens acetylcholine and glutamate ones. | Rising ethanol drives the PAM reward cluster. The first sips are aversive, and that fades. Past its sedation threshold it passes out. Rapid tolerance raises that threshold night by night. |
 | **Nicotine** strengthens every cholinergic synapse. That is 911 of the 1,600 simulated cell types. | It lifts dopamine and builds dependence, and a falling level turns into craving. Too much at once saturates the network, and the fly has a seizure. |
-| **Hangover** leaves GABA weaker than normal (rebound) and drives PPL1 while the Kenyon cells still code the bar. | NPF drains and the mushroom body learns the morning after. Drinking masks it, and a fly low on NPF takes that deal ("hair of the dog"). |
+| **Hangover** leaves GABA weaker than normal (rebound) and drives PPL1 while the Kenyon cells still code the bar. | NPF drains and the mushroom body learns the morning after. Drinking masks it, and a fly low on NPF drinks again to feel better. |
 
-The drugs act through a per-transmitter multiplier on the measured synapses (`src/neural/pharmacology.js`), using each cell type's predicted transmitter from MaleCNS. The mechanisms are the literature's. The magnitudes and the human-scale units (mM ethanol with ‰ alongside, ng/mL nicotine) are the model's, chosen to be legible rather than fitted.
+The drugs act through a per-transmitter multiplier on the measured synapses (`src/neural/pharmacology.js`), using each cell type's predicted transmitter from MaleCNS. The mechanisms are the literature's. The magnitudes and the human-scale units (‰ blood alcohol, ng/mL nicotine) are the model's, chosen to be legible rather than fitted.
 
 ## The trading desk
 
@@ -112,7 +112,7 @@ The market is synthetic and seeded (`?seed=42` replays one exactly), and the mon
 
 ## Doomscrolling
 
-The fourth experiment, at `/scroll/`, has **two** flies, Drosi and Phila, side by side at night. Each has its **own brain**: two rate models run over the same wiring, with two separate mushroom bodies. They scroll a feed of reels and send each other the ones that hit. Nobody controls either of them.
+The fourth experiment, at `/scroll/`, has **two** flies, Ryhox and Plattnericus, side by side at night. Each has its **own brain**: two rate models run over the same wiring, with two separate mushroom bodies. They scroll a feed of reels and send each other the ones that hit. Nobody controls either of them.
 
 - **There are ten kinds of reel**, five pleasant and five threatening, all things a fly's nervous system cares about. Each is fed into the pathway it would use:
   - rotting fruit goes into the olfactory receptor neurons
@@ -130,10 +130,10 @@ The fourth experiment, at `/scroll/`, has **two** flies, Drosi and Phila, side b
 
 ### TikTok edits (optional, consent-based)
 
-The doomscroll feed can also serve real TikTok edits, listed in `src/game/tiktokEdits.js`. With the list empty, which is the default, nothing about TikTok appears anywhere.
+With TikTok allowed, the doomscroll feed shows only Sabrina Carpenter edits: 18 posts listed in `src/game/tiktokEdits.js`. Each fly has its own shuffled feed. Videos advance after a short watch (at most 14 seconds), with attention influencing how long they stay; the flies still swipe, send favourites, and watch shared edits together. Without consent, the local animated reels remain available.
 
 - **Adding edits:** paste full post URLs (`https://www.tiktok.com/@creator/video/…`) with the creator's handle, then run `node tools/check-tiktok-edits.mjs`. It asks TikTok's public oEmbed endpoint about each post and flags wrong URLs and mismatched handles.
-- **Playback:** only through TikTok's official embed player (`https://www.tiktok.com/player/v1/{id}`), muted and looping. Nothing is downloaded or re-hosted. Each video is credited and linked to its creator, and the panel lists every edit with a not-affiliated notice.
+- **Playback:** only through TikTok's official embed player (`https://www.tiktok.com/player/v1/{id}`). Videos move vertically with the fly's swipe in both the small and expanded players; finished clips advance through the same sharing decision. At most one phone is audible. Nothing is downloaded or re-hosted. Each video is credited and linked to its creator, and the panel lists every edit with a not-affiliated notice.
 - **Consent first:** before the visitor chooses *Allow TikTok videos*, the page makes **no request to TikTok at all**. Rejecting is as easy as accepting, and closing the notice counts as rejecting. The choice is kept in `localStorage` (`flylab.consent`) and can be changed with *Cookie settings* on the page or on the legal page, where the privacy policy has its own TikTok section. Withdrawing removes all players at once.
 - **Player errors:** a post that TikTok reports as unavailable (error 1001, for example when it was deleted or embedding is off) is dropped for good. Server and playback errors skip it just this once, and a blocked autoplay is ignored.
 - TikTok shows its **own** cookie notice inside the player the first time. That choice belongs to the visitor.

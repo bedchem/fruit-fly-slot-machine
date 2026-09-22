@@ -1,6 +1,6 @@
 /**
- * Where the two scrollers sit. Drosi takes the casino's seat (layout.js),
- * Phila the same pose moved along the floor beside it, each on its own
+ * Where the two scrollers sit. Ryhox takes the casino's seat (layout.js),
+ * Plattnericus the same pose moved along the floor beside it, each on its own
  * stool. A phone floats in front of each face — held, as far as the scene is
  * concerned, by the legs the rig does not drive — with the right foreleg free
  * to swipe and tap.
@@ -55,7 +55,7 @@ export const lapWorld = (i) => ahead(i, LAP_AHEAD, LAP_BELOW);
 export const phoneLocal = (i = 0) => worldToFly(phoneWorld(i), POSES[i]);
 
 /**
- * The shot: from behind the pair, over Drosi's shoulder — the way you would
+ * The shot: from behind the pair, over Ryhox's shoulder — the way you would
  * catch two people on their phones late at night. Both screens face the
  * camera beside their owners' heads, and the window is ahead of them.
  * Checked by projection: both flies whole, both screens clear of the heads.

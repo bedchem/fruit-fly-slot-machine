@@ -52,6 +52,11 @@ export const TIN_GRIP = [TIN.center[0] + 0.012, TIN.center[1] + TIN.height + 0.0
  * the fly's version of under the lip.
  */
 export const TUCK = flyToWorld([MOUTH_LOCAL[0] - 0.05, MOUTH_LOCAL[1] - 0.04, MOUTH_LOCAL[2] - 0.02]);
+/**
+ * The same spot relative to the mouthparts, as a world offset. The head turns,
+ * so the scene adds this to where the mouth actually is each frame.
+ */
+export const LIP_OFFSET = [TUCK[0] - MOUTH[0], TUCK[1] - MOUTH[1], TUCK[2] - MOUTH[2]];
 
 /**
  * The end of the straw: a little in front of and below the mouthparts, so the

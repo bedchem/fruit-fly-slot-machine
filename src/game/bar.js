@@ -12,7 +12,7 @@
  * defensive state, what its mushroom body has learned) and partly the two
  * drugs in its body, which act back on that brain (neural/pharmacology.js).
  */
-import { TIN_GRIP, TUCK } from '../scene/barLayout.js';
+import { TIN_GRIP, MOUTH, LIP_OFFSET } from '../scene/barLayout.js';
 
 export const PHASES = {
   IDLE: 'idle',
@@ -39,8 +39,9 @@ const START_MINUTE = 19 * 60;
 
 // ---------------------------------------------------------------- ethanol
 /**
- * Units are body ethanol in mM, which is how fly work reports it (whole-body
- * homogenate). 21.7 mM is 1 g/L, so the panel can also show per mille.
+ * The model runs in mM of body ethanol, which is how fly work reports it
+ * (whole-body homogenate), and every threshold below is set in it. The panel
+ * shows Promille (per mille): 21.7 mM is 1 g/L, about 1 ‰.
  *
  * Absorption is first order from the crop; elimination is zero order, the way
  * alcohol dehydrogenase saturates. Tolerance speeds elimination and raises
@@ -53,6 +54,8 @@ const SIP_ETHANOL = 1.25;          // mM of eventual body ethanol per sip
 const ABSORB_MIN = 11;             // crop -> body, time constant in minutes
 const ELIMINATE = 0.115;           // mM per minute, naive
 const SEDATION_MM = 34;            // loss of righting, naive
+/** The naive sedation threshold, for the panel. */
+export const SEDATION_PERMILLE = SEDATION_MM / MM_PER_PERMILLE;
 const SIPS_PER_GLASS = 20;
 
 // --------------------------------------------------------------- nicotine
@@ -65,7 +68,7 @@ const SIPS_PER_GLASS = 20;
  */
 export const POUCH_MG = [3, 6, 11, 16];
 const POUCH_RELEASE_MIN = 18;      // release time constant
-const POUCH_WEAR_MIN = 38;         // how long one stays in
+export const POUCH_WEAR_MIN = 38;  // how long one stays in
 const BIOAVAIL = 0.55;
 const NG_PER_MG = 3.6;
 const NIC_HALF_LIFE = 75;          // minutes
@@ -97,12 +100,15 @@ const HEART_FAINT = 150;
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const smooth = (e0, e1, x) => { const t = clamp01((x - e0) / (e1 - e0)); return t * t * (3 - 2 * t); };
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+/** Past 1 and back: a lid on a spring. */
+const springOut = (t) => { const c = 1.9; const u = t - 1; return 1 + (c + 1) * u * u * u + c * u * u; };
 const decay = (halfLife, dtMin) => Math.pow(0.5, dtMin / halfLife);
 
 /** Motion timings, real seconds. */
 const T = {
   lean: 0.55, sip: 0.62, unlean: 0.5,
-  reach: 0.7, pinch: 0.22, lift: 0.85, tuck: 0.35, release: 0.65,
+  reach: 0.7, pinch: 0.3, lift: 0.85, tuck: 0.75, release: 0.65,
+  lidShut: 0.16,
   refill: 1.6,
   fit: 3.0,
 };
@@ -112,19 +118,19 @@ export function urgeReason(a, kind) {
   if (kind === 'rest') {
     if (a.sleepy > 0.3) return 'too heavy to lift its head';
     if (a.caution > 0.35) return 'hungover — holding off';
-    return 'nothing is pulling hard enough';
+    return 'not ready for another drink or pouch';
   }
   if (kind === 'pouch') {
-    if (a.craving > 0.35) return 'nicotine falling — craving';
+    if (a.craving > 0.35) return 'the nicotine is wearing off — wants another pouch';
     if (a.coUse > 0.18) return 'drunk, and it wants a pouch with it';
     return 'curious about the tin';
   }
-  const top = Math.max(a.chase, a.buzz, a.memory, a.hair);
+  const top = Math.max(a.chase, a.buzz, a.memory, a.relief);
   if (top < 0.12) return 'a slow, steady drink';
-  if (top === a.hair) return 'hair of the dog — it takes the edge off';
-  if (top === a.buzz) return 'riding the buzz — PAM still firing';
+  if (top === a.relief) return 'hungover — a drink makes the headache go away';
+  if (top === a.buzz) return 'enjoying the buzz — wants it to last';
   if (top === a.memory) return a.memory < 0 ? 'remembers the mornings' : 'remembers how good this felt';
-  return 'NPF low — drinking to feel something';
+  return 'feeling low — drinking to feel better';
 }
 
 export class Bar {
@@ -167,6 +173,11 @@ export class Bar {
     this.grip = 0;            // 0..1 foreleg blended from rest onto handTarget
     this.handTarget = TIN_GRIP.slice();
     this.pouchInHand = false;
+    this.pouchStage = null;
+    this.stageK = 0;          // 0..1 through the current pouch stage
+    this.tinLid = 0;          // 0 shut .. 1 open (a little past, on the spring)
+    this.tingle = 0;          // the hit of a fresh pouch, fading
+    this.mouth = MOUTH.slice();  // where the mouthparts are; the scene keeps it live
     this.collapse = 0;        // 0 upright .. 1 slumped
     this.shake = 0;
     this.fill = 1;            // glass level 0..1
@@ -238,8 +249,8 @@ export class Bar {
    *            still firing — ethanol is rewarding to a fly, and flies will
    *            work for it (Kaun et al. 2011, Nat Neurosci). Tolerance blunts it.
    *   memory   what its mushroom body has learned about this bar.
-   *   hair     the hangover is relieved by drinking, and a fly low on NPF
-   *            takes that deal.
+   *   relief   a drink makes the hangover go away for a while, and a fly
+   *            low on NPF takes that deal.
    *   caution  the defensive state, the hangover and nicotine nausea —
    *            all of it scaled down by how drunk it is. Disinhibition is
    *            why the fourth drink is easier than the first.
@@ -252,7 +263,7 @@ export class Bar {
     const chase = (1 - this.npf) * 0.5;
     const buzz = (this.stim * 0.26 + this.dopamine * 0.24) * (1 - this.tolerance * 0.45);
     const memory = Math.max(-0.35, Math.min(0.35, this.memory * 0.4));
-    const hair = H * (1 - this.npf) * 0.75;
+    const relief = H * (1 - this.npf) * 0.75;
     const nausea = smooth(NIC_JITTER, NIC_SEIZURE, this.nicotine);
     const caution = (this.fear * 0.4 + H * 0.5 + nausea * 0.5) * disinhibit;
     const sleepy = this.sedation * 0.22 + Math.max(0, this.sleepPressure - 0.85) * 0.6;
@@ -262,14 +273,14 @@ export class Bar {
     const cue = this.evening ? 0.08 : 0;
     // and drunk, the next one is simply easier
     const loose = (1 - disinhibit) * 0.2;
-    const beer = clamp01(0.06 + cue + chase + buzz + memory + hair + loose - caution - sleepy - full * 0.45);
+    const beer = clamp01(0.06 + cue + chase + buzz + memory + relief + loose - caution - sleepy - full * 0.45);
 
     const craving = this.craving;
     const coUse = I * 0.38;
     const curiosity = this.pouchCount === 0 ? 0.1 + I * 0.18 : 0;
     const pouch = clamp01(0.02 + craving * 0.95 + coUse + curiosity + this.dopamine * 0.04
       - this.nicotine / 42 - caution * 0.45 - sleepy * 0.5);
-    return { cue, chase, buzz, memory, hair, caution, sleepy, full, craving, coUse, disinhibit, beer, pouch };
+    return { cue, chase, buzz, memory, relief, caution, sleepy, full, craving, coUse, disinhibit, beer, pouch };
   }
 
   /** How many sips a given urge asks for. */
@@ -315,8 +326,17 @@ export class Bar {
     this.phase = PHASES.POUCH;
     this.t = 0;
     this.pouchStage = 'reach';
+    this.stageK = 0;
+    this.lidPopped = false;
+    this.lidClicked = false;
     this.handTarget = TIN_GRIP.slice();
     this.emit('reach');
+  }
+
+  /** Under the lip, wherever the head has put the mouth this frame. */
+  get tuckAt() {
+    const m = this.mouth;
+    return [m[0] + LIP_OFFSET[0], m[1] + LIP_OFFSET[1], m[2] + LIP_OFFSET[2]];
   }
 
   record(r) {
@@ -355,6 +375,9 @@ export class Bar {
       this.fill = 1 - this.refilling;
     }
     this.shake = Math.max(0, this.shake - dt * 3);
+    this.tingle = Math.max(0, this.tingle - dt / 1.5);
+    // anything that cuts a pouch short leaves the tin to close itself
+    if (this.phase !== PHASES.POUCH) this.tinLid = Math.max(0, this.tinLid - dt * 6);
     return this;
   }
 
@@ -424,46 +447,91 @@ export class Bar {
     this.lean = 0; this.extend = 0;
   }
 
+  /**
+   * A pouch, in six beats: the foreleg goes to the tin and flips the lid, takes
+   * a pouch, carries it up in an arc as the lid snaps shut, presses it in under
+   * the lip twice with the head tipped back, and lets go.
+   */
   updatePouch(dt) {
     const slow = 1 + this.sway * 0.7;
     const s = this.pouchStage;
     const t = this.t;
-    const next = (stage) => { this.pouchStage = stage; this.t = 0; };
+    const next = (stage) => { this.pouchStage = stage; this.t = 0; this.stageK = 0; };
     if (s === 'reach') {
+      const k = clamp01(t / (T.reach * slow));
+      this.stageK = k;
       this.handTarget = TIN_GRIP.slice();
-      this.grip = easeInOut(clamp01(t / (T.reach * slow)));
-      if (t >= T.reach * slow) { next('pinch'); this.emit('tin'); }
+      this.grip = easeInOut(k);
+      // the tarsus catches the front of the lid on the way in and flips it up
+      const open = clamp01((k - 0.55) / 0.45);
+      this.tinLid = open > 0 ? springOut(open) : 0;
+      if (open > 0 && !this.lidPopped) { this.lidPopped = true; this.emit('tin'); }
+      if (k >= 1) { this.tinLid = 1; next('pinch'); }
     } else if (s === 'pinch') {
+      const k = clamp01(t / T.pinch);
+      this.stageK = k;
       this.grip = 1;
-      if (t >= T.pinch) { this.pouchInHand = true; next('lift'); }
+      this.tinLid = 1;
+      this.pouchInHand = true;
+      // a small dip to close on it, and up again
+      this.handTarget = [TIN_GRIP[0], TIN_GRIP[1] - 0.004 * Math.sin(k * Math.PI), TIN_GRIP[2]];
+      if (k >= 1) next('lift');
     } else if (s === 'lift') {
       const k = easeInOut(clamp01(t / (T.lift * slow)));
-      this.handTarget = TIN_GRIP.map((v, i) => v + (TUCK[i] - v) * k);
+      this.stageK = k;
+      const to = this.tuckAt;
+      // up and a little out on the way, so the pouch never drags through the body
+      const arc = Math.sin(k * Math.PI);
+      this.handTarget = [
+        TIN_GRIP[0] + (to[0] - TIN_GRIP[0]) * k,
+        TIN_GRIP[1] + (to[1] - TIN_GRIP[1]) * k + arc * 0.03,
+        TIN_GRIP[2] + (to[2] - TIN_GRIP[2]) * k - arc * 0.025,
+      ];
       // it looks down at what it is carrying up
-      this.lean = 0.35 * Math.sin(k * Math.PI);
-      if (k >= 1) { next('tuck'); }
+      this.lean = 0.35 * arc;
+      // the lid is on a spring: out of the way of the pouch, it snaps back
+      const shut = clamp01((t - 0.12) / T.lidShut);
+      this.tinLid = 1 - shut * shut;
+      if (shut >= 1 && !this.lidClicked) { this.lidClicked = true; this.emit('lid'); }
+      if (k >= 1) next('tuck');
     } else if (s === 'tuck') {
-      this.handTarget = TUCK.slice();
-      if (t >= T.tuck) {
+      const k = clamp01(t / T.tuck);
+      this.stageK = k;
+      // two presses in towards the mouth, the head tipped back to take it
+      const press = Math.pow(Math.sin(k * Math.PI * 2), 2) * 0.012;
+      const at = this.tuckAt;
+      const l = Math.hypot(LIP_OFFSET[0], LIP_OFFSET[1], LIP_OFFSET[2]) || 1;
+      this.handTarget = at.map((v, i) => v - (LIP_OFFSET[i] / l) * press);
+      this.lean = -0.9 * Math.sin(k * Math.PI);
+      this.tinLid = 0;
+      if (k >= 1) {
         this.pouchInHand = false;
         this.pouches.push({ mg: this.plan.mg, left: this.plan.mg, age: 0 });
         this.pouchCount += 1;
         this.nicotineMg += this.plan.mg;
+        this.tingle = 0.4 + 0.6 * (this.plan.mg / POUCH_MG[POUCH_MG.length - 1]);
         this.record({ kind: 'pouch', mg: this.plan.mg, why: this.plan.why });
         this.emit('tuck', { mg: this.plan.mg });
         next('release');
       }
     } else {
-      this.handTarget = TUCK.slice();
-      this.grip = 1 - easeInOut(clamp01(t / T.release));
-      if (t >= T.release) {
+      this.handTarget = this.tuckAt;
+      const k = clamp01(t / T.release);
+      this.stageK = k;
+      this.grip = 1 - easeInOut(k);
+      this.lean *= Math.max(0, 1 - dt * 8);
+      if (k >= 1) {
         this.grip = 0;
         this.plan = null;
+        this.pouchStage = null;
         this.phase = PHASES.IDLE;
         this.t = 0;
       }
     }
   }
+
+  /** The scene says where the mouthparts are each frame; headless, they stay put. */
+  setMouth(p) { this.mouth = p; }
 
   /** Sedation, or sleep: it slumps, the clock runs, the body clears. */
   updateSleep(dt) {
@@ -502,6 +570,9 @@ export class Bar {
     this.t = 0;
     this.fellAt = this.minute;
     this.plan = null;
+    this.pouchInHand = false;
+    this.pouchStage = null;
+    this.stageK = 0;
     if (passedOut) this.passouts += 1;
     this.history.push({ at: this.now(), kind: passedOut ? 'passout' : 'sleep' });
     if (this.history.length > 12) this.history.shift();
@@ -513,11 +584,16 @@ export class Bar {
     this.phase = PHASES.SEIZURE;
     this.t = 0;
     this.plan = null;
+    this.pouchInHand = false;
+    this.pouchStage = null;
+    this.stageK = 0;
     this.seizures += 1;
     this.startle = 1;
     this.shake = 0.8;
     // the pouches come out: it spits them
+    const spent = this.pouches.length;
     this.pouches = [];
+    if (spent) this.emit('spent', { n: spent });
     this.history.push({ at: this.now(), kind: 'seizure' });
     if (this.history.length > 12) this.history.shift();
     this.record({ kind: 'seizure' });
@@ -564,7 +640,9 @@ export class Bar {
       p.left -= r; p.age += dtMin;
       released += r;
     }
+    const wearing = this.pouches.length;
     this.pouches = this.pouches.filter((p) => p.age < POUCH_WEAR_MIN);
+    if (this.pouches.length < wearing) this.emit('spent', { n: wearing - this.pouches.length });
     const nicBefore = this.nicotine;
     this.nicotine = this.nicotine * decay(NIC_HALF_LIFE, dtMin) + released * BIOAVAIL * NG_PER_MG;
     this.nicotineRise = dtMin > 0 ? Math.max(0, (this.nicotine - nicBefore) / dtMin) : 0;

@@ -7,7 +7,7 @@
  * on an animation frame rather than pushed through React state.
  */
 import { useEffect, useRef } from 'react';
-import { Bar, PHASES, MM_PER_PERMILLE, POUCH_MG, urgeReason } from '../game/bar.js';
+import { Bar, PHASES, MM_PER_PERMILLE, SEDATION_PERMILLE, POUCH_MG, urgeReason } from '../game/bar.js';
 
 function useFrameLoop(machineRef, fn) {
   const fnRef = useRef(fn);
@@ -32,7 +32,7 @@ const PULLS = [
   { key: 'chase', label: 'NPF', tip: 'Low neuropeptide F. Deprived flies drink more ethanol (Shohat-Ophir et al. 2012), so a low level pushes it to the straw.' },
   { key: 'buzz', label: 'buzz', tip: 'The stimulating edge of a rising ethanol level, and the PAM cluster still firing from it. Ethanol is rewarding to a fly. Tolerance blunts it.' },
   { key: 'memory', label: 'memory', tip: 'What its mushroom body has learned about this bar: the reward of the evenings against the punishment of the mornings.' },
-  { key: 'hair', label: 'hair', tip: 'Drinking masks the hangover — so a hungover fly low on NPF takes that deal.' },
+  { key: 'relief', label: 'relief', tip: 'A drink makes the hangover go away for a while — so a hungover fly low on NPF drinks again.' },
   { key: 'craving', label: 'craving', tip: 'Nicotine dependence, felt as the level falls. It builds with every milligram and fades over days.' },
   { key: 'caution', label: 'caution', tip: 'The defensive state, the hangover and nicotine nausea — all of it scaled down by how drunk it is. Disinhibition.' },
 ];
@@ -133,13 +133,11 @@ export function BarBank({ machineRef, ui }) {
   const clockRef = useRef(null);
   const dayRef = useRef(null);
   const bacRef = useRef(null);
-  const pmRef = useRef(null);
   const nicRef = useRef(null);
   useFrameLoop(machineRef, (m) => {
     setText(clockRef.current, m.clock);
     setText(dayRef.current, `night ${m.nights}`);
-    setText(bacRef.current, m.bac.toFixed(1));
-    setText(pmRef.current, `${(m.bac / MM_PER_PERMILLE).toFixed(2)} ‰`);
+    setText(bacRef.current, m.permille.toFixed(2));
     setText(nicRef.current, m.nicotine.toFixed(0));
     if (bacRef.current) bacRef.current.dataset.level = m.sedation > 0.3 ? 'high' : m.sway > 0.3 ? 'mid' : 'low';
   });
@@ -149,8 +147,8 @@ export function BarBank({ machineRef, ui }) {
         <b ref={clockRef}>19:00</b><span ref={dayRef}>night 1</span>
       </div>
       <div className="bar-levels">
-        <div className="bar-level tip" data-tip="Body ethanol in mM, the unit fly research reports it in. 21.7 mM is 1 g/L — shown underneath in per mille. Around 34 mM a naive fly loses its footing and passes out; tolerance pushes that up.">
-          <b ref={bacRef} data-level="low">0.0</b><span>mM ethanol</span><small ref={pmRef}>0.00 ‰</small>
+        <div className="bar-level tip" data-tip={`Alcohol level in Promille (‰). In this model, a fly with no tolerance can pass out around ${SEDATION_PERMILLE.toFixed(1)} ‰; tolerance pushes that up. Internally, the model uses mM of body ethanol: 1 ‰ is about ${MM_PER_PERMILLE} mM.`}>
+          <b ref={bacRef} data-level="low">0.00</b><span>‰ alcohol</span>
         </div>
         <div className="bar-level tip" data-tip="Nicotine in hemolymph, ng/mL, on a human scale so pouch strengths read as they do on the tin. Past 26 it gets the jitters; past 38 it seizes. Nicotine is an insecticide.">
           <b ref={nicRef}>0</b><span>ng/mL nicotine</span>
@@ -188,7 +186,7 @@ export function BarBody({ machineRef, store, ready }) {
       el.style.setProperty('--v', String(Math.max(0, Math.min(1, value))));
       setText(el.querySelector('output'), text);
     };
-    set('ethanol', m.bac / m.sedationAt, `${m.bac.toFixed(0)} mM`);
+    set('ethanol', m.bac / m.sedationAt, `${m.permille.toFixed(2)} ‰`);
     set('nicotine', m.nicotine / 38, `${m.nicotine.toFixed(0)}`);
     set('hangover', m.hangover, m.hangover < 0.02 ? 'none' : m.hangover.toFixed(2));
     set('tolerance', m.tolerance, m.tolerance.toFixed(2));
@@ -209,7 +207,7 @@ export function BarBody({ machineRef, store, ready }) {
   return (
     <section className="vitals barbody">
       <span className="memory-title">In its body</span>
-      {row('ethanol', 'Ethanol')}
+      {row('ethanol', 'Alcohol')}
       {row('nicotine', 'Nicotine')}
       {row('hangover', 'Hangover')}
       {row('tolerance', 'Tolerance')}
@@ -232,7 +230,7 @@ export function BarTab({ machineRef }) {
       sips: m.sips,
       pouches: m.pouchCount,
       mg: m.nicotineMg,
-      peak: `${m.allTimePeak.toFixed(0)} mM`,
+      peak: `${(m.allTimePeak / MM_PER_PERMILLE).toFixed(2)} ‰`,
       out: m.passouts,
       fits: m.seizures,
       nights: m.nights,
@@ -251,7 +249,7 @@ export function BarTab({ machineRef }) {
       {cell('sips', 'sips', 'Every sip through the straw.')}
       {cell('pouches', 'pouches', 'Nicotine pouches taken. Spent ones pile up on the napkin.')}
       {cell('mg', 'mg nicotine', 'Total nicotine in all the pouches it has taken.')}
-      {cell('peak', 'peak', 'The highest body ethanol it has reached.')}
+      {cell('peak', 'peak', 'The highest alcohol level it has reached, in Promille (‰).')}
       {cell('out', 'passed out', 'Nights that ended with it falling over rather than going to sleep.')}
       {cell('fits', 'seizures', 'Times it poisoned itself with nicotine.')}
       {cell('nights', 'nights', 'Nights at the bar so far.')}
@@ -279,7 +277,7 @@ export function ActionSlip({ result }) {
 const DOWN_COPY = {
   'passed-out': {
     head: 'Passed out',
-    body: 'Past its sedation threshold. A drunk fly loses its footing and falls over — the inebriometer measures exactly that. It will sleep it off.',
+    body: 'Past its sedation threshold. A drunk fly loses its footing and falls over — that is how scientists measure how drunk a fly is. It will sleep it off.',
   },
   asleep: {
     head: 'Asleep',

@@ -164,8 +164,11 @@ export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mo
     const slump = machine?.collapse ?? 0;
     const alive = 1 - slump;
     const breathe = (Math.sin(t * 1.35) * 0.006 + Math.sin(t * 3.1) * 0.002) * (0.25 + 0.75 * alive);
+    // a fresh nicotine pouch: a quick shiver that runs through it and fades
+    const tingle = (machine?.tingle ?? 0) * alive;
     const tremor = arousal * (Math.sin(t * 22) * 0.004 + Math.sin(t * 31.3) * 0.003)
-      + fear * alive * Math.sin(t * 41) * 0.0035;
+      + fear * alive * Math.sin(t * 41) * 0.0035
+      + tingle * (Math.sin(t * 63) * 0.005 + Math.sin(t * 47.3) * 0.003);
     // drunk, it sways on the stool; poisoned, it convulses
     const sway = (machine?.sway ?? 0) * alive;
     const fit = machine?.seizureFit ?? 0;
@@ -174,7 +177,8 @@ export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mo
     g.rotation.y = pose.rotationY + (Math.sin(t * 0.47) * 0.012 + arousal * Math.sin(t * 9.7) * 0.008) * alive
       + sway * Math.sin(t * 0.9) * 0.05 + convulse;
     g.rotation.z = (Math.sin(t * 0.83) * 0.006 + fear * Math.sin(t * 5.3) * 0.012) * alive + slump * SLUMP_ROLL
-      + sway * (Math.sin(t * 0.61) * 0.07 + Math.sin(t * 1.37) * 0.025) + convulse * 1.3;
+      + sway * (Math.sin(t * 0.61) * 0.07 + Math.sin(t * 1.37) * 0.025) + convulse * 1.3
+      + tingle * Math.sin(t * 57) * 0.014;
     // FLY.pitch is what sits the fly up on the stool; the lean is the extra
     // tip it gives the handle on the way down.
     const lean = (machine?.grip ?? 0) * -(machine?.pullProgress ?? 0);
@@ -198,9 +202,15 @@ export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mo
     const look = solveHeadLook([tmp.local.x + glance, tmp.local.y + glance * 0.6, tmp.local.z]);
     u.uHead.value.set(look[0], look[1], look[2], look[3]);
     if (mouthRef && mouthLocal) {
-      // the mouthparts ride on the head: turn them about the neck, then out to world
+      // Match the shader's blended head weight: the mouth is at the soft edge
+      // of the neck mask, so a full rotation would detach the pouch and straw.
       const off = quatRotate(look, [mouthLocal[0] - NECK[0], mouthLocal[1] - NECK[1], mouthLocal[2] - NECK[2]]);
-      tmp.world.set(NECK[0] + off[0], NECK[1] + off[1], NECK[2] + off[2]);
+      const weight = headWeight(...mouthLocal);
+      tmp.world.set(
+        mouthLocal[0] + (NECK[0] + off[0] - mouthLocal[0]) * weight,
+        mouthLocal[1] + (NECK[1] + off[1] - mouthLocal[1]) * weight,
+        mouthLocal[2] + (NECK[2] + off[2] - mouthLocal[2]) * weight,
+      );
       g.localToWorld(tmp.world);
       mouthRef.current = [tmp.world.x, tmp.world.y, tmp.world.z];
     }

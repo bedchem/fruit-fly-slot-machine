@@ -7,7 +7,7 @@
  * terms and licences. If a creator has switched embedding off, or deletes
  * the post, the player reports an error and the flies skip it.
  *
- * TO FILL IN: paste the post URLs, as TikTok shows them when you open a post
+ * To add an edit, paste its post URL as TikTok shows it when you open a post
  * in the browser (https://www.tiktok.com/@creator/video/1234567890123456789).
  * Short links (vm.tiktok.com/...) do not carry the post ID; open them first
  * and copy the full address. `node tools/check-tiktok-edits.mjs` checks every
@@ -17,7 +17,6 @@
  * here exactly: it is shown as the credit under every video.
  */
 export const TIKTOK_EDITS = [
-  // { url: 'https://www.tiktok.com/@creator/video/0000000000000000000', creator: '@creator' },
   { url: 'https://www.tiktok.com/@sabsvia/video/7683599968128503070', creator: '@sabsvia' },
   { url: 'https://www.tiktok.com/@chlo.vsp4/video/7625734045153938710', creator: '@chlo.vsp4' },
   { url: 'https://www.tiktok.com/@melanieae/video/7432472179553373482', creator: '@melanieae' },
@@ -49,7 +48,7 @@ export const EDITS = TIKTOK_EDITS
   .filter((e) => e.id && e.creator);
 
 /**
- * The player URL for a post: TikTok's documented embed player, looping, no
+ * The player URL for a post: TikTok's documented embed player, no
  * clutter. It starts silent (`mute` on ready) and the page un-mutes at most
  * one player at a time, when the visitor has sound on — `muted=1` would lock
  * the volume at zero for good, so it is not used.
@@ -57,7 +56,7 @@ export const EDITS = TIKTOK_EDITS
 export function playerUrl(id) {
   const q = new URLSearchParams({
     autoplay: '1',
-    loop: '1',
+    loop: '0',
     muted: '0',
     controls: '0',
     progress_bar: '1',

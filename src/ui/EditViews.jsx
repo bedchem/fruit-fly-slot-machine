@@ -4,8 +4,9 @@
  * of one kind of reel says nothing).
  */
 import { useEffect, useRef } from 'react';
-import { TikTokPlayer, EditCredit } from './TikTokConsent.jsx';
+import { TikTokFeedPlayer, EditCredit } from './TikTokConsent.jsx';
 import { EDIT_SUBJECT } from '../game/tiktokEdits.js';
+import { NAMES } from '../game/scroll.js';
 
 function useFrameLoop(ref, fn) {
   const fnRef = useRef(fn);
@@ -47,7 +48,7 @@ export function EditOverlay({ duo, index, reel, audible, onClose }) {
           <button type="button" className="edit-overlay-close" onClick={onClose} aria-label="Close">×</button>
         </div>
         <div className="edit-overlay-video">
-          <TikTokPlayer duo={duo} reel={reel} audible={audible} />
+          <TikTokFeedPlayer duo={duo} index={index} reel={reel} audible={audible} />
         </div>
         <EditCredit reel={reel} />
       </div>
@@ -88,7 +89,7 @@ export function Favourites({ duoRef }) {
       <span className="memory-title tip" tabIndex={0} data-tip={`With TikTok allowed, the feed is ${EDIT_SUBJECT} edits and nothing else. These are the ones that held each fly longest, and how often each was sent on.`}>
         Their favourite edits
       </span>
-      {['Drosi', 'Phila'].map((n, i) => (
+      {NAMES.map((n, i) => (
         <div className="fav" key={n} ref={(el) => { refs.current[i] = el; }}>
           <div className="fav-head">
             <b>{n}</b>

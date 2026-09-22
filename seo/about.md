@@ -72,7 +72,7 @@ The drugs act on the wiring, not on the behaviour. Each is given a receptor, and
 - **Nicotine** strengthens every cholinergic synapse, which is 911 of the 1,600 types and most fast excitation in an insect brain. It lifts dopamine and builds dependence, and a falling level turns into craving. Too much at once saturates the network, and the fly has a seizure. Nicotine is an insecticide.
 - **The hangover** is what the night leaves behind, felt as the ethanol clears. Inhibition rebounds below normal, NPF drains, and PPL1 fires while the Kenyon cells still code the bar, so the mushroom body learns the morning after as well. Drinking again masks it, and a fly low on NPF takes that deal.
 
-The mechanisms come from the literature. The magnitudes and the human-scale units (mM body ethanol with per mille alongside, ng/mL nicotine) are the model's, chosen to be legible rather than fitted. No fly was served a beer.
+The mechanisms come from the literature. The magnitudes and the human-scale units (‰ blood alcohol, ng/mL nicotine) are the model's, chosen to be legible rather than fitted. No fly was served a beer.
 
 ## At the trading desk
 
