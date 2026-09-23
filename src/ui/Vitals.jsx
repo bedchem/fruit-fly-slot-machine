@@ -12,7 +12,7 @@ import { CortisolMeter } from './CortisolMeter.jsx';
  * What each signal is. Shown on hover, because the panel should be readable
  * without already knowing fly neuroscience.
  */
-const EXPLAIN = {
+export const EXPLAIN = {
   heart: 'The dorsal vessel, in beats per minute. A young adult fly rests around 270; octopamine is a cardioaccelerator, so arousal drives it up from there.',
   dopamine: 'The PAM cluster — the cells that signal reward. They fire when the spin pays, and that is what teaches the mushroom body the pull was worth making.',
   octopamine: 'The insect equivalent of adrenaline. It rises with anything salient, win or loss, and it sits upstream of the reward cells rather than beside them.',
@@ -20,10 +20,18 @@ const EXPLAIN = {
   npf: 'Neuropeptide F, this animal’s version of NPY: satisfaction. A losing streak drains it, and a fly running low on NPF seeks reward harder.',
 };
 
-export function Vitals({ machineRef }) {
+/**
+ * `title` names whose vitals these are, when a page shows more than one
+ * animal; `explain` swaps in that page's own wording; `extra` adds rows
+ * after NPF, each { key, label, tip, value(m) } with value in 0..1; and
+ * `cortisol` passes a label and id prefix on to the stress gauge.
+ */
+export function Vitals({ machineRef, title = null, explain = EXPLAIN, extra = [], cortisol = {} }) {
   const ecgRef = useRef(null);
   const bpmRef = useRef(null);
   const rowsRef = useRef({});
+  const extraRef = useRef(extra);
+  extraRef.current = extra;
 
   useEffect(() => {
     const canvas = ecgRef.current;
@@ -96,15 +104,19 @@ export function Vitals({ machineRef }) {
       set('octopamine', m.octopamine, m.octopamine.toFixed(2));
       set('defensive', m.fear, m.fear < 0.02 ? 'none' : m.fear.toFixed(2));
       set('npf', m.npf, m.npf.toFixed(2));
+      for (const r of extraRef.current) {
+        const v = r.value(m);
+        set(r.key, v, v.toFixed(2));
+      }
 
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, [machineRef]);
 
-  const row = (key, label) => (
+  const row = (key, label, tip = explain[key]) => (
     <div className="vital" key={key} ref={(el) => { rowsRef.current[key] = el; }}>
-      <span className="vital-label tip" data-tip={EXPLAIN[key]} tabIndex={0}>{label}</span>
+      <span className="vital-label tip" data-tip={tip} tabIndex={0}>{label}</span>
       <div className="vital-track"><i /></div>
       <output className="vital-value">—</output>
     </div>
@@ -112,8 +124,9 @@ export function Vitals({ machineRef }) {
 
   return (
     <section className="vitals">
+      {title && <span className="vitals-owner">{title}</span>}
       <div className="heart">
-        <div className="heart-read tip" data-tip={EXPLAIN.heart} tabIndex={0}>
+        <div className="heart-read tip" data-tip={explain.heart} tabIndex={0}>
           <b ref={bpmRef}>296</b>
           <span>bpm</span>
         </div>
@@ -124,7 +137,8 @@ export function Vitals({ machineRef }) {
       {row('octopamine', 'Octopamine')}
       {row('defensive', 'Defensive')}
       {row('npf', 'NPF')}
-      <CortisolMeter machineRef={machineRef} />
+      {extra.map((r) => row(r.key, r.label, r.tip))}
+      <CortisolMeter machineRef={machineRef} {...cortisol} />
     </section>
   );
 }

@@ -238,19 +238,28 @@ function safeParse(s) {
 
 /** The hashtag frame sizes itself; these keep a bad report from wrecking the panel. */
 const TAG_HEIGHT = { start: 360, min: 240, max: 720 };
+/**
+ * Shown smaller than TikTok lays it out: the whole widget, its credits and
+ * links included, scaled down rather than cropped.
+ */
+const TAG_SCALE = 0.75;
 
 /**
  * TikTok's live feed for EDIT_TAG, in the panel: the official hashtag embed,
  * so what it lists, and in which order, is TikTok's and changes from visit to
  * visit. It is not the flies' feed — they play the listed edits one by one.
- * Before the visitor allows TikTok it is a plain link and a way back to the
- * notice; withdrawing takes the frame out at once.
+ * It stays folded away until the visitor opens it, and the frame exists only
+ * while it is open, so it loads nothing until then. Before the visitor allows
+ * TikTok it is a plain link and a way back to the notice; withdrawing takes
+ * the frame out at once.
  */
 export function TikTokTagFeed({ allowed, onAsk }) {
   const frame = useRef(null);
+  const [open, setOpen] = useState(false);
   const [height, setHeight] = useState(TAG_HEIGHT.start);
+  const live = allowed && open;
   useEffect(() => {
-    if (!allowed) return undefined;
+    if (!live) return undefined;
     const onMessage = (e) => {
       if (e.origin !== TIKTOK_ORIGIN || e.source !== frame.current?.contentWindow) return;
       const msg = typeof e.data === 'string' ? safeParse(e.data) : e.data;
@@ -259,37 +268,48 @@ export function TikTokTagFeed({ allowed, onAsk }) {
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [allowed]);
+  }, [live]);
   if (!EDIT_TAG) return null;
   const lang = navigator.language || 'en';
   return (
     <section className="tag-feed">
-      <span className="memory-title tip" tabIndex={0} data-tip={`TikTok's own hashtag embed: what TikTok lists under #${EDIT_TAG} right now, fresh on every visit. The flies' phones play the edits listed further down, one by one.`}>
-        Live on TikTok · #{EDIT_TAG}
-      </span>
-      {allowed ? (
-        <iframe
-          ref={frame}
-          name={`flylab-tag-${EDIT_TAG}`}
-          className="tiktok-tag"
-          src={tagEmbedUrl(EDIT_TAG, lang)}
-          title={`#${EDIT_TAG} on TikTok, live`}
-          style={{ height }}
-          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-          referrerPolicy="strict-origin-when-cross-origin"
-          loading="lazy"
-        />
-      ) : (
-        <p className="tag-feed-off">
-          What TikTok lists under <a href={tagUrl(EDIT_TAG)} target="_blank" rel="noopener">#{EDIT_TAG}</a> right
-          now. Nothing loads from TikTok until you allow it in{' '}
-          <button type="button" onClick={onAsk}>Cookie settings</button>.
+      <button
+        type="button"
+        className="tag-feed-toggle"
+        aria-expanded={open}
+        aria-controls="tag-feed-body"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span>Live on TikTok · #{EDIT_TAG}</span>
+        <i aria-hidden="true" />
+      </button>
+      <div id="tag-feed-body" className="tag-feed-body" hidden={!open}>
+        {!allowed ? (
+          <p className="tag-feed-off">
+            What TikTok lists under <a href={tagUrl(EDIT_TAG)} target="_blank" rel="noopener">#{EDIT_TAG}</a> right
+            now. Nothing loads from TikTok until you allow it in{' '}
+            <button type="button" onClick={onAsk}>Cookie settings</button>.
+          </p>
+        ) : live && (
+          <div className="tiktok-tag-box" style={{ height: Math.round(height * TAG_SCALE), '--tag-scale': TAG_SCALE }}>
+            <iframe
+              ref={frame}
+              name={`flylab-tag-${EDIT_TAG}`}
+              className="tiktok-tag"
+              src={tagEmbedUrl(EDIT_TAG, lang)}
+              title={`#${EDIT_TAG} on TikTok, live`}
+              style={{ height }}
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          </div>
+        )}
+        <p className="edit-disclaimer">
+          What TikTok lists under the hashtag right now, chosen and ordered by TikTok; the flies&apos; phones play the
+          edits listed below. The videos belong to their creators; {EDIT_SUBJECT} and the creators are not
+          affiliated with Fly Lab.
         </p>
-      )}
-      <p className="edit-disclaimer">
-        Chosen and ordered by TikTok. The videos belong to their creators; {EDIT_SUBJECT} and the creators are not
-        affiliated with Fly Lab.
-      </p>
+      </div>
     </section>
   );
 }

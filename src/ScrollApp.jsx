@@ -6,9 +6,8 @@ import { Connectome } from './neural/Connectome.jsx';
 import { useConnectome } from './neural/useConnectome.js';
 import { DuoBrain } from './neural/scrollBrain.js';
 import { Tooltips } from './ui/Tooltips.jsx';
-import { CortisolMeter } from './ui/CortisolMeter.jsx';
 import {
-  ScrollBank, Phones, Feeds, Pair, Thread, Thoughts, MorningCard, EventToast, ScrollHowItWorks,
+  ScrollBank, Phones, Feeds, ScrollVitals, Thread, Thoughts, MorningCard, EventToast, ScrollHowItWorks,
 } from './ui/ScrollPanels.jsx';
 import { GitHubIcon } from './ui/icons.jsx';
 import { SiteMenu } from './ui/SiteMenu.jsx';
@@ -199,7 +198,6 @@ export default function ScrollApp() {
           onExpand={setExpanded}
         />
         {fanMode ? <Favourites duoRef={duoRef} /> : <Feeds duoRef={duoRef} />}
-        <TikTokTagFeed allowed={tiktok === true} onAsk={() => setNoticeOpen(true)} />
         <div className="scopes">
           <div>
             <span className="scope-owner">{NAMES[0]}&apos;s brain</span>
@@ -210,12 +208,8 @@ export default function ScrollApp() {
             <Connectome machineRef={duoRef} store={storeB} ready={cnsReady && !!storeB.current.sim} height={170} />
           </div>
         </div>
-        <Pair duoRef={duoRef} />
-        <div className="cortisols">
-          {NAMES.map((n, i) => (
-            <CortisolMeter key={n} machineRef={flyRefs[i]} label={`Cortisol · ${n}`} idPrefix={`cortisol-${n.toLowerCase()}`} />
-          ))}
-        </div>
+        <ScrollVitals flyRefs={flyRefs} />
+        <TikTokTagFeed allowed={tiktok === true} onAsk={() => setNoticeOpen(true)} />
         <Thread thread={ui.thread} />
         <Thoughts duoRef={duoRef} />
         <EditList edits={edits} />

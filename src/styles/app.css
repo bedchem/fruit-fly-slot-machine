@@ -231,7 +231,8 @@ b, output, .roll { font-variant-numeric: tabular-nums; }
   text-align: center;
   border-block: 1px solid var(--divider);
 }
-.cortisol-toggle {
+.cortisol-toggle,
+.tag-feed-toggle {
   display: flex;
   width: 100%;
   align-items: center;
@@ -251,10 +252,13 @@ b, output, .roll { font-variant-numeric: tabular-nums; }
 }
 .cortisol-toggle span { text-align: left; }
 .cortisol-toggle b { margin-left: auto; }
-.cortisol-toggle:hover { color: var(--ink); background: transparent; }
-.cortisol-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.cortisol-toggle:hover,
+.tag-feed-toggle:hover { color: var(--ink); background: transparent; }
+.cortisol-toggle:focus-visible,
+.tag-feed-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .cortisol-toggle b { color: #1e3b6d; font-family: var(--mono); font-size: 0.63rem; font-weight: 500; }
-.cortisol-toggle i {
+.cortisol-toggle i,
+.tag-feed-toggle i {
   width: 0.45rem;
   height: 0.45rem;
   border-right: 1.5px solid currentColor;
@@ -264,7 +268,8 @@ b, output, .roll { font-variant-numeric: tabular-nums; }
   transform: rotate(-135deg) translate(-2px, 0);
   transition: transform 160ms ease-out;
 }
-.cortisol-toggle[aria-expanded='false'] i { transform: rotate(45deg) translateY(-2px); }
+.cortisol-toggle[aria-expanded='false'] i,
+.tag-feed-toggle[aria-expanded='false'] i { transform: rotate(45deg) translateY(-2px); }
 .cortisol-graphic { padding-top: 0.25rem; }
 .cortisol-meter svg {
   display: block;
@@ -1365,14 +1370,11 @@ a.pill { text-decoration: none; }
 
 .scopes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
 .scopes .scope-bar, .scopes .scope-foot { display: none; }
-.cortisols { display: grid; gap: 0.2rem; }
 .scope-owner { display: block; font-size: 0.72rem; font-weight: 600; margin-bottom: 0.25rem; }
+/* whose vitals: the doomscroll shows one block per fly */
+.vitals-owner { font-size: 0.8rem; font-weight: 600; color: var(--ink); }
 
 /* both flies' vitals side by side */
-.pair { display: grid; gap: 0.45rem; }
-.pair-head, .pair-row { display: grid; grid-template-columns: 5.4rem 1fr 1fr; align-items: center; gap: 0.6rem; }
-.pair-head b { font-size: 0.75rem; }
-.pair-row output { font-family: var(--mono); font-size: 0.75rem; }
 
 /* the thread between them */
 .thread { display: flex; flex-direction: column; gap: 0.4rem; }
@@ -1461,13 +1463,27 @@ a.pill { text-decoration: none; }
 .edit-list ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem 0.8rem; font-size: 0.75rem; }
 .edit-list a { color: var(--ink-2); }
 .edit-disclaimer { margin: 0; font-size: 0.66rem; color: var(--ink-3); }
-.tag-feed { display: grid; gap: 0.4rem; }
+/* the live hashtag feed: folded away like the cortisol meter, and smaller */
+/* the divider above comes from the cortisol meter over it */
+.tag-feed { padding: 0 0 0.7rem; border-bottom: 1px solid var(--divider); }
+.tag-feed-toggle i { margin-left: auto; }
+.tag-feed-body { display: grid; gap: 0.45rem; padding-top: 0.3rem; }
+.tag-feed-body[hidden] { display: none; }
+/* TikTok lays the widget out at the panel's width; it is shown at a scale of that */
+.tiktok-tag-box {
+  width: calc(100% * var(--tag-scale, 1));
+  justify-self: center;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #fff;
+}
 .tiktok-tag {
   display: block;
-  width: 100%;
+  width: calc(100% / var(--tag-scale, 1));
   border: 0;
-  border-radius: 11px;
   background: #fff;
+  transform: scale(var(--tag-scale, 1));
+  transform-origin: 0 0;
 }
 .tag-feed-off { margin: 0; font-size: 0.75rem; line-height: 1.45; color: var(--ink-2); }
 .tag-feed-off a { color: var(--ink); }

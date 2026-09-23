@@ -11,6 +11,7 @@ import { useEffect, useRef } from 'react';
 import { REELS, CATS, PHASES, NAMES } from '../game/scroll.js';
 import { ScrollThinker } from './scrollThoughts.js';
 import { TikTokFeedPlayer, EditCredit } from './TikTokConsent.jsx';
+import { Vitals, EXPLAIN } from './Vitals.jsx';
 import { EDITS, EDIT_SUBJECT } from '../game/tiktokEdits.js';
 
 function useFrameLoop(ref, fn) {
@@ -194,41 +195,38 @@ export function Feeds({ duoRef }) {
   );
 }
 
-/** Both flies' vitals, side by side. */
-export function Pair({ duoRef }) {
-  const refs = useRef({});
-  const ROWS = [
-    ['dopamine', 'Dopamine', 'PAM: a reel better than reels usually are, a message from the other, a reply.'],
-    ['octopamine', 'Octopamine', 'PPL1 and arousal: what the threat reels drive, and what keeps a fly watching.'],
-    ['fear', 'Defensive', 'Builds with every spider and swatter, and with a feed that is mostly doom.'],
-    ['npf', 'NPF', 'Satisfaction. Replies top it up; being left on seen and a frightening feed drain it.'],
-    ['sleepPressure', 'Sleepy', 'Sleep pressure. The phone\'s light holds it off; the battery usually gives out first.'],
-    // only when there are TikTok edits to fall for
-    ...(EDITS.length ? [['love', 'Love', `How far it has fallen for ${EDIT_SUBJECT}: it grows with every edit watched, with dopamine behind it, and fades only slowly.`]] : []),
-  ];
-  useFrameLoop(duoRef, (d) => {
-    d.flies.forEach((f, i) => {
-      for (const [k] of ROWS) {
-        const el = refs.current[`${k}${i}`];
-        if (el) el.style.setProperty('--v', String(Math.max(0, Math.min(1, f[k]))));
-      }
-      setText(refs.current[`heart${i}`], Math.round(f.heartRate));
-    });
-  });
-  return (
-    <section className="pair">
-      <div className="pair-head"><span /><b>{NAMES[0]}</b><b>{NAMES[1]}</b></div>
-      <div className="pair-row"><span className="vital-label">Heart</span>
-        {[0, 1].map((i) => <output key={i} className="vital-value" ref={(el) => { refs.current[`heart${i}`] = el; }}>268</output>)}
-      </div>
-      {ROWS.map(([k, label, tip]) => (
-        <div className="pair-row" key={k}>
-          <span className="vital-label tip" data-tip={tip} tabIndex={0}>{label}</span>
-          {[0, 1].map((i) => <div key={i} className="vital-track" ref={(el) => { refs.current[`${k}${i}`] = el; }}><i /></div>)}
-        </div>
-      ))}
-    </section>
-  );
+/** What the signals mean here, where a reel is the only thing that happens. */
+const SCROLL_EXPLAIN = {
+  ...EXPLAIN,
+  dopamine: 'PAM: a reel better than reels usually are, a message from the other, a reply.',
+  octopamine: 'PPL1 and arousal: what the threat reels drive, and what keeps a fly watching.',
+  defensive: 'Builds with every spider and swatter, and with a feed that is mostly doom.',
+  npf: 'Satisfaction. Replies top it up; being left on seen and a frightening feed drain it.',
+};
+
+const EXTRA_ROWS = [
+  { key: 'sleepy', label: 'Sleepy', tip: 'Sleep pressure. The phone\'s light holds it off; the battery usually gives out first.', value: (f) => f.sleepPressure },
+  // only when there are TikTok edits to fall for
+  ...(EDITS.length ? [{
+    key: 'love',
+    label: 'Love',
+    tip: `How far it has fallen for ${EDIT_SUBJECT}: it grows with every edit watched, with dopamine behind it, and fades only slowly.`,
+    value: (f) => f.love,
+  }] : []),
+];
+
+/** Each fly's vitals as the other experiments show them, with its own stress gauge. */
+export function ScrollVitals({ flyRefs }) {
+  return NAMES.map((n, i) => (
+    <Vitals
+      key={n}
+      machineRef={flyRefs[i]}
+      title={n}
+      explain={SCROLL_EXPLAIN}
+      extra={EXTRA_ROWS}
+      cortisol={{ label: `Cortisol · ${n}`, idPrefix: `cortisol-${n.toLowerCase()}` }}
+    />
+  ));
 }
 
 /** The thread between the two phones, newest first. */
