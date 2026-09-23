@@ -114,14 +114,14 @@ export default function BarApp() {
         <BarScene bar={bar} onTick={onTick} />
 
         <div className="stage-overlay">
-          <Loader />
+          <Loader label="Loading the bar and fly" />
           <header className="masthead">
             <h1>
               <span className="title-full">Fruit Fly at the Bar</span>
               <span className="title-compact">Fruit Fly Bar</span>
             </h1>
             <p className="lede">
-              <mark>The same real brain</mark>, now at a bar. Beer through a straw, nicotine pouches from the tin —
+              <mark>The same real brain</mark>, now at a bar. It lifts a beer glass, drinks from the rim, and takes nicotine pouches from the tin —
               and both drugs act on <mark>the measured wiring</mark> of{' '}
               <a href="https://male-cns.janelia.org/" target="_blank" rel="noopener">MaleCNS v1.0</a>: ethanol
               strengthens its GABA synapses, nicotine its cholinergic ones. It decides <mark>how much, and when to stop</mark>.
@@ -167,7 +167,7 @@ export default function BarApp() {
             <a href="https://sketchfab.com/3d-models/drosophila-adult-fruit-fly-ct-scan-ad29b897bd2b4e27bb04ab9d31baa117" target="_blank" rel="noopener">
               fruit fly CT scan
             </a>
-            {' '}by etainproject. The bar is built from primitives.
+            {' '}by etainproject. Interior: <a href="https://sketchfab.com/3d-models/old-bar-bab28c8336f944afad0cc759d7f5ec0b" target="_blank" rel="noopener">Old bar</a> by katydid (Sketchfab Standard license).
           </p>
           <a className="source" href={site.repository} target="_blank" rel="noopener">
             <GitHubIcon /> Open source on GitHub

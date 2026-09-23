@@ -29,7 +29,7 @@ const setText = (el, v) => { if (el && el.textContent !== String(v)) el.textCont
 // ------------------------------------------------------------ top right
 
 const PULLS = [
-  { key: 'chase', label: 'NPF', tip: 'Low neuropeptide F. Deprived flies drink more ethanol (Shohat-Ophir et al. 2012), so a low level pushes it to the straw.' },
+  { key: 'chase', label: 'NPF', tip: 'Low neuropeptide F. Deprived flies drink more ethanol (Shohat-Ophir et al. 2012), so a low level pushes it back to the glass.' },
   { key: 'buzz', label: 'buzz', tip: 'The stimulating edge of a rising ethanol level, and the PAM cluster still firing from it. Ethanol is rewarding to a fly. Tolerance blunts it.' },
   { key: 'memory', label: 'memory', tip: 'What its mushroom body has learned about this bar: the reward of the evenings against the punishment of the mornings.' },
   { key: 'relief', label: 'relief', tip: 'A drink makes the hangover go away for a while — so a hungover fly low on NPF drinks again.' },
@@ -122,7 +122,7 @@ function BarRunLog({ history }) {
     <div className="history">
       <span className="history-label">Tonight:</span>
       <div className="runlog barlog tip" data-tip="The last dozen things it did. Amber: a bout of beer, taller for more sips. White: a pouch. Dark: passed out. Grey: slept. Red: nicotine poisoning.">
-        {history.map((h, i) => <i key={h.at ?? i} className={cls(h)} />)}
+        {history.map((h, i) => <i key={`${h.at}-${h.kind}-${i}`} className={cls(h)} />)}
         {Array.from({ length: empty }, (_, i) => <i key={`e${i}`} className="empty" />)}
       </div>
     </div>
@@ -137,7 +137,7 @@ export function BarBank({ machineRef, ui }) {
   useFrameLoop(machineRef, (m) => {
     setText(clockRef.current, m.clock);
     setText(dayRef.current, `night ${m.nights}`);
-    setText(bacRef.current, m.permille.toFixed(2));
+    setText(bacRef.current, m.meterPermille.toFixed(2));
     setText(nicRef.current, m.nicotine.toFixed(0));
     if (bacRef.current) bacRef.current.dataset.level = m.sedation > 0.3 ? 'high' : m.sway > 0.3 ? 'mid' : 'low';
   });
@@ -147,7 +147,7 @@ export function BarBank({ machineRef, ui }) {
         <b ref={clockRef}>19:00</b><span ref={dayRef}>night 1</span>
       </div>
       <div className="bar-levels">
-        <div className="bar-level tip" data-tip={`Alcohol level in Promille (‰). In this model, a fly with no tolerance can pass out around ${SEDATION_PERMILLE.toFixed(1)} ‰; tolerance pushes that up. Internally, the model uses mM of body ethanol: 1 ‰ is about ${MM_PER_PERMILLE} mM.`}>
+        <div className="bar-level tip" data-tip={`Alcohol level in Promille (‰). After a blackout this holds the level that caused it until the fly wakes, while the body rail shows the level clearing. A fly with no tolerance can pass out around ${SEDATION_PERMILLE.toFixed(1)} ‰; tolerance pushes that up. Internally, the model uses mM of body ethanol: 1 ‰ is about ${MM_PER_PERMILLE} mM.`}>
           <b ref={bacRef} data-level="low">0.00</b><span>‰ alcohol</span>
         </div>
         <div className="bar-level tip" data-tip="Nicotine in hemolymph, ng/mL, on a human scale so pouch strengths read as they do on the tin. Past 26 it gets the jitters; past 38 it seizes. Nicotine is an insecticide.">
@@ -246,7 +246,7 @@ export function BarTab({ machineRef }) {
   return (
     <section className="ledger">
       {cell('beers', 'glasses', 'Glasses finished, and how far into the current one it is. Finished glasses stay on the counter.')}
-      {cell('sips', 'sips', 'Every sip through the straw.')}
+      {cell('sips', 'sips', 'Each drink is taken from the lifted glass.')}
       {cell('pouches', 'pouches', 'Nicotine pouches taken. Spent ones pile up on the napkin.')}
       {cell('mg', 'mg nicotine', 'Total nicotine in all the pouches it has taken.')}
       {cell('peak', 'peak', 'The highest alcohol level it has reached, in Promille (‰).')}
@@ -342,7 +342,7 @@ export function BarHowItWorks({ open, onClose }) {
         <dt>The fly</dt>
         <dd>
           The same micro-CT scan as in the casino, on the same stool. It drinks the way flies do, by
-          extending its proboscis — here onto a straw — and takes nicotine pouches from the tin with its
+          lifting a glass to its mouth and takes nicotine pouches from the tin with its
           rigged right foreleg.
         </dd>
         <dt>Its decisions</dt>

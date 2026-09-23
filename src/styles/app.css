@@ -1043,6 +1043,169 @@ a.pill { text-decoration: none; }
   .venue-bar .slip { bottom: 4.2rem; max-width: calc(100% - 1.8rem); min-width: 0; }
 }
 
+/* Keep the bar's controls at the edges of the actual canvas. The side panel
+   can leave a narrow stage even in a wide browser, so use its width here. */
+.venue-bar .stage { container: bar-stage / inline-size; }
+.venue-bar .masthead { max-width: min(25rem, calc(100% - 26rem)); }
+.venue-bar .barbank {
+  --ink-3: #75654e;
+  width: 23rem;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 1.1rem;
+  row-gap: 0.5rem;
+  padding: 0.8rem 1rem;
+}
+.venue-bar .bar-levels { justify-content: flex-end; gap: 1rem; }
+.venue-bar .bar-clock { flex-wrap: wrap; gap: 0.25rem 0.45rem; }
+.venue-bar .bar-clock b { font-size: 1.4rem; }
+.venue-bar .bar-level b { font-size: 1.15rem; }
+.venue-bar .barbank .stake {
+  grid-column: 1 / -1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 0.85rem;
+  row-gap: 0.18rem;
+  align-items: center;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--divider);
+}
+.venue-bar .stake-head { gap: 0.35rem; }
+.venue-bar .stake-head b { font-size: 1rem; white-space: nowrap; }
+.venue-bar .stake-verb { font-size: 0.7rem; }
+.venue-bar .stake-pips { gap: 3px; }
+.venue-bar .stake-pips i { width: 6px; height: 6px; }
+.venue-bar .stake-why {
+  grid-column: 1;
+  text-align: left;
+  font-size: 0.68rem;
+  max-width: none;
+  line-height: 1.3;
+}
+.venue-bar .bar-pulls {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  max-width: none;
+  margin: 0;
+}
+.venue-bar .bar-pulls .pull { font-size: 0.51rem; }
+.venue-bar .bar-pulls .pull i { height: 18px; }
+.venue-bar .barbank .history { grid-column: 1 / -1; justify-self: end; gap: 0.4rem; }
+.venue-bar .barbank .history-label { font-size: 0.63rem; }
+.venue-bar .barbank .runlog { height: 16px; gap: 3px; align-items: flex-end; }
+.venue-bar .barbank .runlog i { max-height: 16px; width: 3px; }
+.venue-bar .barbank .bank-tags { grid-column: 1 / -1; justify-content: flex-end; flex-wrap: wrap; }
+.venue-bar .dock-left {
+  right: var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.venue-bar .dock-left .pill {
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.78rem;
+}
+.venue-bar .dock-left .pill.sound { min-width: 7.2rem; }
+.venue-bar .howto {
+  top: auto;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: calc(var(--gutter) + 3.6rem);
+  width: min(34rem, calc(100% - 2 * var(--gutter)));
+  max-height: calc(100% - 2 * var(--gutter) - 3.6rem);
+}
+.venue-bar .slip { bottom: calc(var(--gutter) + 3.6rem); }
+.venue-bar .barslip {
+  width: max-content;
+  max-width: min(25rem, calc(100% - 2 * var(--gutter)));
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.65rem 0.85rem;
+}
+.venue-bar .barslip .slip-stake { font-size: 0.73rem; }
+.venue-bar .barslip .stamp { margin: 0; font-size: 0.8rem; flex-shrink: 0; letter-spacing: 0.08em; }
+
+@container bar-stage (max-width: 780px) {
+  .venue-bar .masthead {
+    left: var(--gutter);
+    top: var(--gutter);
+    max-width: calc(100% - 2 * var(--gutter));
+  }
+  .venue-bar .masthead h1 { font-size: 1.4rem; }
+  .venue-bar .masthead .lede { display: none; }
+  .venue-bar .masthead .byline { font-size: 0.76rem; }
+  .venue-bar .barbank {
+    left: var(--gutter);
+    right: var(--gutter);
+    top: 5.2rem;
+    width: auto;
+    padding: 0.65rem 0.85rem;
+    row-gap: 0.35rem;
+  }
+  .venue-bar .barbank .stake { column-gap: 1.2rem; }
+  .venue-bar .bar-pulls { gap: 0.6rem; }
+  .venue-bar .bar-pulls .pull { font-size: 0.57rem; }
+  .venue-bar .barbank .history { position: absolute; right: 0.85rem; bottom: 0.65rem; }
+  .venue-bar .barbank .stake { padding-bottom: 1.35rem; }
+  .venue-bar .barbank .bank-tags { justify-self: start; max-width: calc(100% - 8.5rem); }
+}
+
+@container bar-stage (max-width: 460px) {
+  .venue-bar .masthead h1 { font-size: 1.15rem; }
+  .venue-bar .masthead .byline { font-size: 0.67rem; }
+  .venue-bar .masthead .byline .pill-icon { display: none; }
+  .venue-bar .barbank {
+    top: 4.4rem;
+    padding: 0.6rem 0.7rem;
+    column-gap: 0.7rem;
+    border-radius: 0.8rem;
+  }
+  .venue-bar .bar-clock b { font-size: 1.15rem; }
+  .venue-bar .bar-clock span { font-size: 0.62rem; }
+  .venue-bar .bar-levels { gap: 0.8rem; }
+  .venue-bar .bar-level b { font-size: 1rem; }
+  .venue-bar .bar-level span { font-size: 0.57rem; }
+  .venue-bar .barbank .stake { column-gap: 0.6rem; }
+  .venue-bar .stake-head { justify-content: flex-start; gap: 0.4rem; }
+  .venue-bar .stake-pips { display: none; }
+  .venue-bar .stake-head b { font-size: 0.85rem; }
+  .venue-bar .stake-verb, .venue-bar .stake-why { font-size: 0.63rem; }
+  .venue-bar .bar-pulls { gap: 0.36rem; }
+  .venue-bar .bar-pulls .pull { font-size: 0.49rem; }
+  .venue-bar .barbank .history { right: 0.7rem; bottom: 0.6rem; }
+  .venue-bar .dock-left { gap: 0.3rem; }
+  .venue-bar .dock-left .pill { flex: 1 1 auto; min-width: 0; font-size: 0.65rem; padding: 0.65rem 0.5rem; gap: 0.35em; }
+  .venue-bar .dock-left .pill.sound { min-width: 0; }
+  .venue-bar .dock-left .pill-icon { width: 1em; height: 1em; }
+  .venue-bar .barslip { gap: 0.5rem; padding: 0.55rem 0.65rem; }
+  .venue-bar .barslip .slip-stake { font-size: 0.65rem; }
+  .venue-bar .barslip .stamp { font-size: 0.7rem; padding: 0.3rem 0.4rem; }
+}
+
+@container bar-stage (max-width: 360px) {
+  .venue-bar .dock-left .pill-icon { display: none; }
+}
+
+@media (max-width: 900px) {
+  .venue-bar { grid-template-rows: minmax(36rem, 70svh) auto; }
+  .venue-bar .stage { min-height: 36rem; }
+}
+@media (max-width: 900px) and (max-height: 520px) {
+  .venue-bar { grid-template-rows: minmax(28rem, 100svh) auto; }
+  .venue-bar .stage { min-height: 28rem; }
+}
+
 /* ---------- the trading desk ---------- */
 
 .venue-trade .slip { top: auto; bottom: var(--gutter); }

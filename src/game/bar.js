@@ -12,11 +12,11 @@
  * defensive state, what its mushroom body has learned) and partly the two
  * drugs in its body, which act back on that brain (neural/pharmacology.js).
  */
-import { TIN_GRIP, MOUTH, LIP_OFFSET } from '../scene/barLayout.js';
+import { TIN_GRIP, GLASS_GRIP, DRINK_GLASS_GRIP, MOUTH, LIP_OFFSET } from '../scene/barLayout.js';
 
 export const PHASES = {
   IDLE: 'idle',
-  /** Proboscis out, on the straw. */
+  /** Glass lifted and the fly drinking at the rim. */
   SIPPING: 'sipping',
   /** Foreleg to the tin, a pouch to the mouth, foreleg back. */
   POUCH: 'pouch',
@@ -106,8 +106,9 @@ const decay = (halfLife, dtMin) => Math.pow(0.5, dtMin / halfLife);
 
 /** Motion timings, real seconds. */
 const T = {
-  lean: 0.55, sip: 0.62, unlean: 0.5,
-  reach: 0.7, pinch: 0.3, lift: 0.85, tuck: 0.75, release: 0.65,
+  lean: 0.75, sip: 0.78, unlean: 0.65,
+  glassLift: 0.55, glassLower: 0.65, gulp: 1.1,
+  reach: 0.9, pinch: 0.42, lift: 1.05, tuck: 1.0, release: 0.9,
   lidShut: 0.16,
   refill: 1.6,
   fit: 3.0,
@@ -168,8 +169,12 @@ export class Bar {
     this.heartRate = HEART_REST;
 
     // --- motion ------------------------------------------------------------
-    this.lean = 0;            // 0..1 head down to the straw
+    this.lean = 0;            // 0..1 head lowered to the glass
     this.extend = 0;          // 0..1 proboscis out
+    this.proboscis = 0;       // visual extension; continuous at contact and release
+    this.glassLift = 0;       // 0 on the counter, 1 at the mouth
+    this.glassTilt = 0;       // 0 upright, 1 tipped to drink
+    this.drinkStyle = 'sips';  // seeded: ordinary sips or one committed gulp
     this.grip = 0;            // 0..1 foreleg blended from rest onto handTarget
     this.handTarget = TIN_GRIP.slice();
     this.pouchInHand = false;
@@ -222,6 +227,12 @@ export class Bar {
   /** The bar is busy from six in the evening until it empties out. */
   get evening() { const h = this.hour; return h >= 18 || h < 5; }
   get permille() { return this.bac / MM_PER_PERMILLE; }
+  /** The headline meter stays informative after a blackout: show the level
+   * that caused the fall until the fly wakes, while the body rail still shows
+   * the clearing alcohol level. */
+  get meterPermille() {
+    return this.down ? Math.max(this.permille, this.peakBac / MM_PER_PERMILLE) : this.permille;
+  }
   get sedationAt() { return SEDATION_MM * (1 + this.tolerance * 0.45); }
   /** 0 sober .. 1 at the sedation threshold. */
   get intox() { return clamp01(this.bac / this.sedationAt); }
@@ -278,8 +289,8 @@ export class Bar {
     const craving = this.craving;
     const coUse = I * 0.38;
     const curiosity = this.pouchCount === 0 ? 0.1 + I * 0.18 : 0;
-    const pouch = clamp01(0.02 + craving * 0.95 + coUse + curiosity + this.dopamine * 0.04
-      - this.nicotine / 42 - caution * 0.45 - sleepy * 0.5);
+    const pouch = clamp01(0.06 + craving * 1.25 + coUse * 1.3 + curiosity + this.dopamine * 0.04
+      - this.nicotine / 60 - caution * 0.3 - sleepy * 0.3);
     return { cue, chase, buzz, memory, relief, caution, sleepy, full, craving, coUse, disinhibit, beer, pouch };
   }
 
@@ -319,6 +330,11 @@ export class Bar {
     this.phase = PHASES.SIPPING;
     this.t = 0;
     this.sipsTaken = 0;
+    this.drinkStyle = this.rng() < 0.22 ? 'gulp' : 'sips';
+    this.grip = 0;
+    this.handTarget = GLASS_GRIP.slice();
+    this.glassLift = 0;
+    this.glassTilt = 0;
     this.emit('lean');
   }
 
@@ -392,34 +408,71 @@ export class Bar {
     const k = Math.min(1, dt * 5);
     this.lean += (0 - this.lean) * k;
     this.extend += (0 - this.extend) * k;
+    this.proboscis *= Math.exp(-dt * 5);
+    this.glassLift *= Math.exp(-dt * 5);
+    this.glassTilt *= Math.exp(-dt * 5);
     this.grip += (0 - this.grip) * k;
     this.collapse = Math.max(0, this.collapse - dt / 2.4);
   }
 
   updateSipping(dt) {
-    const slow = 1 + this.sway * 0.9;          // a drunk fly is slow on the straw
+    const slow = 1 + this.sway * 0.9;          // a drunk fly is slower and less steady
     const { sips } = this.plan;
-    const lean = T.lean * slow, sip = T.sip * slow, unlean = T.unlean * slow;
+    const reach = T.lean * slow;
+    const lift = T.glassLift * slow;
+    const drink = (this.drinkStyle === 'gulp' ? T.gulp : Math.max(T.sip, sips * T.sip)) * slow;
+    const lower = T.glassLower * slow;
     const t = this.t;
-    if (t < lean) {
-      const k = easeInOut(t / lean);
-      this.lean = k;
-      this.extend = Math.max(0, (k - 0.4) / 0.6);
+    const drinkStart = reach + lift;
+    const lowerStart = drinkStart + drink;
+    if (t < reach) {
+      const k = easeInOut(t / reach);
+      this.lean = smooth(0.2, 1, k);
+      this.extend = k;
+      this.grip = k;
+      this.handTarget = GLASS_GRIP.slice();
+      this.glassLift = 0;
+      this.glassTilt = 0;
       return;
     }
-    const inSips = t - lean;
-    const done = Math.floor(inSips / sip);
-    this.lean = 1;
-    // the proboscis pumps once per sip
-    const ph = (inSips % sip) / sip;
-    this.extend = 0.82 + 0.18 * Math.sin(ph * Math.PI);
-    while (this.sipsTaken < Math.min(done, sips)) this.takeSip();
-    if (inSips >= sips * sip) {
-      const k = clamp01((inSips - sips * sip) / unlean);
-      this.lean = 1 - easeInOut(k);
-      this.extend = Math.max(0, 1 - k * 1.6);
-      if (k >= 1) this.finishBout();
+    if (t < drinkStart) {
+      const k = easeInOut((t - reach) / lift);
+      this.grip = 1;
+      this.glassLift = k;
+      this.glassTilt = 0;
+      this.handTarget = GLASS_GRIP.map((v, i) => v + (DRINK_GLASS_GRIP[i] - GLASS_GRIP[i]) * k);
+      this.lean = 1;
+      this.extend = 1;
+      return;
     }
+    if (t < lowerStart) {
+      const k = clamp01((t - drinkStart) / drink);
+      this.grip = 1;
+      this.glassLift = 1;
+      this.glassTilt = smooth(0.06, 0.2, k);
+      this.handTarget = DRINK_GLASS_GRIP.slice();
+      this.lean = 1;
+      this.extend = 1;
+      if (this.drinkStyle === 'gulp') {
+        if (k >= 0.42 && this.sipsTaken < sips) while (this.sipsTaken < sips) this.takeSip();
+      } else {
+        const done = Math.floor(k * sips);
+        while (this.sipsTaken < Math.min(done, sips)) this.takeSip();
+      }
+      return;
+    }
+    if (t < lowerStart + lower) {
+      const k = easeInOut((t - lowerStart) / lower);
+      this.grip = 1 - k;
+      this.glassLift = 1 - k;
+      this.glassTilt = 1 - k;
+      this.handTarget = DRINK_GLASS_GRIP.map((v, i) => v + (GLASS_GRIP[i] - DRINK_GLASS_GRIP[i]) * k);
+      this.lean = 1 - k;
+      this.extend = 1 - k;
+      return;
+    }
+    while (this.sipsTaken < sips) this.takeSip();
+    this.finishBout();
   }
 
   takeSip() {
@@ -444,7 +497,8 @@ export class Bar {
     this.plan = null;
     this.phase = PHASES.IDLE;
     this.t = 0;
-    this.lean = 0; this.extend = 0;
+    this.lean = 0; this.extend = 0; this.proboscis = 0;
+    this.glassLift = 0; this.glassTilt = 0; this.grip = 0;
   }
 
   /**
@@ -456,17 +510,24 @@ export class Bar {
     const slow = 1 + this.sway * 0.7;
     const s = this.pouchStage;
     const t = this.t;
-    const next = (stage) => { this.pouchStage = stage; this.t = 0; this.stageK = 0; };
+    // Carry the fractional frame into the next beat instead of introducing a
+    // fresh pause at every transition on slower displays.
+    const next = (stage, duration) => {
+      this.pouchStage = stage;
+      this.t = Math.max(0, t - duration);
+      this.stageK = 0;
+    };
     if (s === 'reach') {
       const k = clamp01(t / (T.reach * slow));
       this.stageK = k;
-      this.handTarget = TIN_GRIP.slice();
-      this.grip = easeInOut(k);
+      const reach = easeInOut(k);
+      this.handTarget = [TIN_GRIP[0], TIN_GRIP[1] + Math.sin(reach * Math.PI) ** 2 * 0.018, TIN_GRIP[2]];
+      this.grip = reach;
       // the tarsus catches the front of the lid on the way in and flips it up
       const open = clamp01((k - 0.55) / 0.45);
       this.tinLid = open > 0 ? springOut(open) : 0;
       if (open > 0 && !this.lidPopped) { this.lidPopped = true; this.emit('tin'); }
-      if (k >= 1) { this.tinLid = 1; next('pinch'); }
+      if (k >= 1) { this.tinLid = 1; next('pinch', T.reach * slow); }
     } else if (s === 'pinch') {
       const k = clamp01(t / T.pinch);
       this.stageK = k;
@@ -474,8 +535,8 @@ export class Bar {
       this.tinLid = 1;
       this.pouchInHand = true;
       // a small dip to close on it, and up again
-      this.handTarget = [TIN_GRIP[0], TIN_GRIP[1] - 0.004 * Math.sin(k * Math.PI), TIN_GRIP[2]];
-      if (k >= 1) next('lift');
+      this.handTarget = [TIN_GRIP[0], TIN_GRIP[1] - 0.004 * Math.sin(k * Math.PI) ** 2, TIN_GRIP[2]];
+      if (k >= 1) next('lift', T.pinch);
     } else if (s === 'lift') {
       const k = easeInOut(clamp01(t / (T.lift * slow)));
       this.stageK = k;
@@ -493,7 +554,7 @@ export class Bar {
       const shut = clamp01((t - 0.12) / T.lidShut);
       this.tinLid = 1 - shut * shut;
       if (shut >= 1 && !this.lidClicked) { this.lidClicked = true; this.emit('lid'); }
-      if (k >= 1) next('tuck');
+      if (k >= 1) next('tuck', T.lift * slow);
     } else if (s === 'tuck') {
       const k = clamp01(t / T.tuck);
       this.stageK = k;
@@ -502,7 +563,7 @@ export class Bar {
       const at = this.tuckAt;
       const l = Math.hypot(LIP_OFFSET[0], LIP_OFFSET[1], LIP_OFFSET[2]) || 1;
       this.handTarget = at.map((v, i) => v - (LIP_OFFSET[i] / l) * press);
-      this.lean = -0.9 * Math.sin(k * Math.PI);
+      this.lean = -0.9 * Math.sin(k * Math.PI) ** 2;
       this.tinLid = 0;
       if (k >= 1) {
         this.pouchInHand = false;
@@ -512,12 +573,20 @@ export class Bar {
         this.tingle = 0.4 + 0.6 * (this.plan.mg / POUCH_MG[POUCH_MG.length - 1]);
         this.record({ kind: 'pouch', mg: this.plan.mg, why: this.plan.why });
         this.emit('tuck', { mg: this.plan.mg });
-        next('release');
+        next('release', T.tuck);
       }
     } else {
-      this.handTarget = this.tuckAt;
       const k = clamp01(t / T.release);
       this.stageK = k;
+      // Clear the lip before relaxing the foreleg. A little lift keeps the
+      // returning tarsus from cutting straight through the underside of the head.
+      const at = this.tuckAt;
+      const retreat = smooth(0, 0.65, k);
+      this.handTarget = [
+        at[0] + LIP_OFFSET[0] * retreat * 0.65,
+        at[1] + LIP_OFFSET[1] * retreat * 0.65 + Math.sin(k * Math.PI) ** 2 * 0.012,
+        at[2] + LIP_OFFSET[2] * retreat * 0.65,
+      ];
       this.grip = 1 - easeInOut(k);
       this.lean *= Math.max(0, 1 - dt * 8);
       if (k >= 1) {
@@ -537,6 +606,9 @@ export class Bar {
   updateSleep(dt) {
     this.lean += (0 - this.lean) * Math.min(1, dt * 3);
     this.extend += (0 - this.extend) * Math.min(1, dt * 4);
+    this.proboscis *= Math.exp(-dt * 7);
+    this.glassLift *= Math.exp(-dt * 5);
+    this.glassTilt *= Math.exp(-dt * 5);
     this.grip += (0 - this.grip) * Math.min(1, dt * 4);
     this.pouchInHand = false;
     this.collapse = Math.min(1, this.collapse + dt / 1.6);
@@ -551,6 +623,9 @@ export class Bar {
   updateSeizure(dt) {
     this.lean += (0 - this.lean) * Math.min(1, dt * 3);
     this.extend = 0;
+    this.proboscis *= Math.exp(-dt * 12);
+    this.glassLift *= Math.exp(-dt * 6);
+    this.glassTilt *= Math.exp(-dt * 6);
     this.grip += (0 - this.grip) * Math.min(1, dt * 4);
     this.pouchInHand = false;
     // the fit first, then it lies there knocked down until the level falls

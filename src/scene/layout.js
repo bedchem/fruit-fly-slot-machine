@@ -47,7 +47,9 @@ export const STOOL = {
  * tools/poses.mjs solves all four numbers together with the stool offset.
  */
 export const FLY = {
-  position: [0.9631, 1.2664, -0.1845],
+  // The fly sits on the green upholstered stool that is part of old-bar.glb.
+  // Its measured seat is at the near end of the counter (world Z ≈ -1.34).
+  position: [0.9631, 1.2664, -1.34],
   rotationY: -1.9208,
   pitch: -1.05,
   scale: 0.62,

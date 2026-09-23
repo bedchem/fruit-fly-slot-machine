@@ -2,10 +2,9 @@
  * The bar: the same fly, on the same stool, at a counter instead of a slot
  * machine.
  *
- * Everything here is built from primitives at load time — the counter, the
- * stool, the glass, the straw, the tin — so the bar costs no download beyond
- * the fly itself. As in the casino, one `useFrame` advances the state machine
- * and pushes its numbers onto the objects; React does not re-render per frame.
+ * The supplied Old bar interior is aligned to the interaction coordinates.
+ * The glass, stool and tin remain live props; one frame loop advances the
+ * simulation without making React re-render the room every frame.
  */
 import { Suspense, forwardRef, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree, advance } from '@react-three/fiber';
@@ -17,8 +16,10 @@ import { Fly } from './Fly.jsx';
 import { STOOL, flyToWorld } from './layout.js';
 import { HAND } from './flyRig.js';
 import {
-  BAR_CAMERA, COUNTER, GLASS, TIN, TIN_GRIP, STRAW_TIP, MOUTH_LOCAL, MOUTH, LIP_OFFSET,
+  BAR_CAMERA, COUNTER, GLASS, TIN, TIN_GRIP, STRAW_TIP, DRINK_GLASS_BASE, MOUTH_LOCAL, MOUTH, LIP_OFFSET,
 } from './barLayout.js';
+import { OldBar } from './OldBar.jsx';
+import { BarCamera } from './BarCamera.jsx';
 import { PHASES, POUCH_WEAR_MIN } from '../game/bar.js';
 import { sound } from '../audio/audio.js';
 
@@ -34,15 +35,14 @@ const MAX_EMPTIES = 9;
 const MAX_SPENT = 12;
 
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
+const smooth01 = (x) => { const t = clamp01(x); return t * t * (3 - 2 * t); };
 /** Where it looks while a pouch goes in: up and out over the counter, not at its own chin. */
 const LOOK_AHEAD = [GLASS.base[0] - 0.3, GLASS.base[1] + 0.42, GLASS.base[2] - 0.05];
 
 // ------------------------------------------------------------------ the rig
 
 function Rig({ bar, gripTargetRef, dopamineRef, lookRef, mouthRef, onTick }) {
-  const { camera, scene } = useThree();
-  const base = useMemo(() => new THREE.Vector3(...BAR_CAMERA.position), []);
-  const look = useMemo(() => new THREE.Vector3(...BAR_CAMERA.target), []);
+  const { scene } = useThree();
   const gaze = useMemo(() => ({ want: new THREE.Vector3(), at: new THREE.Vector3(), out: [0, 0, 0], ready: false }), []);
   const uiClock = useRef(0);
 
@@ -53,14 +53,14 @@ function Rig({ bar, gripTargetRef, dopamineRef, lookRef, mouthRef, onTick }) {
     gripTargetRef.current = bar.grip > 0.001 ? bar.handTarget : REST_HAND_WORLD;
     dopamineRef.current = bar.dopamine;
 
-    // where the head goes: the straw while drinking, the pouch while carrying
+    // where the head goes: the glass while drinking, the pouch while carrying
     // it — but up and away once it is at the mouth, or the head would chase
     // its own chin — otherwise a slow wander between the glass and the room.
     // The head turns towards it rather than snapping.
     const t = state.clock.elapsedTime;
     const s = bar.phase === PHASES.POUCH ? bar.pouchStage : null;
     const atMouth = s === 'tuck' || s === 'release' || (s === 'lift' && bar.stageK > 0.45);
-    if (bar.lean > 0.05 && bar.phase === PHASES.SIPPING) gaze.want.set(...STRAW_TIP);
+    if (bar.phase === PHASES.SIPPING && bar.lean > 0.05) gaze.want.set(...MOUTH);
     else if (atMouth) gaze.want.set(...LOOK_AHEAD);
     else if (bar.grip > 0.3) gaze.want.set(...bar.handTarget);
     else {
@@ -73,17 +73,6 @@ function Rig({ bar, gripTargetRef, dopamineRef, lookRef, mouthRef, onTick }) {
     lookRef.current = gaze.out;
 
     sound.setArousal(bar.arousal, bar.collapse);
-
-    // the camera drinks too: past about half a per mille the room starts to float
-    const drunk = bar.sway;
-    const shake = bar.shake;
-    camera.position.set(
-      base.x + Math.sin(t * 0.21) * 0.05 + drunk * Math.sin(t * 0.37) * 0.16 + Math.sin(t * 31.7) * shake * 0.04,
-      base.y + Math.sin(t * 0.17) * 0.03 + drunk * Math.sin(t * 0.29) * 0.07 + Math.sin(t * 27.3) * shake * 0.035,
-      base.z + Math.cos(t * 0.19) * 0.05 + drunk * Math.cos(t * 0.33) * 0.14 + Math.cos(t * 24.1) * shake * 0.04,
-    );
-    camera.lookAt(look);
-    camera.rotateZ(drunk * Math.sin(t * 0.43) * 0.045);
 
     // the lights go down while it sleeps
     const night = bar.phase === PHASES.ASLEEP || bar.phase === PHASES.PASSED_OUT ? bar.collapse : 0;
@@ -146,42 +135,7 @@ export function StudioProbe() {
 
 // --------------------------------------------------------------- furniture
 
-const WOOD = { color: '#5b3720', roughness: 0.55, metalness: 0 };
-const WOOD_TOP = { color: '#6e4427', roughness: 0.28, metalness: 0.05 };
 const BRASS = { color: '#c9954b', roughness: 0.3, metalness: 0.9 };
-
-function Counter() {
-  const { top, thickness, front, back, zMin, zMax } = COUNTER;
-  const len = zMax - zMin;
-  const zMid = (zMin + zMax) / 2;
-  const depth = front - back;
-  return (
-    <group>
-      {/* the top, overhanging the body on the fly's side */}
-      <mesh position={[(front + back) / 2, top - thickness / 2, zMid]} castShadow receiveShadow>
-        <boxGeometry args={[depth, thickness, len]} />
-        <meshStandardMaterial {...WOOD_TOP} />
-      </mesh>
-      {/* the body, down to the floor */}
-      <mesh position={[(front + back) / 2 - 0.06, (top - thickness) / 2, zMid]} castShadow receiveShadow>
-        <boxGeometry args={[depth - 0.12, top - thickness, len]} />
-        <meshStandardMaterial {...WOOD} />
-      </mesh>
-      {/* panels on the front face, so it reads as joinery and not a block */}
-      {Array.from({ length: Math.floor(len / 0.6) }, (_, i) => (
-        <mesh key={i} position={[front - 0.059, (top - thickness) / 2, zMin + 0.3 + i * 0.6]}>
-          <boxGeometry args={[0.012, (top - thickness) * 0.72, 0.5]} />
-          <meshStandardMaterial color="#4c2d19" roughness={0.6} />
-        </mesh>
-      ))}
-      {/* the brass foot rail */}
-      <mesh position={[front + 0.05, 0.22, zMid]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <cylinderGeometry args={[0.022, 0.022, len, 16]} />
-        <meshStandardMaterial {...BRASS} />
-      </mesh>
-    </group>
-  );
-}
 
 /** A plain bar stool under the fly, where the casino's stool stood; `offset` moves it for a second fly. */
 export function Stool({ offset = [0, 0, 0] }) {
@@ -215,86 +169,6 @@ export function Stool({ offset = [0, 0, 0] }) {
   );
 }
 
-/** The back bar: shelves of bottles in front of a dim mirror. */
-function BackBar() {
-  const bottles = useMemo(() => {
-    const hues = ['#2f5d34', '#6b3a17', '#8c6a2a', '#274566', '#5e1f24', '#9aa08a', '#3f2a17'];
-    const out = [];
-    let seed = 7;
-    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-    for (const y of [1.46, 1.92, 2.38]) {
-      for (let z = -2.4; z < 2.0; z += 0.17 + rnd() * 0.08) {
-        out.push({ y, z, h: 0.22 + rnd() * 0.14, r: 0.033 + rnd() * 0.015, c: hues[Math.floor(rnd() * hues.length)] });
-      }
-    }
-    return out;
-  }, []);
-  const x = -0.72;
-  return (
-    <group>
-      <mesh position={[x - 0.2, 1.8, -0.2]} receiveShadow>
-        <boxGeometry args={[0.05, 3.6, 5.2]} />
-        <meshStandardMaterial color="#2d2019" roughness={0.9} />
-      </mesh>
-      <mesh position={[x - 0.17, 1.95, -0.2]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[4.6, 1.3]} />
-        <meshStandardMaterial color="#6f625a" roughness={0.12} metalness={0.8} side={THREE.DoubleSide} />
-      </mesh>
-      {[1.44, 1.9, 2.36].map((y) => (
-        <mesh key={y} position={[x, y - 0.015, -0.2]} castShadow receiveShadow>
-          <boxGeometry args={[0.3, 0.03, 4.6]} />
-          <meshStandardMaterial {...WOOD_TOP} />
-        </mesh>
-      ))}
-      {bottles.map((b, i) => (
-        <group key={i} position={[x + 0.02, b.y, b.z]}>
-          <mesh position={[0, b.h / 2, 0]} castShadow>
-            <cylinderGeometry args={[b.r, b.r, b.h, 14]} />
-            <meshPhysicalMaterial color={b.c} roughness={0.15} transmission={0.35} thickness={0.05} />
-          </mesh>
-          <mesh position={[0, b.h + 0.045, 0]}>
-            <cylinderGeometry args={[b.r * 0.3, b.r * 0.9, 0.09, 10]} />
-            <meshPhysicalMaterial color={b.c} roughness={0.15} transmission={0.35} thickness={0.05} />
-          </mesh>
-        </group>
-      ))}
-      {/* the pendant over the fly's end of the counter */}
-      <mesh position={[0.62, 2.45, -0.05]}>
-        <coneGeometry args={[0.13, 0.12, 24, 1, true]} />
-        <meshStandardMaterial color="#1e1a16" side={THREE.DoubleSide} />
-      </mesh>
-      <mesh position={[0.62, 2.38, -0.05]}>
-        <sphereGeometry args={[0.04, 16, 12]} />
-        <meshStandardMaterial color="#ffd9a0" emissive="#ffb35c" emissiveIntensity={2.4} />
-      </mesh>
-      <mesh position={[0.62, 3.0, -0.05]}>
-        <cylinderGeometry args={[0.004, 0.004, 1.1, 6]} />
-        <meshStandardMaterial color="#111" />
-      </mesh>
-    </group>
-  );
-}
-
-/** The tap, further down the counter. */
-function Tap() {
-  return (
-    <group position={[0.4, COUNTER.top, 1.1]}>
-      <mesh position={[0, 0.16, 0]} castShadow>
-        <cylinderGeometry args={[0.03, 0.04, 0.32, 20]} />
-        <meshStandardMaterial {...BRASS} />
-      </mesh>
-      <mesh position={[0.06, 0.28, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-        <cylinderGeometry args={[0.014, 0.014, 0.12, 12]} />
-        <meshStandardMaterial {...BRASS} />
-      </mesh>
-      <mesh position={[0, 0.42, 0]} castShadow>
-        <boxGeometry args={[0.03, 0.18, 0.05]} />
-        <meshStandardMaterial color="#1b1b1b" roughness={0.4} />
-      </mesh>
-    </group>
-  );
-}
-
 // ------------------------------------------------------------- the drink
 
 /** A pint-ish glass profile, for the lathe. */
@@ -314,6 +188,7 @@ const GLASS_MAT = {
 
 function Glass({ bar }) {
   const { base, height, radiusTop, radiusBottom } = GLASS;
+  const group = useRef();
   const liquid = useRef();
   const foam = useRef();
   const bubbles = useRef();
@@ -321,16 +196,6 @@ function Glass({ bar }) {
   const inner = radiusBottom - 0.005;
   const innerTop = radiusTop * 0.9;
   const fullH = height * 0.86;
-  const straw = useMemo(() => {
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(base[0] + 0.008, base[1] + 0.02, base[2] - 0.004),
-      new THREE.Vector3(base[0] + 0.012, base[1] + height + 0.05, base[2] - 0.01),
-      new THREE.Vector3(base[0] + 0.05, base[1] + height + 0.13, base[2] - 0.05),
-      new THREE.Vector3(STRAW_TIP[0] - 0.09, STRAW_TIP[1] + 0.02, STRAW_TIP[2] + 0.02),
-      new THREE.Vector3(...STRAW_TIP),
-    ], false, 'catmullrom', 0.3);
-    return new THREE.TubeGeometry(curve, 64, 0.0055, 10, false);
-  }, [base, height]);
   const bubbleSeeds = useMemo(() => Array.from({ length: 14 }, (_, i) => ({
     a: (i * 2.39996) % (Math.PI * 2), r: 0.3 + ((i * 37) % 10) / 16, s: 0.6 + ((i * 13) % 7) / 10, o: i / 14,
   })), []);
@@ -338,25 +203,35 @@ function Glass({ bar }) {
 
   useFrame((state) => {
     const f = clamp01(bar.fill);
+    const lift = smooth01(bar.glassLift);
+    const tilt = smooth01(bar.glassTilt);
     const h = Math.max(0.0005, fullH * f);
+    if (group.current) {
+      group.current.position.set(
+        base[0] + (DRINK_GLASS_BASE[0] - base[0]) * lift,
+        base[1] + (DRINK_GLASS_BASE[1] - base[1]) * lift,
+        base[2] + (DRINK_GLASS_BASE[2] - base[2]) * lift,
+      );
+      group.current.rotation.z = -0.62 * tilt;
+    }
     if (liquid.current) {
       liquid.current.scale.set(1, h / fullH, 1);
-      liquid.current.position.y = base[1] + 0.012 + h / 2;
+      liquid.current.position.y = 0.012 + h / 2;
       liquid.current.visible = f > 0.01;
     }
     if (foam.current) {
       const r = inner + (innerTop - inner) * (h / fullH);
       foam.current.scale.set(r / innerTop, 1, r / innerTop);
-      foam.current.position.y = base[1] + 0.012 + h + 0.006;
+      foam.current.position.y = 0.012 + h + 0.006;
       foam.current.visible = f > 0.01;
     }
     if (bubbles.current) {
       const t = state.clock.elapsedTime;
       bubbleSeeds.forEach((b, i) => {
         const k = (t * 0.25 * b.s + b.o) % 1;
-        const y = base[1] + 0.02 + k * h * 0.95;
+        const y = 0.02 + k * h * 0.95;
         const rr = inner * b.r * 0.8;
-        dummy.position.set(base[0] + Math.cos(b.a) * rr, y, base[2] + Math.sin(b.a) * rr);
+        dummy.position.set(Math.cos(b.a) * rr, y, Math.sin(b.a) * rr);
         dummy.scale.setScalar(f > 0.02 ? 1 : 0);
         dummy.updateMatrix();
         bubbles.current.setMatrixAt(i, dummy.matrix);
@@ -366,16 +241,16 @@ function Glass({ bar }) {
   });
 
   return (
-    <group>
-      <mesh geometry={geo} position={base} castShadow renderOrder={2}>
+    <group ref={group} position={base}>
+      <mesh geometry={geo} castShadow renderOrder={2}>
         <meshPhysicalMaterial {...GLASS_MAT} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
-      <mesh ref={liquid} position={[base[0], base[1] + fullH / 2, base[2]]}>
+      <mesh ref={liquid} position={[0, fullH / 2, 0]}>
         <cylinderGeometry args={[innerTop, inner, fullH, 32]} />
         <meshPhysicalMaterial color="#e39a2a" roughness={0.15} transmission={0.45} thickness={0.05}
           emissive="#8a4b08" emissiveIntensity={0.35} />
       </mesh>
-      <mesh ref={foam} position={[base[0], base[1] + fullH, base[2]]}>
+      <mesh ref={foam} position={[0, fullH, 0]}>
         <cylinderGeometry args={[innerTop, innerTop, 0.014, 32]} />
         <meshStandardMaterial color="#fbf3e4" roughness={0.9} />
       </mesh>
@@ -383,10 +258,7 @@ function Glass({ bar }) {
         <sphereGeometry args={[0.0016, 6, 5]} />
         <meshStandardMaterial color="#fff3cf" roughness={0.2} />
       </instancedMesh>
-      <mesh geometry={straw} castShadow>
-        <meshStandardMaterial color="#d8342b" roughness={0.45} />
-      </mesh>
-      <mesh position={[base[0], base[1] - 0.003, base[2]]} receiveShadow>
+      <mesh position={[0, -0.003, 0]} receiveShadow>
         <cylinderGeometry args={[0.058, 0.058, 0.006, 32]} />
         <meshStandardMaterial color="#e8dcc4" roughness={0.95} />
       </mesh>
@@ -713,7 +585,7 @@ function Proboscis({ bar, mouthRef }) {
   const up = useMemo(() => new THREE.Vector3(0, 1, 0), []);
   useFrame(() => {
     const m = mouthRef.current;
-    const e = bar.extend;
+    const e = bar.proboscis ?? bar.extend;
     const on = !!m && e > 0.02;
     if (stalk.current) stalk.current.visible = on;
     if (tip.current) tip.current.visible = on;
@@ -753,11 +625,9 @@ function World({ bar, onTick }) {
   return (
     <>
       <Lights bar={bar} dopamineRef={dopamineRef} />
+      <BarCamera bar={bar} />
       <Rig bar={bar} gripTargetRef={gripTargetRef} dopamineRef={dopamineRef} lookRef={lookRef} mouthRef={mouthRef} onTick={onTick} />
-      <Counter />
-      <Stool />
-      <BackBar />
-      <Tap />
+      <OldBar />
       <Glass bar={bar} />
       <Empties bar={bar} />
       <Fly
@@ -770,12 +640,7 @@ function World({ bar, onTick }) {
       />
       <Tin bar={bar} mouthRef={mouthRef} />
       <Tingle bar={bar} mouthRef={mouthRef} />
-      <Proboscis bar={bar} mouthRef={mouthRef} />
       <ContactShadows position={[0, 0.002, 0]} opacity={0.5} scale={12} blur={2.4} far={4} resolution={1024} color="#140c06" />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[16, 64]} />
-        <meshStandardMaterial color="#4a3526" roughness={0.85} />
-      </mesh>
       <StudioProbe />
     </>
   );

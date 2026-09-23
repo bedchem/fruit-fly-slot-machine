@@ -31,15 +31,22 @@ export const COUNTER = {
  * over to its mouth: flies drink through the proboscis, not from a rim.
  */
 export const GLASS = {
-  base: [0.66, COUNTER.top, -0.07],
+  base: [0.78, COUNTER.top, -1.22],
   height: 0.16,
   radiusTop: 0.043,
   radiusBottom: 0.034,
 };
 
+/** The tarsus closes around the middle of the glass while it drinks. */
+export const GLASS_GRIP = [GLASS.base[0] - 0.03, GLASS.base[1] + 0.085, GLASS.base[2]];
+
+/** Bottom of the glass when its rim reaches the mouth for a proper sip. */
+export const DRINK_GLASS_BASE = [MOUTH[0] - 0.025, MOUTH[1] - GLASS.height - 0.012, MOUTH[2] + 0.006];
+export const DRINK_GLASS_GRIP = [DRINK_GLASS_BASE[0] - 0.045, DRINK_GLASS_BASE[1] + 0.085, DRINK_GLASS_BASE[2]];
+
 /** The pouch tin, on the counter under the right foreleg. */
 export const TIN = {
-  center: [0.77, COUNTER.top, -0.30],
+  center: [0.84, COUNTER.top, -1.46],
   radius: 0.036,
   height: 0.021,
 };
@@ -73,8 +80,7 @@ export const STRAW_TIP = (() => {
  * with the stool under it and the back bar alongside.
  */
 export const BAR_CAMERA = {
-  position: [0.02, 2.3, -3.15],
-  target: [0.78, 1.52, -0.1],
-  fov: 36,
+  position: [0.20, 2.45, -4.75],
+  target: [0.72, 1.42, -1.05],
+  fov: 43,
 };
-

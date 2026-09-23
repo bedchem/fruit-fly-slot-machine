@@ -124,7 +124,7 @@ const SITUATIONS = [
   {
     key: 'learned-bad',
     when: (m) => m.memory < -0.35,
-    lines: ['I know how this ends. With a morning.', 'This place hurts me. And yet. The straw.'],
+    lines: ['I know how this ends. With a morning.', 'This place hurts me. And yet. One more glass.'],
   },
   {
     key: 'learned-good',
@@ -134,7 +134,7 @@ const SITUATIONS = [
   {
     key: 'calm',
     when: () => true,
-    lines: ['Nice place. Quiet. Sticky.', 'Just the one tonight. Probably.', 'Straw\'s right there. No rush.'],
+    lines: ['Nice place. Quiet. Sticky.', 'Just the one tonight. Probably.', 'The glass is right there. No rush.'],
   },
 ];
 
