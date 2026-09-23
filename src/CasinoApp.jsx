@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { FlyScene } from './scene/FlyScene.jsx';
 import { SlotMachine as Machine, PHASES } from './game/machine.js';
 import { LEVER_PULLED } from './scene/layout.js';
@@ -10,10 +10,12 @@ import { Tooltips } from './ui/Tooltips.jsx';
 import { ResultSlip, Credits, RunLog, BrokeCard, ReviveCard } from './ui/Result.jsx';
 import { Stake } from './ui/Stake.jsx';
 import { MemoryPanel, Ledger } from './ui/Memory.jsx';
-import { HowItWorks, HowItWorksButton } from './ui/HowItWorks.jsx';
+import { HowItWorks } from './ui/HowItWorks.jsx';
 import site from '../site.config.js';
 import { Loader } from './ui/Loader.jsx';
-import { LegalIcon, GitHubIcon, SoundIcon, LabIcon } from './ui/icons.jsx';
+import { GitHubIcon } from './ui/icons.jsx';
+import { SiteMenu } from './ui/SiteMenu.jsx';
+import { useSound } from './ui/useSound.js';
 
 /** How long the "it comes round" card stays up. */
 const REVIVE_CARD_MS = 4200;
@@ -37,7 +39,7 @@ export default function CasinoApp() {
     result: null, history: [],
     brokeStage: null, deaths: 0, revivedAt: 0,
   });
-  const [muted, setMuted] = useState(true);
+  const { muted, toggleSound } = useSound();
   const [howOpen, setHowOpen] = useState(false);
   const closeHow = useCallback(() => setHowOpen(false), []);
 
@@ -91,39 +93,6 @@ export default function CasinoApp() {
         }
     ));
   }, []);
-
-  // Sound starts off. Browsers will not start audio without a gesture anyway,
-  // so the visitor's FIRST press anywhere on the page turns it on. After that
-  // only the sound pill (or M) switches it: once someone has turned it off,
-  // clicking around the page must not bring it back.
-  const soundTouched = useRef(false);
-  const toggleSound = useCallback(() => {
-    soundTouched.current = true;
-    sound.resume();
-    setMuted((v) => { sound.setMuted(!v); return !v; });
-  }, []);
-
-  useEffect(() => {
-    const events = ['pointerdown', 'keydown', 'touchstart'];
-    const first = (e) => {
-      if (soundTouched.current) return;
-      // the pill and M make their own choice; turning it on here as well
-      // would have their toggle switch it straight back off
-      if (e.target?.closest?.('.pill.sound') || e.key === 'm' || e.key === 'M') return;
-      soundTouched.current = true;
-      sound.resume();
-      sound.setMuted(false);
-      setMuted(false);
-    };
-    events.forEach((e) => window.addEventListener(e, first, { passive: true }));
-    return () => events.forEach((e) => window.removeEventListener(e, first));
-  }, []);
-
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'm' || e.key === 'M') toggleSound(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [toggleSound]);
 
   const showResult = ui.result && (ui.phase === PHASES.RESULT || ui.phase === PHASES.RESOLVING);
   // onTick fires at 12 Hz, so the card comes down within a tick of its time
@@ -181,21 +150,12 @@ export default function CasinoApp() {
             )}
           </aside>
 
-          {/* bottom left: sound, then Legal, then How it works */}
-          <nav className="dock-left" aria-label="Controls">
-            <a className="pill info home" href="/"><LabIcon />Fly Lab</a>
-            <button
-              type="button"
-              className={`pill sound ${muted ? 'off' : ''}`}
-              aria-pressed={!muted}
-              onClick={toggleSound}
-            >
-              <SoundIcon muted={muted} />
-              {muted ? 'Sound off' : 'Sound on'}
-            </button>
-            <a className="pill info" href="/legal.html"><LegalIcon />Legal</a>
-            <HowItWorksButton open={howOpen} onToggle={() => setHowOpen((v) => !v)} />
-          </nav>
+          <SiteMenu
+            muted={muted}
+            onToggleSound={toggleSound}
+            howOpen={howOpen}
+            onToggleHow={() => setHowOpen((v) => !v)}
+          />
           <HowItWorks open={howOpen} onClose={closeHow} />
 
           {showResult && <ResultSlip result={ui.result} />}

@@ -62,6 +62,8 @@ export const phoneLocal = (i = 0) => worldToFly(phoneWorld(i), POSES[i]);
  */
 export const SCROLL_CAMERA = {
   position: [3.9, 2.7, -1.2],
-  target: [0.75, 1.3, 0.35],
-  fov: 40,
+  // Both stools and both flies must remain in the hero shot on the narrow
+  // stage too; the original high/right aim cropped the near fly.
+  target: [0.75, 1.0, -0.15],
+  fov: 48,
 };

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { TradeScene } from './scene/TradeScene.jsx';
 import { Trader, PHASES } from './game/trader.js';
 import { sound } from './audio/audio.js';
@@ -8,12 +8,13 @@ import { TraderBrain } from './neural/traderBrain.js';
 import { Vitals } from './ui/Vitals.jsx';
 import { Tooltips } from './ui/Tooltips.jsx';
 import { MemoryPanel } from './ui/Memory.jsx';
-import { HowItWorksButton } from './ui/HowItWorks.jsx';
 import { TradeThinker } from './ui/tradeThoughts.js';
 import {
   TradeBank, Vision, League, FillSlip, MarginCard, ClosedCard, NewsToast, TradeHowItWorks,
 } from './ui/TradePanels.jsx';
-import { LegalIcon, GitHubIcon, SoundIcon, LabIcon } from './ui/icons.jsx';
+import { GitHubIcon } from './ui/icons.jsx';
+import { SiteMenu } from './ui/SiteMenu.jsx';
+import { useSound } from './ui/useSound.js';
 import site from '../site.config.js';
 import { Loader } from './ui/Loader.jsx';
 
@@ -43,7 +44,7 @@ export default function TradeApp() {
   if (import.meta.env.DEV) window.__trader = trader;
 
   const [ui, setUi] = useState({ phase: trader.phase, result: null, history: [], panics: 0, marginCalls: 0, news: null, newsAt: 0 });
-  const [muted, setMuted] = useState(true);
+  const { muted, toggleSound } = useSound();
   const [howOpen, setHowOpen] = useState(false);
   const closeHow = useCallback(() => setHowOpen(false), []);
 
@@ -81,32 +82,6 @@ export default function TradeApp() {
     ));
   }, []);
 
-  // sound: the first press anywhere turns it on; after that only the pill (or M)
-  const soundTouched = useRef(false);
-  const toggleSound = useCallback(() => {
-    soundTouched.current = true;
-    sound.resume();
-    setMuted((v) => { sound.setMuted(!v); return !v; });
-  }, []);
-  useEffect(() => {
-    const events = ['pointerdown', 'keydown', 'touchstart'];
-    const first = (e) => {
-      if (soundTouched.current) return;
-      if (e.target?.closest?.('.pill.sound') || e.key === 'm' || e.key === 'M') return;
-      soundTouched.current = true;
-      sound.resume();
-      sound.setMuted(false);
-      setMuted(false);
-    };
-    events.forEach((e) => window.addEventListener(e, first, { passive: true }));
-    return () => events.forEach((e) => window.removeEventListener(e, first));
-  }, []);
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'm' || e.key === 'M') toggleSound(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [toggleSound]);
-
   const now = Date.now();
   const r = ui.result;
   const showSlip = r && now - r.at < SLIP_MS && ['buy', 'sell', 'panic'].includes(r.kind);
@@ -143,15 +118,12 @@ export default function TradeApp() {
 
           <TradeBank traderRef={traderRef} ui={ui} />
 
-          <nav className="dock-left" aria-label="Controls">
-            <a className="pill info home" href="/"><LabIcon />Fly Lab</a>
-            <button type="button" className={`pill sound ${muted ? 'off' : ''}`} aria-pressed={!muted} onClick={toggleSound}>
-              <SoundIcon muted={muted} />
-              {muted ? 'Sound off' : 'Sound on'}
-            </button>
-            <a className="pill info" href="/legal.html"><LegalIcon />Legal</a>
-            <HowItWorksButton open={howOpen} onToggle={() => setHowOpen((v) => !v)} />
-          </nav>
+          <SiteMenu
+            muted={muted}
+            onToggleSound={toggleSound}
+            howOpen={howOpen}
+            onToggleHow={() => setHowOpen((v) => !v)}
+          />
           <TradeHowItWorks open={howOpen} onClose={closeHow} />
 
           {showNews && <NewsToast news={ui.news} />}

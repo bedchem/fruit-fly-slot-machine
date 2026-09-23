@@ -59,8 +59,11 @@ export const MONITOR = MONITORS.find((m) => m.id === 'main');
 const BUTTON_Y = DESK.top + 0.018;
 /** The two buttons, a hand's width apart, under the right foreleg. */
 export const BUTTONS = {
-  buy: [0.79, BUTTON_Y, -0.2],
-  sell: [0.79, BUTTON_Y, -0.36],
+  // The fly sits at the near end of the desk (z ≈ -1.34). Keep the buttons
+  // under its right foreleg and on the desk surface, not in the middle of the
+  // desk where the reach rig cannot touch them.
+  buy: [0.79, BUTTON_Y, -1.23],
+  sell: [0.79, BUTTON_Y, -1.39],
   radius: 0.034,
 };
 
@@ -88,7 +91,8 @@ export const gazeAt = (id) => {
  */
 export const TRADE_CAMERA = {
   position: [2.3, 2.2, -3.3],
-  target: [0.55, 1.68, -0.1],
+  // Lower and pull the look point towards the fly's end of the desk so the
+  // seated fly stays visible above the dock on narrow stages.
+  target: [0.55, 1.15, -0.45],
   fov: 40,
 };
-

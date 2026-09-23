@@ -8,10 +8,11 @@ import { BarBrain } from './neural/barBrain.js';
 import { Vitals } from './ui/Vitals.jsx';
 import { Tooltips } from './ui/Tooltips.jsx';
 import { MemoryPanel } from './ui/Memory.jsx';
-import { HowItWorksButton } from './ui/HowItWorks.jsx';
 import { BarThinker } from './ui/barThoughts.js';
 import { BarBank, BarBody, BarTab, ActionSlip, DownCard, WakeCard, BarHowItWorks } from './ui/BarPanels.jsx';
-import { LegalIcon, GitHubIcon, SoundIcon, LabIcon } from './ui/icons.jsx';
+import { GitHubIcon } from './ui/icons.jsx';
+import { SiteMenu } from './ui/SiteMenu.jsx';
+import { useSound } from './ui/useSound.js';
 import site from '../site.config.js';
 import { Loader } from './ui/Loader.jsx';
 
@@ -31,7 +32,7 @@ export default function BarApp() {
   if (import.meta.env.DEV) window.__bar = bar;
 
   const [ui, setUi] = useState({ phase: bar.phase, result: null, history: [], passouts: 0, seizures: 0, wokeAt: 0, clock: bar.clock });
-  const [muted, setMuted] = useState(true);
+  const { muted, toggleSound } = useSound();
   const [howOpen, setHowOpen] = useState(false);
   const closeHow = useCallback(() => setHowOpen(false), []);
 
@@ -71,32 +72,6 @@ export default function BarApp() {
     ));
   }, []);
 
-  // Sound: as in the casino, the first press anywhere turns it on, and after
-  // that only the pill (or M) switches it.
-  const soundTouched = useRef(false);
-  const toggleSound = useCallback(() => {
-    soundTouched.current = true;
-    sound.resume();
-    setMuted((v) => { sound.setMuted(!v); return !v; });
-  }, []);
-  useEffect(() => {
-    const events = ['pointerdown', 'keydown', 'touchstart'];
-    const first = (e) => {
-      if (soundTouched.current) return;
-      if (e.target?.closest?.('.pill.sound') || e.key === 'm' || e.key === 'M') return;
-      soundTouched.current = true;
-      sound.resume();
-      sound.setMuted(false);
-      setMuted(false);
-    };
-    events.forEach((e) => window.addEventListener(e, first, { passive: true }));
-    return () => events.forEach((e) => window.removeEventListener(e, first));
-  }, []);
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'm' || e.key === 'M') toggleSound(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [toggleSound]);
   // leaving the bar must not leave it snoring
   useEffect(() => () => sound.stopSnore?.(), []);
   useEffect(() => {
@@ -138,15 +113,12 @@ export default function BarApp() {
 
           <BarBank machineRef={barRef} ui={ui} />
 
-          <nav className="dock-left" aria-label="Controls">
-            <a className="pill info home" href="/"><LabIcon />Fly Lab</a>
-            <button type="button" className={`pill sound ${muted ? 'off' : ''}`} aria-pressed={!muted} onClick={toggleSound}>
-              <SoundIcon muted={muted} />
-              {muted ? 'Sound off' : 'Sound on'}
-            </button>
-            <a className="pill info" href="/legal.html"><LegalIcon />Legal</a>
-            <HowItWorksButton open={howOpen} onToggle={() => setHowOpen((v) => !v)} />
-          </nav>
+          <SiteMenu
+            muted={muted}
+            onToggleSound={toggleSound}
+            howOpen={howOpen}
+            onToggleHow={() => setHowOpen((v) => !v)}
+          />
           <BarHowItWorks open={howOpen} onClose={closeHow} />
 
           {showSlip && <ActionSlip result={ui.result} />}

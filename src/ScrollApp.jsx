@@ -7,11 +7,12 @@ import { useConnectome } from './neural/useConnectome.js';
 import { DuoBrain } from './neural/scrollBrain.js';
 import { Tooltips } from './ui/Tooltips.jsx';
 import { CortisolMeter } from './ui/CortisolMeter.jsx';
-import { HowItWorksButton } from './ui/HowItWorks.jsx';
 import {
   ScrollBank, Phones, Feeds, Pair, Thread, Thoughts, MorningCard, EventToast, ScrollHowItWorks,
 } from './ui/ScrollPanels.jsx';
-import { LegalIcon, GitHubIcon, SoundIcon, LabIcon } from './ui/icons.jsx';
+import { GitHubIcon } from './ui/icons.jsx';
+import { SiteMenu } from './ui/SiteMenu.jsx';
+import { useSound } from './ui/useSound.js';
 import { useTikTokConsent, TikTokNotice, EditList } from './ui/TikTokConsent.jsx';
 import { EDITS, EDIT_SUBJECT } from './game/tiktokEdits.js';
 import { EditOverlay, Favourites } from './ui/EditViews.jsx';
@@ -53,7 +54,7 @@ export default function ScrollApp() {
   const fanMode = tiktok === true && EDITS.length > 0;
   useEffect(() => { duo.setFan(EDITS, tiktok === true); }, [duo, tiktok]);
   const toast = useRef(null);
-  const [muted, setMuted] = useState(true);
+  const { muted, toggleSound } = useSound();
   const [howOpen, setHowOpen] = useState(false);
   const closeHow = useCallback(() => setHowOpen(false), []);
 
@@ -93,31 +94,6 @@ export default function ScrollApp() {
     ));
   }, []);
 
-  const soundTouched = useRef(false);
-  const toggleSound = useCallback(() => {
-    soundTouched.current = true;
-    sound.resume();
-    setMuted((v) => { sound.setMuted(!v); return !v; });
-  }, []);
-  useEffect(() => {
-    const events = ['pointerdown', 'keydown', 'touchstart'];
-    const first = (e) => {
-      if (soundTouched.current) return;
-      if (e.target?.closest?.('.pill.sound') || e.key === 'm' || e.key === 'M') return;
-      soundTouched.current = true;
-      sound.resume();
-      sound.setMuted(false);
-      setMuted(false);
-    };
-    events.forEach((e) => window.addEventListener(e, first, { passive: true }));
-    return () => events.forEach((e) => window.removeEventListener(e, first));
-  }, []);
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'm' || e.key === 'M') toggleSound(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [toggleSound]);
-
   const showToast = ui.toast && Date.now() - ui.toast.at < TOAST_MS && !ui.morning;
 
   return (
@@ -156,21 +132,17 @@ export default function ScrollApp() {
 
           <ScrollBank duoRef={duoRef} />
 
-          <nav className="dock-left" aria-label="Controls">
-            <a className="pill info home" href="/"><LabIcon />Fly Lab</a>
-            <button type="button" className={`pill sound ${muted ? 'off' : ''}`} aria-pressed={!muted} onClick={toggleSound}>
-              <SoundIcon muted={muted} />
-              {muted ? 'Sound off' : 'Sound on'}
-            </button>
-            <a className="pill info" href="/legal.html"><LegalIcon />Legal</a>
-            {EDITS.length > 0 && (
-              <button type="button" className="pill info" onClick={() => setNoticeOpen(true)} aria-haspopup="dialog">
-                <LegalIcon />Cookie settings
-              </button>
-            )}
-            <HowItWorksButton open={howOpen} onToggle={() => setHowOpen((v) => !v)} />
-          </nav>
-          <ScrollHowItWorks open={howOpen} onClose={closeHow} />
+          <SiteMenu
+            muted={muted}
+            onToggleSound={toggleSound}
+            howOpen={howOpen}
+            onToggleHow={() => setHowOpen((v) => !v)}
+          />
+          <ScrollHowItWorks
+            open={howOpen}
+            onClose={closeHow}
+            onCookieSettings={() => setNoticeOpen(true)}
+          />
           {noticeOpen && (
             <TikTokNotice value={tiktok} onChoose={setTiktok} onClose={() => setNoticeOpen(false)} count={EDITS.length} />
           )}

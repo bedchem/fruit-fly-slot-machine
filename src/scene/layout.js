@@ -106,7 +106,9 @@ export function reachFraction(worldPoint, fly = FLY) {
  */
 export const CAMERA = {
   position: [4.95, 2.70, -3.35],
-  target: [1.05, 1.38, -0.15],
+  // Keep the fly on the stool's near side of the machine instead of letting
+  // the portrait/side-panel crop push it to the right edge of the shot.
+  target: [1.05, 1.38, -0.65],
   fov: 40,
 };
 

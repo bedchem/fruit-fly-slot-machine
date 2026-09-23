@@ -303,7 +303,7 @@ export function EventToast({ event }) {
 
 // --------------------------------------------------------- how it works
 
-export function ScrollHowItWorks({ open, onClose }) {
+export function ScrollHowItWorks({ open, onClose, onCookieSettings }) {
   const ref = useRef(null);
   useEffect(() => {
     if (!open) return undefined;
@@ -364,6 +364,7 @@ export function ScrollHowItWorks({ open, onClose }) {
       </p>
       <p className="howto-links">
         <a href="/about.html">Read the full write-up</a> · <a href="/legal.html">Legal &amp; privacy</a>
+        {onCookieSettings && <>{' · '}<button type="button" onClick={onCookieSettings}>Cookie settings</button></>}
       </p>
     </div>
   );
