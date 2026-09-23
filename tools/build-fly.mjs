@@ -18,7 +18,7 @@ import { flatten, dedup, join, weld, simplify, prune, clearNodeTransform } from 
 import { MeshoptSimplifier } from 'meshoptimizer';
 
 const SRC = process.argv[2];
-const OUT = process.argv[3] || 'public/models/fly.glb';
+const OUT = process.argv[3] || 'assets/models/fly.glb';
 const RATIO = Number(process.argv[4] || 0.22);
 
 const io = new NodeIO().registerExtensions(KHRONOS_EXTENSIONS);

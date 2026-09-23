@@ -17,7 +17,7 @@ import { KHRONOS_EXTENSIONS } from '@gltf-transform/extensions';
 import { flatten, dedup, prune, clearNodeTransform } from '@gltf-transform/functions';
 
 const SRC = process.argv[2];
-const OUT = process.argv[3] || 'public/models/slot-machine.glb';
+const OUT = process.argv[3] || 'assets/models/slot-machine.glb';
 const META = 'src/scene/parts.js';
 
 const io = new NodeIO().registerExtensions(KHRONOS_EXTENSIONS);

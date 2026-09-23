@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "assets": "node --max-old-space-size=6144 tools/build-all.mjs",
+    "models": "node --max-old-space-size=6144 tools/compress-models.mjs",
     "shot": "node --max-old-space-size=4096 tools/preview.mjs"
   },
   "dependencies": {

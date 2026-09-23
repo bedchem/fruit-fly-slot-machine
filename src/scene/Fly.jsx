@@ -75,7 +75,7 @@ export const REST_HAND = HAND;
  * second fly is the same pose moved along the floor.
  */
 export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mouthLocal, pose = FLY }) {
-  const { scene } = useGLTF('/models/fly.glb');
+  const { scene } = useGLTF('/models/fly.glb', '/draco/');
   const groupRef = useRef();
   const uniforms = useRef(null);
 
@@ -263,4 +263,4 @@ export function Fly({ machine, gripTargetRef, dopamineRef, lookRef, mouthRef, mo
   );
 }
 
-useGLTF.preload('/models/fly.glb');
+useGLTF.preload('/models/fly.glb', '/draco/');

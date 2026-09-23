@@ -14,7 +14,7 @@ import { HowItWorks } from './ui/HowItWorks.jsx';
 import site from '../site.config.js';
 import { Loader } from './ui/Loader.jsx';
 import { GitHubIcon } from './ui/icons.jsx';
-import { SiteMenu } from './ui/SiteMenu.jsx';
+import { SiteMenu, LabHome } from './ui/SiteMenu.jsx';
 import { useSound } from './ui/useSound.js';
 
 /** How long the "it comes round" card stays up. */
@@ -104,35 +104,16 @@ export default function CasinoApp() {
         <FlyScene machine={machine} onTick={onTick} />
 
         <div className="stage-overlay">
-          <Loader />
+          <Loader ready={cnsReady} />
           <header className="masthead">
+            <LabHome />
             <h1>
               <span className="title-full">Fruit Fly Slot Machine</span>
               <span className="title-compact">Fruit Fly Slots</span>
             </h1>
-            <p className="lede">
-              <mark>A real brain.</mark> Every dot is a neuron of <mark>a real male fruit fly</mark>, mapped synapse by synapse
-              from electron microscopy by{' '}
-              <a href="https://www.janelia.org/project-team/flyem" target="_blank" rel="noopener">HHMI Janelia&rsquo;s FlyEM team</a>
-              {' '}with{' '}
-              <a href="https://research.google" target="_blank" rel="noopener">Google Research</a>,
-              {' '}Cambridge and the MRC LMB, published as{' '}
-              <a href="https://male-cns.janelia.org/" target="_blank" rel="noopener">MaleCNS v1.0</a>.
-              What it does is how that real wiring responds in a fruit fly <mark>forced to gamble forever</mark>.
-            </p>
             <p className="byline">
               <span>by </span>
-              <a href="https://github.com/ryhox" target="_blank" rel="noopener" title="ryhox on GitHub">
-                ryhox <GitHubIcon />
-              </a>
-              <span>, </span>
-              <a href="https://github.com/plattnericus" target="_blank" rel="noopener" title="Nexor on GitHub">
-                Nexor <GitHubIcon />
-              </a>
-              <span> and </span>
-              <a href="https://github.com/peramanu" target="_blank" rel="noopener" title="peramanu on GitHub">
-                peramanu <GitHubIcon />
-              </a>
+              <a href="https://github.com/orgs/bedchem/people" target="_blank" rel="noopener" title="BedChem on GitHub">BedChem <GitHubIcon /></a>
             </p>
           </header>
 

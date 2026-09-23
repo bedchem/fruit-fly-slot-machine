@@ -13,7 +13,7 @@ import * as rig from '../src/scene/flyRig.js';
 import { STOOL, knobAt, gripAt, LEVER_PULLED } from '../src/scene/layout.js';
 
 const url = (p) => new URL(p, import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/, '');
-const mesh = loadMesh(url('../public/models/fly.glb'));
+const mesh = loadMesh(url('../assets/models/fly.glb'));
 const P = mesh.P, nv = P.length / 3;
 
 const SEAT = STOOL.seatCenter;

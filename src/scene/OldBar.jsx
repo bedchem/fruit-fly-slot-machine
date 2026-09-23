@@ -22,7 +22,7 @@ const CUTOUT_MATERIALS = new Set(['TextureMaterial_31', 'TextureMaterial_48']);
  * would take it off the casino, trading and doomscroll stools as well.
  */
 export function OldBar() {
-  const { scene } = useGLTF('/models/old-bar.glb');
+  const { scene } = useGLTF('/models/old-bar.glb', '/draco/');
   const room = useMemo(() => {
     const root = scene.clone(true);
     const materials = [];
@@ -50,4 +50,4 @@ export function OldBar() {
   return <primitive object={room.root} position={[1.9615, -5.2877, 3.6351]} rotation={[0, 1.6018, 0]} scale={1.21} dispose={null} />;
 }
 
-useGLTF.preload('/models/old-bar.glb');
+useGLTF.preload('/models/old-bar.glb', '/draco/');

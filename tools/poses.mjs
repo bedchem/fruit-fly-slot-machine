@@ -10,7 +10,7 @@ import * as rig from '../src/scene/flyRig.js';
 import { STOOL, knobAt, gripAt, LEVER_PULLED, CAMERA } from '../src/scene/layout.js';
 
 const url = (p) => new URL(p, import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/, '');
-const flyRest = loadMesh(url('../public/models/fly.glb'));
+const flyRest = loadMesh(url('../assets/models/fly.glb'));
 const nv = flyRest.P.length / 3;
 const P = flyRest.P;
 
@@ -26,7 +26,7 @@ const rotZ = (a) => {
 };
 const translate = (x, y, z) => [1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1];
 const slot = (angle, stoolOffset = [0, 0, 0]) => ({
-  ...loadMesh(url('../public/models/slot-machine.glb'), {
+  ...loadMesh(url('../assets/models/slot-machine.glb'), {
     nodeTransform: (n) => (n === 'Lever' ? rotZ(angle)
       : n === 'Stool' ? translate(stoolOffset[0], stoolOffset[1], stoolOffset[2])
       : null),

@@ -10,10 +10,10 @@ import {
   ScrollBank, Phones, Feeds, ScrollVitals, Thread, Thoughts, MorningCard, EventToast, ScrollHowItWorks,
 } from './ui/ScrollPanels.jsx';
 import { GitHubIcon } from './ui/icons.jsx';
-import { SiteMenu } from './ui/SiteMenu.jsx';
+import { SiteMenu, LabHome } from './ui/SiteMenu.jsx';
 import { useSound } from './ui/useSound.js';
 import { useTikTokConsent, TikTokNotice, EditList, TikTokTagFeed } from './ui/TikTokConsent.jsx';
-import { EDIT_SUBJECT, EDIT_TAG } from './game/tiktokEdits.js';
+import { EDIT_TAG } from './game/tiktokEdits.js';
 import { cachedEdits, fetchEdits, forgetEdits } from './game/editPool.js';
 import { EditOverlay, Favourites } from './ui/EditViews.jsx';
 import { Loader } from './ui/Loader.jsx';
@@ -125,30 +125,14 @@ export default function ScrollApp() {
 
         <div className="stage-overlay">
           <header className="masthead">
+            <LabHome />
             <h1>
               <span className="title-full">Two Flies Doomscrolling</span>
               <span className="title-compact">Doomscroll</span>
             </h1>
-            {fanMode ? (
-              <p className="lede">
-                <mark>Two real brains, one crush.</mark> {NAMES[0]} and {NAMES[1]} scroll {EDIT_SUBJECT} edits on TikTok and send
-                each other their favourites. Each phone gets a different mix of videos, and <mark>they keep swiping
-                for the next one</mark>. Watch along below, or open an edit large.
-              </p>
-            ) : (
-              <p className="lede">
-                <mark>Two real brains, one feed.</mark> {NAMES[0]} and {NAMES[1]} scroll reels made of things a fly&apos;s nervous
-                system cares about, send each other the ones that hit, and flinch at spiders through their real giant
-                fibre. The algorithm only measures watch time — and <mark>drifts them towards doom</mark>.
-              </p>
-            )}
             <p className="byline">
               <span>by </span>
-              <a href="https://github.com/ryhox" target="_blank" rel="noopener" title="ryhox on GitHub">ryhox <GitHubIcon /></a>
-              <span>, </span>
-              <a href="https://github.com/plattnericus" target="_blank" rel="noopener" title="Nexor on GitHub">Nexor <GitHubIcon /></a>
-              <span> and </span>
-              <a href="https://github.com/peramanu" target="_blank" rel="noopener" title="peramanu on GitHub">peramanu <GitHubIcon /></a>
+              <a href="https://github.com/orgs/bedchem/people" target="_blank" rel="noopener" title="BedChem on GitHub">BedChem <GitHubIcon /></a>
             </p>
           </header>
 
@@ -169,7 +153,7 @@ export default function ScrollApp() {
             <TikTokNotice value={tiktok} onChoose={setTiktok} onClose={() => setNoticeOpen(false)} count={edits.length} />
           )}
 
-          <Loader />
+          <Loader ready={cnsReady} />
           {showToast && <EventToast event={ui.toast} />}
           {expanded !== null && (
             <EditOverlay

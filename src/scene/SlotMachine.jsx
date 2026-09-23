@@ -73,7 +73,7 @@ function Reel({ spec, index, reelRef }) {
 }
 
 export function SlotMachine({ machine, leverRef, reelRefs, winGlowRef }) {
-  const { scene } = useGLTF('/models/slot-machine.glb');
+  const { scene } = useGLTF('/models/slot-machine.glb', '/draco/');
   const leverGroup = useRef();
   const glowRef = useRef();
 
@@ -152,4 +152,4 @@ export function SlotMachine({ machine, leverRef, reelRefs, winGlowRef }) {
 SlotMachine.LEVER_PULLED = LEVER_PULLED;
 SlotMachine.SYMBOL_COUNT = SYMBOLS.length;
 
-useGLTF.preload('/models/slot-machine.glb');
+useGLTF.preload('/models/slot-machine.glb', '/draco/');

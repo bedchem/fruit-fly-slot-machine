@@ -13,7 +13,7 @@ import {
   TradeBank, Vision, League, FillSlip, MarginCard, ClosedCard, NewsToast, TradeHowItWorks,
 } from './ui/TradePanels.jsx';
 import { GitHubIcon } from './ui/icons.jsx';
-import { SiteMenu } from './ui/SiteMenu.jsx';
+import { SiteMenu, LabHome } from './ui/SiteMenu.jsx';
 import { useSound } from './ui/useSound.js';
 import site from '../site.config.js';
 import { Loader } from './ui/Loader.jsx';
@@ -93,26 +93,16 @@ export default function TradeApp() {
         <TradeScene trader={trader} store={cnsStore} onTick={onTick} />
 
         <div className="stage-overlay">
-          <Loader />
+          <Loader ready={cnsReady} />
           <header className="masthead">
+            <LabHome />
             <h1>
               <span className="title-full">Fruit Fly Trading Desk</span>
               <span className="title-compact">Fruit Fly Trader</span>
             </h1>
-            <p className="lede">
-              <mark>A real brain reads the chart.</mark> The price moves the fly&apos;s own motion detectors, the
-              wiring of{' '}
-              <a href="https://male-cns.janelia.org/" target="_blank" rel="noopener">MaleCNS v1.0</a>{' '}
-              decides which way it leans, and <mark>a crash fires its escape reflex</mark>. It paper-trades
-              banana futures, alone, against buy-and-hold and a coin.
-            </p>
             <p className="byline">
               <span>by </span>
-              <a href="https://github.com/ryhox" target="_blank" rel="noopener" title="ryhox on GitHub">ryhox <GitHubIcon /></a>
-              <span>, </span>
-              <a href="https://github.com/plattnericus" target="_blank" rel="noopener" title="Nexor on GitHub">Nexor <GitHubIcon /></a>
-              <span> and </span>
-              <a href="https://github.com/peramanu" target="_blank" rel="noopener" title="peramanu on GitHub">peramanu <GitHubIcon /></a>
+              <a href="https://github.com/orgs/bedchem/people" target="_blank" rel="noopener" title="BedChem on GitHub">BedChem <GitHubIcon /></a>
             </p>
           </header>
 

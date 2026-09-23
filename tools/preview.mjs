@@ -42,7 +42,7 @@ const xfV = (m, p) => [
   m[2] * p[0] + m[6] * p[1] + m[10] * p[2]];
 
 console.log('loading built assets...');
-const flyRest = loadMesh(url('../public/models/fly.glb'));
+const flyRest = loadMesh(url('../assets/models/fly.glb'));
 const nv = flyRest.P.length / 3;
 
 const W1 = new Float32Array(nv), W2 = new Float32Array(nv);
@@ -99,7 +99,7 @@ function poseFly(targetWorld) {
 
 const translate = (x, y, z) => [1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1];
 function slotAt(angle) {
-  const m = loadMesh(url('../public/models/slot-machine.glb'),
+  const m = loadMesh(url('../assets/models/slot-machine.glb'),
     { nodeTransform: (name) => (name === 'Lever' ? rotZ(angle)
       : name === 'Stool' ? translate(STOOL.offset[0], STOOL.offset[1], STOOL.offset[2]) : null) });
   return { ...m, color: [126, 122, 118] };

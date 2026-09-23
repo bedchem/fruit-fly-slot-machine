@@ -5,7 +5,7 @@
 import { loadMesh } from './lib-raster.mjs';
 import { loadGLB, readAccessor, walk, xfP } from './lib-glb.mjs';
 
-const SRC = 'public/models/slot-machine.glb';
+const SRC = 'assets/models/slot-machine.glb';
 const { json, bin } = loadGLB(SRC);
 
 // connected components, welded by quantised position

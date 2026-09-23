@@ -52,9 +52,9 @@ export function ResultSlip({ result }) {
         </div>
       )}
       <div className={`stamp ${stamped ? 'down' : ''}`}>{verdict}</div>
-      {result.win && stamped && (
+      {result.jackpot && stamped && (
         <div className="coins" aria-hidden="true">
-          {Array.from({ length: result.jackpot ? 14 : 7 }, (_, i) => (
+          {Array.from({ length: 14 }, (_, i) => (
             <i key={i} style={{ '--i': i, '--d': `${(i % 5) * 60}ms` }} />
           ))}
         </div>

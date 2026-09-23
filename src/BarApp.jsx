@@ -11,7 +11,7 @@ import { MemoryPanel } from './ui/Memory.jsx';
 import { BarThinker } from './ui/barThoughts.js';
 import { BarBank, BarBody, BarTab, ActionSlip, DownCard, WakeCard, BarHowItWorks } from './ui/BarPanels.jsx';
 import { GitHubIcon } from './ui/icons.jsx';
-import { SiteMenu } from './ui/SiteMenu.jsx';
+import { SiteMenu, LabHome } from './ui/SiteMenu.jsx';
 import { useSound } from './ui/useSound.js';
 import site from '../site.config.js';
 import { Loader } from './ui/Loader.jsx';
@@ -89,25 +89,16 @@ export default function BarApp() {
         <BarScene bar={bar} onTick={onTick} />
 
         <div className="stage-overlay">
-          <Loader label="Loading the bar and fly" />
+          <Loader ready={cnsReady} />
           <header className="masthead">
+            <LabHome />
             <h1>
               <span className="title-full">Fruit Fly at the Bar</span>
               <span className="title-compact">Fruit Fly Bar</span>
             </h1>
-            <p className="lede">
-              <mark>The same real brain</mark>, now at a bar. It lifts a beer glass, drinks from the rim, and takes nicotine pouches from the tin —
-              and both drugs act on <mark>the measured wiring</mark> of{' '}
-              <a href="https://male-cns.janelia.org/" target="_blank" rel="noopener">MaleCNS v1.0</a>: ethanol
-              strengthens its GABA synapses, nicotine its cholinergic ones. It decides <mark>how much, and when to stop</mark>.
-            </p>
             <p className="byline">
               <span>by </span>
-              <a href="https://github.com/ryhox" target="_blank" rel="noopener" title="ryhox on GitHub">ryhox <GitHubIcon /></a>
-              <span>, </span>
-              <a href="https://github.com/plattnericus" target="_blank" rel="noopener" title="Nexor on GitHub">Nexor <GitHubIcon /></a>
-              <span> and </span>
-              <a href="https://github.com/peramanu" target="_blank" rel="noopener" title="peramanu on GitHub">peramanu <GitHubIcon /></a>
+              <a href="https://github.com/orgs/bedchem/people" target="_blank" rel="noopener" title="BedChem on GitHub">BedChem <GitHubIcon /></a>
             </p>
           </header>
 

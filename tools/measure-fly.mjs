@@ -12,7 +12,7 @@
 import { loadMesh } from './lib-raster.mjs';
 
 const SIDE = (process.argv[2] || 'right').toLowerCase();
-const SRC = process.argv[3] || 'public/models/fly.glb';
+const SRC = process.argv[3] || 'assets/models/fly.glb';
 
 // generous boxes around each front leg, from the slab survey of the scan
 const BOX = {

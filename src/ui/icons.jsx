@@ -40,14 +40,26 @@ export function SoundIcon({ muted }) {
   );
 }
 
-/** A small grid of four: back to the Fly Lab hub. */
-export function LabIcon() {
+/** An arrow pointing left: back to the Fly Lab hub. */
+export function BackIcon() {
   return (
     <svg className="pill-icon" viewBox="0 0 20 20" aria-hidden="true">
-      <rect x="3" y="3" width="6" height="6" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <rect x="11" y="3" width="6" height="6" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <rect x="3" y="11" width="6" height="6" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <rect x="11" y="11" width="6" height="6" rx="1.5" fill="currentColor" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M16 10H4.5M9 5l-5 5 5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** The Fly Lab mark: the same little fly as on the landing page. */
+export function FlyLogo() {
+  return (
+    <svg className="fly-logo" viewBox="0 0 48 48" aria-hidden="true">
+      <ellipse cx="17" cy="22" rx="9" ry="15" transform="rotate(-35 17 22)" fill="#fff" fillOpacity="0.6" stroke="#c98a4c" strokeWidth="1.4" />
+      <ellipse cx="31" cy="22" rx="9" ry="15" transform="rotate(35 31 22)" fill="#fff" fillOpacity="0.6" stroke="#c98a4c" strokeWidth="1.4" />
+      <ellipse cx="24" cy="30" rx="7" ry="12" fill="#d9731f" />
+      <path d="M18 29h12M18 34h12" stroke="#a9541a" strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="24" cy="15" r="6.5" fill="#e3872f" />
+      <circle cx="20.5" cy="13.5" r="3" fill="#b8321f" />
+      <circle cx="27.5" cy="13.5" r="3" fill="#b8321f" />
     </svg>
   );
 }

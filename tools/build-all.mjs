@@ -42,7 +42,8 @@ for (const [name, file] of Object.entries(MODELS)) {
   }
 }
 run(['tools/build-slot.mjs', MODELS.slot], 'slot machine');
-run(['tools/build-fly.mjs', MODELS.fly, 'public/models/fly.glb', '0.22'], 'fly');
+run(['tools/build-fly.mjs', MODELS.fly, 'assets/models/fly.glb', '0.22'], 'fly');
+run(['tools/compress-models.mjs'], 'compress models for the site');
 
 // --- the connectome --------------------------------------------------------
 fs.mkdirSync(CACHE, { recursive: true });

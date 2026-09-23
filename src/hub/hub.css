@@ -1,7 +1,7 @@
 /*
  * Fly Lab, the hub: a wall of experiments to pick from. Laid out like a
  * gallery, dressed like the rest of the site — the same beige surfaces,
- * the same ink, the one orange accent, flat and without shadows.
+ * the same ink, the one orange accent.
  */
 @import '@fontsource-variable/inter';
 @import '../styles/tokens.css';
@@ -24,51 +24,59 @@ a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offs
 a:hover { color: var(--accent); }
 a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 
-/* ---------- the title ---------- */
+/* ---------- the top bar ---------- */
 
-.lab-head {
-  max-width: 44rem;
+.lab-nav nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 72rem;
   margin: 0 auto;
-  padding: clamp(2.5rem, 7vw, 5rem) 1.25rem 2.25rem;
-  text-align: center;
+  padding: 1.25rem 1.25rem 0;
 }
 .lab-mark {
   display: inline-flex;
   align-items: center;
-  gap: 0.2em;
-  font-size: clamp(2.6rem, 1.6rem + 5vw, 4.4rem);
+  gap: 0.3em;
+  font-size: 1.35rem;
   font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.03em;
   text-decoration: none;
   color: var(--ink);
 }
 .lab-mark:hover { color: var(--ink); }
-.lab-mark svg { width: 1.05em; height: 1.05em; flex: none; }
-.lab-lede {
-  margin: 1.1rem auto 0;
-  max-width: 34rem;
-  font-size: 1.02rem;
-  line-height: 1.6;
-  color: var(--ink-2);
+.lab-mark svg { width: 1.4em; height: 1.4em; flex: none; }
+.lab-links { display: flex; gap: 1.4rem; font-size: 0.92rem; }
+.lab-links a { color: var(--ink-2); text-decoration: none; }
+.lab-links a:hover { color: var(--ink); }
+
+/* ---------- the experiments ---------- */
+
+.lab-intro {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: clamp(1.75rem, 3.5vw, 2.5rem) 1.25rem 1.5rem;
 }
-.lab-lede a { color: var(--ink); }
-.lab-lede mark {
+.lab-intro h1 { margin: 0; font-size: clamp(1.8rem, 1.3rem + 2vw, 2.6rem); letter-spacing: -0.035em; line-height: 1.1; }
+.lab-intro p { margin: 0.6rem 0 0; max-width: 36rem; color: var(--ink-2); }
+.lab-intro p a { color: var(--ink); }
+.lab-intro mark {
   padding: 0 0.2em;
   border-radius: 3px;
   background: var(--accent-soft);
   color: var(--ink);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
-
-/* ---------- the experiments ---------- */
 
 .lab-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
   gap: 1.5rem;
-  max-width: 64rem;
+  max-width: 72rem;
   margin: 0 auto;
-  padding: 0 1.25rem 3rem;
+  padding: 0 1.25rem 4rem;
 }
 
 .lab-card {
@@ -80,13 +88,12 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-
   background: var(--page);
   color: var(--ink);
   text-decoration: none;
-  transition: background 0.15s, transform 0.15s;
 }
-a.lab-card:hover { background: var(--surface-hover); color: var(--ink); transform: translateY(-3px); }
-a.lab-card:active { transform: translateY(-1px); }
+a.lab-card:hover { color: var(--ink); }
 a.lab-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 .lab-thumb {
+  position: relative;
   display: block;
   overflow: hidden;
   aspect-ratio: 400 / 260;
@@ -98,17 +105,30 @@ a.lab-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px
 .lab-thumb.navy { background: #161b24; }
 .lab-thumb.night { background: #0d1119; }
 .lab-thumb img { display: block; width: 100%; height: 100%; transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-a.lab-card:hover .lab-thumb img { transform: scale(1.04); }
+a.lab-card:hover .lab-thumb img { transform: scale(1.05); }
+.lab-num {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(20, 16, 12, 0.7);
+  color: #f3ead9;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
 
 .lab-title {
   padding: 0 0.25rem;
-  font-size: 1.12rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 650;
   letter-spacing: -0.015em;
 }
 .lab-blurb {
   padding: 0 0.25rem;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   line-height: 1.45;
   color: var(--ink-2);
 }
@@ -123,6 +143,13 @@ a.lab-card:hover .lab-thumb img { transform: scale(1.04); }
   color: var(--ink-2);
 }
 .lab-tags i.new { background: var(--accent-soft); color: var(--accent); }
+.lab-go {
+  margin-top: auto;
+  padding: 0.8rem 0.25rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+}
 
 /* the tile that is not there yet */
 .lab-card.soon { background: transparent; box-shadow: inset 0 0 0 2px var(--track); }
@@ -139,7 +166,7 @@ a.lab-card:hover .lab-thumb img { transform: scale(1.04); }
 /* ---------- the footer ---------- */
 
 .lab-foot {
-  max-width: 64rem;
+  max-width: 72rem;
   margin: 0 auto;
   padding: 1.5rem 1.25rem 2.5rem;
   border-top: 1px solid var(--divider);
@@ -154,6 +181,6 @@ a.lab-card:hover .lab-thumb img { transform: scale(1.04); }
 .lab-foot p a { color: var(--ink-2); }
 
 @media (prefers-reduced-motion: reduce) {
-  .lab-card, .lab-thumb img { transition: none; }
-  a.lab-card:hover, a.lab-card:hover .lab-thumb img { transform: none; }
+  .lab-thumb img { transition: none; }
+  a.lab-card:hover .lab-thumb img { transform: none; }
 }

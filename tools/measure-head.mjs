@@ -8,7 +8,7 @@
 import { loadMesh } from './lib-raster.mjs';
 
 const url = (p) => new URL(p, import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/, '');
-const m = loadMesh(url('../public/models/fly.glb'));
+const m = loadMesh(url('../assets/models/fly.glb'));
 const P = m.P, nv = P.length / 3;
 
 console.log('Z slice   n     radius   centroid (x, y, z)');
