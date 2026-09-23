@@ -108,12 +108,20 @@
 
   <p>
     The doomscroll experiment can show real TikTok videos (fan edits about %SITE.editSubject%) through TikTok's
-    official embedded player. Until you choose <em>Allow TikTok videos</em>, nothing is loaded from TikTok: no
-    player, no script, no connection. The experiment works fully without it.
+    official embedded player, and a live feed of the hashtag #%SITE.editTag% through TikTok's official hashtag
+    embed. Until you choose <em>Allow TikTok videos</em>, nothing is loaded from TikTok: no player, no feed, no
+    script, no connection. The experiment works fully without it.
   </p>
 
   <p>
-    If you allow it, your browser connects directly to TikTok's servers when a video is shown. TikTok then
+    Which videos the flies can scroll comes from a list published on this site, kept up to date from public
+    web search results and TikTok's public oEmbed service; loading that list sends nothing to TikTok. So that
+    there is no pause between videos, each phone loads its next video in advance, muted and paused.
+  </p>
+
+  <p>
+    If you allow it, your browser connects directly to TikTok's servers when a video or the hashtag feed is
+    shown or loaded in advance. TikTok then
     receives technical data such as your IP address, browser and device information and the address of this
     page, and TikTok may store or read cookies and similar information on your device, including for its own
     analytics and advertising. What TikTok does with these data is decided by TikTok: see TikTok's
@@ -129,13 +137,15 @@
       device, art. 122 of the Italian Privacy Code implementing art. 5(3) of the ePrivacy Directive).
     </li>
     <li>
-      <strong>Who is responsible:</strong> for making the connection to TikTok by embedding the player, we and
+      <strong>Who is responsible:</strong> for making the connection to TikTok by embedding the player and the
+      hashtag feed, we and
       TikTok may be jointly responsible (see CJEU, C-40/17 <em>Fashion ID</em>). For everything TikTok does with
       the data afterwards, TikTok alone is responsible. You can exercise your rights with us or with TikTok.
     </li>
     <li>
       <strong>Withdrawing:</strong> you can withdraw your consent at any time, as easily as you gave it, with the
-      button below or with <em>Cookie settings</em> on the experiment page. Players are removed immediately. Cookies
+      button below or with <em>Cookie settings</em> on the experiment page. Players and the hashtag feed are removed
+      immediately. Cookies
       TikTok has already set are under TikTok's control; you can delete them in your browser settings.
       Withdrawing does not affect what happened before.
     </li>
@@ -143,6 +153,12 @@
       <strong>Your choice itself</strong> is saved in your browser's local storage under the key
       <code>flylab.consent</code>: only the answer and when you gave it. This is strictly necessary to respect
       your choice and is never sent to us or anyone else. Clearing your browser data removes it.
+    </li>
+    <li>
+      <strong>The list of videos:</strong> while TikTok is allowed, the last list of TikTok posts the page loaded
+      from this site is kept in your browser's local storage under the key <code>flylab.edits</code>, so the
+      videos start without waiting on your next visit. It holds only public post addresses and creators' names,
+      nothing about you, is never sent anywhere, and is deleted when you withdraw your consent.
     </li>
   </ul>
 
@@ -229,8 +245,8 @@
   <p>
     TikTok videos shown in the doomscroll experiment remain the work and property of their creators and of the
     rights holders of the music and footage in them; each is credited and linked where it plays. They are shown
-    only through TikTok's own embedded player, under TikTok's terms, and are not downloaded, copied or re-hosted
-    here. Fly Lab is not affiliated with, or endorsed by, %SITE.editSubject%, her record labels, the creators of
+    only through TikTok's own embedded player and hashtag embed, under TikTok's terms, and are not downloaded,
+    copied or re-hosted here. Fly Lab is not affiliated with, or endorsed by, %SITE.editSubject%, her record labels, the creators of
     the edits, or TikTok. If you are a creator or rights holder and want a video removed, write to
     <a href="mailto:%SITE.operator.email%">%SITE.operator.email%</a> and it will be taken out promptly.
   </p>

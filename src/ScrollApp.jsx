@@ -13,13 +13,16 @@ import {
 import { GitHubIcon } from './ui/icons.jsx';
 import { SiteMenu } from './ui/SiteMenu.jsx';
 import { useSound } from './ui/useSound.js';
-import { useTikTokConsent, TikTokNotice, EditList } from './ui/TikTokConsent.jsx';
-import { EDITS, EDIT_SUBJECT } from './game/tiktokEdits.js';
+import { useTikTokConsent, TikTokNotice, EditList, TikTokTagFeed } from './ui/TikTokConsent.jsx';
+import { EDIT_SUBJECT, EDIT_TAG } from './game/tiktokEdits.js';
+import { cachedEdits, fetchEdits, forgetEdits } from './game/editPool.js';
 import { EditOverlay, Favourites } from './ui/EditViews.jsx';
 import { Loader } from './ui/Loader.jsx';
 import site from '../site.config.js';
 
 const TOAST_MS = 2600;
+/** A long night on the page still picks up a pool refreshed in the meantime. */
+const POOL_POLL_MS = 20 * 60 * 1000;
 
 function readSeed() {
   try {
@@ -40,19 +43,36 @@ export default function ScrollApp() {
   // one ref per fly, for the widgets that read a single animal
   const flyRefs = [useRef(duo.flies[0]), useRef(duo.flies[1])];
 
-  const [ui, setUi] = useState({ thread: [], morning: null, toast: null, playing: [null, null] });
+  const [ui, setUi] = useState({ thread: [], morning: null, toast: null, playing: [null, null], upcoming: [null, null] });
 
   // TikTok: nothing loads until the visitor allows it. With no edits listed
-  // there is nothing to ask about, so the notice never appears.
+  // and no hashtag there is nothing to ask about, so the notice never appears.
   const [tiktok, setTiktok] = useTikTokConsent();
-  const [noticeOpen, setNoticeOpen] = useState(() => EDITS.length > 0 && tiktok === null);
+  // the pool starts from what this browser last saw; a fresh one only adds to it
+  const [edits, setEdits] = useState(cachedEdits);
+  const editsRef = useRef(edits);
+  editsRef.current = edits;
+  const [noticeOpen, setNoticeOpen] = useState(() => (edits.length > 0 || !!EDIT_TAG) && tiktok === null);
   /** Which fly's phone you hear, when both are on an edit. */
   const [listen, setListen] = useState(0);
   /** Which fly's edit is open large over the scene, if any. */
   const [expanded, setExpanded] = useState(null);
   const closeExpanded = useCallback(() => setExpanded(null), []);
-  const fanMode = tiktok === true && EDITS.length > 0;
-  useEffect(() => { duo.setFan(EDITS, tiktok === true); }, [duo, tiktok]);
+  const fanMode = tiktok === true && edits.length > 0;
+  // consent switches the edits on and off; a refreshed pool only joins them
+  useEffect(() => { duo.setFan(editsRef.current, tiktok === true); }, [duo, tiktok]);
+  useEffect(() => { duo.updateEdits(edits); }, [duo, edits]);
+  useEffect(() => {
+    if (tiktok !== true) {
+      if (tiktok === false) forgetEdits();
+      return undefined;
+    }
+    const ctl = new AbortController();
+    const pull = () => fetchEdits({ signal: ctl.signal }).then((list) => { if (list) setEdits(list); });
+    pull();
+    const poll = setInterval(pull, POOL_POLL_MS);
+    return () => { ctl.abort(); clearInterval(poll); };
+  }, [tiktok]);
   const toast = useRef(null);
   const { muted, toggleSound } = useSound();
   const [howOpen, setHowOpen] = useState(false);
@@ -86,11 +106,14 @@ export default function ScrollApp() {
     const beat = Math.floor(Date.now() / 500);
     // which fly is on a TikTok edit right now, if any: those get a player
     const playing = d.flies.map((f) => (f.reel.cat === 'fan' && f.screenOn && d.canPlay(f.reel.edit) ? f.reel : null));
+    // and what each of those phones shows next, to load it before the swipe
+    const upcoming = playing.map((r, i) => (r ? d.upcomingEdit(i) : null));
     setUi((prev) => (
       prev.beat === beat && prev.threadLen === d.thread.length && prev.morning === d.morning && prev.toast === toast.current
         && prev.playing[0] === playing[0] && prev.playing[1] === playing[1]
+        && prev.upcoming[0] === upcoming[0] && prev.upcoming[1] === upcoming[1]
         ? prev
-        : { beat, thread: d.thread.slice(), threadLen: d.thread.length, morning: d.morning, toast: toast.current, playing }
+        : { beat, thread: d.thread.slice(), threadLen: d.thread.length, morning: d.morning, toast: toast.current, playing, upcoming }
     ));
   }, []);
 
@@ -144,7 +167,7 @@ export default function ScrollApp() {
             onCookieSettings={() => setNoticeOpen(true)}
           />
           {noticeOpen && (
-            <TikTokNotice value={tiktok} onChoose={setTiktok} onClose={() => setNoticeOpen(false)} count={EDITS.length} />
+            <TikTokNotice value={tiktok} onChoose={setTiktok} onClose={() => setNoticeOpen(false)} count={edits.length} />
           )}
 
           <Loader />
@@ -154,6 +177,7 @@ export default function ScrollApp() {
               duo={duo}
               index={expanded}
               reel={tiktok === true ? ui.playing[expanded] : null}
+              next={tiktok === true ? ui.upcoming[expanded] : null}
               audible={!muted}
               onClose={closeExpanded}
             />
@@ -167,6 +191,7 @@ export default function ScrollApp() {
           duoRef={duoRef}
           canvasRefs={canvasRefs}
           playing={tiktok === true ? ui.playing : [null, null]}
+          upcoming={tiktok === true ? ui.upcoming : [null, null]}
           soundOn={!muted}
           listen={listen}
           onListen={(i) => { setListen(i); if (muted) toggleSound(); }}
@@ -174,6 +199,7 @@ export default function ScrollApp() {
           onExpand={setExpanded}
         />
         {fanMode ? <Favourites duoRef={duoRef} /> : <Feeds duoRef={duoRef} />}
+        <TikTokTagFeed allowed={tiktok === true} onAsk={() => setNoticeOpen(true)} />
         <div className="scopes">
           <div>
             <span className="scope-owner">{NAMES[0]}&apos;s brain</span>
@@ -192,7 +218,7 @@ export default function ScrollApp() {
         </div>
         <Thread thread={ui.thread} />
         <Thoughts duoRef={duoRef} />
-        <EditList edits={EDITS} />
+        <EditList edits={edits} />
         <footer className="panel-foot">
           <p className="credits-3d">
             3D model, CC BY 4.0:{' '}

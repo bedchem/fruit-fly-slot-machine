@@ -16,7 +16,7 @@ import { Fly } from './Fly.jsx';
 import { STOOL, flyToWorld } from './layout.js';
 import { HAND } from './flyRig.js';
 import {
-  BAR_CAMERA, COUNTER, GLASS, TIN, TIN_GRIP, STRAW_TIP, DRINK_GLASS_BASE, MOUTH_LOCAL, MOUTH, LIP_OFFSET,
+  BAR_CAMERA, BAR_FLY, COUNTER, GLASS, TIN, TIN_GRIP, STRAW_TIP, DRINK_GLASS_BASE, MOUTH_LOCAL, MOUTH, LIP_OFFSET,
 } from './barLayout.js';
 import { OldBar } from './OldBar.jsx';
 import { BarCamera } from './BarCamera.jsx';
@@ -27,7 +27,7 @@ import { sound } from '../audio/audio.js';
 // no animation frames, so this is the only way to look at it there
 if (import.meta.env.DEV) window.__advance = advance;
 
-const REST_HAND_WORLD = flyToWorld(HAND);
+const REST_HAND_WORLD = flyToWorld(HAND, BAR_FLY);
 const BG_AWAKE = new THREE.Color('#3b2d22');
 const BG_ASLEEP = new THREE.Color('#15110e');
 /** How many finished glasses and spent pouches stay on the counter. */
@@ -632,6 +632,7 @@ function World({ bar, onTick }) {
       <Empties bar={bar} />
       <Fly
         machine={bar}
+        pose={BAR_FLY}
         gripTargetRef={gripTargetRef}
         dopamineRef={dopamineRef}
         lookRef={lookRef}

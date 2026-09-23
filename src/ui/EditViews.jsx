@@ -29,7 +29,7 @@ const setText = (el, v) => { if (el && el.textContent !== String(v)) el.textCont
  * when it swipes to the next edit, so does the overlay; when it stops
  * watching edits, the overlay closes itself.
  */
-export function EditOverlay({ duo, index, reel, audible, onClose }) {
+export function EditOverlay({ duo, index, reel, next = null, audible, onClose }) {
   const box = useRef(null);
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -48,7 +48,7 @@ export function EditOverlay({ duo, index, reel, audible, onClose }) {
           <button type="button" className="edit-overlay-close" onClick={onClose} aria-label="Close">×</button>
         </div>
         <div className="edit-overlay-video">
-          <TikTokFeedPlayer duo={duo} index={index} reel={reel} audible={audible} />
+          <TikTokFeedPlayer duo={duo} index={index} reel={reel} next={next} audible={audible} />
         </div>
         <EditCredit reel={reel} />
       </div>

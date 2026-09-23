@@ -118,8 +118,11 @@ export class Feed {
 
   learn(cat, seconds) { this.expected[cat] += (seconds - this.expected[cat]) * 0.3; }
 
-  /** Each phone has its own shuffled feed, including after a full pass. */
-  nextEdit(previousId, friendId) {
+  /**
+   * Where the next edit sits in the queue. Each phone has its own shuffled
+   * feed, including after a full pass; -1 when there is nothing to play.
+   */
+  pickEdit(previousId, friendId) {
     const available = this.duo.edits.filter((edit) => this.duo.canPlay(edit));
     const ids = new Set(available.map((edit) => edit.id));
     this.editQueue = this.editQueue.filter((edit) => ids.has(edit.id));
@@ -130,6 +133,9 @@ export class Feed {
         [this.editQueue[i], this.editQueue[j]] = [this.editQueue[j], this.editQueue[i]];
       }
     }
+    // the one the page is already loading, while it still qualifies
+    const held = this.editQueue.findIndex((edit) => edit.id === this.heldId);
+    if (held >= 0 && this.heldId !== previousId && this.heldId !== friendId) return held;
     // Prefer a different post from both the last reel and the other phone.
     // Shared reels deliberately bypass this feed so both can watch together.
     let next = this.editQueue.findIndex((edit) => edit.id !== previousId && edit.id !== friendId);
@@ -138,10 +144,25 @@ export class Feed {
       // A shared video may have used the last remaining entry. Start a new
       // pass instead of serving that same post straight back to the fly.
       this.editQueue = [];
-      return this.nextEdit(previousId, friendId);
+      return this.pickEdit(previousId, friendId);
     }
-    if (next < 0) next = 0;
-    return this.editQueue.splice(next, 1)[0] ?? null;
+    return next < 0 ? (this.editQueue.length ? 0 : -1) : next;
+  }
+
+  nextEdit(previousId, friendId) {
+    const i = this.pickEdit(previousId, friendId);
+    this.heldId = null;
+    return i < 0 ? null : this.editQueue.splice(i, 1)[0];
+  }
+
+  /**
+   * The edit nextEdit would serve now, held so that it is the one served —
+   * the page loads it early, and a swipe then lands on a post already there.
+   */
+  peekEdit(previousId, friendId) {
+    const i = this.pickEdit(previousId, friendId);
+    this.heldId = i < 0 ? null : this.editQueue[i].id;
+    return i < 0 ? null : this.editQueue[i];
   }
 
   /** Share of each category in what it has served lately. */
@@ -594,6 +615,7 @@ export class Duo {
     /** The TikTok edits in play: only when the visitor allowed TikTok. */
     this.fanEnabled = false;
     this.edits = [];
+    this.editIds = new Set();
     this.brokenEdits = new Set();
     this.lastEvent = null;
   }
@@ -607,6 +629,7 @@ export class Duo {
    */
   setFan(edits, allowed) {
     this.edits = edits.filter((e) => !this.brokenEdits.has(e.id));
+    this.editIds = new Set(this.edits.map((e) => e.id));
     this.fanEnabled = !!allowed && this.edits.length > 0;
     for (const f of this.flies) {
       f.feed.editQueue = [];
@@ -614,9 +637,26 @@ export class Duo {
     }
   }
 
+  /**
+   * Takes in a refreshed pool without disturbing what is on screen: the reels
+   * playing now carry on, and new posts join each phone's current pass at
+   * random places rather than waiting for the next one.
+   */
+  updateEdits(edits) {
+    const known = this.editIds;
+    this.edits = edits.filter((e) => !this.brokenEdits.has(e.id));
+    this.editIds = new Set(this.edits.map((e) => e.id));
+    if (!this.fanEnabled) return;
+    const fresh = this.edits.filter((e) => !known.has(e.id));
+    for (const f of this.flies) {
+      const queue = f.feed.editQueue;
+      if (queue.length) for (const e of fresh) queue.splice(Math.floor(f.rng() * (queue.length + 1)), 0, e);
+      f.dropReel();
+    }
+  }
+
   canPlay(edit) {
-    return !!edit && this.fanEnabled && !this.brokenEdits.has(edit.id)
-      && this.edits.some((listed) => listed.id === edit.id);
+    return !!edit && this.fanEnabled && !this.brokenEdits.has(edit.id) && this.editIds.has(edit.id);
   }
 
   /** Current and queued reels always belong to the selected feed mode. */
@@ -628,6 +668,18 @@ export class Duo {
   nextEdit(index = 0) {
     const fly = this.flies[index];
     return fly.feed.nextEdit(fly.reel?.edit?.id, this.flies[1 - index]?.reel?.edit?.id);
+  }
+
+  /**
+   * The edit this phone will show after the current one: a reel the other
+   * fly sent comes first, otherwise the feed's next, held for it. The page
+   * loads it off screen so the swipe lands on a video that is already there.
+   */
+  upcomingEdit(index = 0) {
+    const fly = this.flies[index];
+    if (!this.fanEnabled || !fly.screenOn) return null;
+    if (fly.inbox.length) return this.canShow(fly.inbox[0]) ? fly.inbox[0].edit : null;
+    return fly.feed.peekEdit(fly.reel?.edit?.id, this.flies[1 - index]?.reel?.edit?.id);
   }
 
   /** The player could not show a post (removed, private, embedding off): never again. */

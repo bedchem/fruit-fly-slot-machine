@@ -47,9 +47,7 @@ export const STOOL = {
  * tools/poses.mjs solves all four numbers together with the stool offset.
  */
 export const FLY = {
-  // The fly sits on the green upholstered stool that is part of old-bar.glb.
-  // Its measured seat is at the near end of the counter (world Z ≈ -1.34).
-  position: [0.9631, 1.2664, -1.34],
+  position: [0.9631, 1.2664, -0.1845],
   rotationY: -1.9208,
   pitch: -1.05,
   scale: 0.62,
@@ -106,9 +104,7 @@ export function reachFraction(worldPoint, fly = FLY) {
  */
 export const CAMERA = {
   position: [4.95, 2.70, -3.35],
-  // Keep the fly on the stool's near side of the machine instead of letting
-  // the portrait/side-panel crop push it to the right edge of the shot.
-  target: [1.05, 1.38, -0.65],
+  target: [1.05, 1.38, -0.15],
   fov: 40,
 };
 

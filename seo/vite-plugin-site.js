@@ -19,7 +19,7 @@ import path from 'node:path';
 import { marked } from 'marked';
 import site from '../site.config.js';
 import { PAGES, FAQ } from './content.js';
-import { EDIT_SUBJECT } from '../src/game/tiktokEdits.js';
+import { EDIT_SUBJECT, EDIT_TAG } from '../src/game/tiktokEdits.js';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/, '')), '..');
 const today = () => new Date().toISOString().slice(0, 10);
@@ -46,6 +46,7 @@ function fill(text, page) {
     'SITE.host.name': site.host.name,
     'SITE.host.privacyUrl': site.host.privacyUrl,
     'SITE.editSubject': EDIT_SUBJECT,
+    'SITE.editTag': EDIT_TAG,
     'BUILD.date': today(),
     'BUILD.year': String(new Date().getFullYear()),
     'PAGE.url': page ? abs(page.path) : site.url,

@@ -14,7 +14,8 @@
  * entry against TikTok's public oEmbed endpoint and prints creator and title.
  *
  * Choose posts whose creators allow embedding, and keep the creator's handle
- * here exactly: it is shown as the credit under every video.
+ * here exactly: it is shown as the credit under every video. Every post has to
+ * carry #EDIT_TAG in its caption; the check flags any that does not.
  */
 export const TIKTOK_EDITS = [
   { url: 'https://www.tiktok.com/@sabsvia/video/7683599968128503070', creator: '@sabsvia' },
@@ -35,17 +36,77 @@ export const TIKTOK_EDITS = [
   { url: 'https://www.tiktok.com/@wandvll/video/7617976696394009877', creator: '@wandvll' },
   { url: 'https://www.tiktok.com/@lokrvq/video/7562986955315678486', creator: '@lokrvq' },
   { url: 'https://www.tiktok.com/@eternaljuno/video/7663961386904489234', creator: '@eternaljuno' },
+  { url: 'https://www.tiktok.com/@eicsxsabrina/video/7429464112159067423', creator: '@eicsxsabrina' },
+  { url: 'https://www.tiktok.com/@eternaljuno/video/7607480461643844882', creator: '@eternaljuno' },
+  { url: 'https://www.tiktok.com/@whiteoutstarz/video/7577087520765185335', creator: '@whiteoutstarz' },
+  { url: 'https://www.tiktok.com/@daisvisualsfx/video/7416138932628327712', creator: '@daisvisualsfx' },
+  { url: 'https://www.tiktok.com/@goodkarma131/video/7479988461492096261', creator: '@goodkarma131' },
+  { url: 'https://www.tiktok.com/@vxciovs/video/7640963118151126285', creator: '@vxciovs' },
+  { url: 'https://www.tiktok.com/@jqsids/video/7412357378932264225', creator: '@jqsids' },
+  { url: 'https://www.tiktok.com/@thedevilsanus_/video/7421483962767281415', creator: '@thedevilsanus_' },
+  { url: 'https://www.tiktok.com/@sentmedowntownlights/video/7490589351143918878', creator: '@sentmedowntownlights' },
+  { url: 'https://www.tiktok.com/@m0nliqt/video/7676978955957570829', creator: '@m0nliqt' },
+  { url: 'https://www.tiktok.com/@aeterrify/video/7411879080024345874', creator: '@aeterrify' },
+  { url: 'https://www.tiktok.com/@joshm3r/video/7433454086730550544', creator: '@joshm3r' },
+  { url: 'https://www.tiktok.com/@gyjfilm/video/7468878221807799558', creator: '@gyjfilm' },
+  { url: 'https://www.tiktok.com/@thatgirllalison/video/7357349657413979434', creator: '@thatgirllalison' },
 ];
 
 /** The star the edits are about, for labels and the not-affiliated notice. */
 export const EDIT_SUBJECT = 'Sabrina Carpenter';
 
-const ID = /\/video\/(\d{8,})/;
+/**
+ * The hashtag whose live feed sits beside the flies: whatever TikTok lists
+ * under it right now, fetched fresh on every visit through TikTok's official
+ * hashtag embed. It needs the same consent as the edits. An empty string
+ * leaves the live feed out.
+ */
+export const EDIT_TAG = 'sabrinacarpenter';
 
-/** The usable entries: a post ID parsed from the URL, and a creator handle. */
-export const EDITS = TIKTOK_EDITS
-  .map((e) => ({ ...e, id: (e.url.match(ID) || [])[1] }))
-  .filter((e) => e.id && e.creator);
+export const tagUrl = (tag) => `https://www.tiktok.com/tag/${encodeURIComponent(tag)}`;
+
+/** Whether a post's caption carries the hashtag: the filter every post in the feed passes. */
+export const captionHasTag = (caption, tag = EDIT_TAG) => !tag || String(caption ?? '').toLowerCase().includes(`#${tag.toLowerCase()}`);
+
+/**
+ * The hashtag embed's frame. It is the iframe TikTok's embed.js puts in place
+ * of the oEmbed markup for a hashtag (`data-embed-type="tag"`); using it
+ * directly keeps TikTok's script out of the page, as with the player below.
+ * The frame reports its height by postMessage, tagged with the frame's name.
+ */
+export function tagEmbedUrl(tag, lang = 'en') {
+  const q = new URLSearchParams({ lang, embedFrom: 'oembed' });
+  return `https://www.tiktok.com/embed/tag/${encodeURIComponent(tag)}?${q}`;
+}
+
+const POST = /^https:\/\/www\.tiktok\.com\/@([\w.-]{1,40})\/video\/(\d{8,25})(?:[?#]|$)/;
+const HANDLE = /^@[\w.-]{1,40}$/;
+
+/**
+ * The usable entries: plainly a TikTok post and a creator handle, with the
+ * post ID parsed out, each post once. The list above and the refreshed pool
+ * both come through here, so nothing else can reach a player.
+ */
+export function parseEdits(list) {
+  const seen = new Set();
+  const out = [];
+  for (const e of Array.isArray(list) ? list : []) {
+    const id = typeof e?.url === 'string' ? (e.url.match(POST) || [])[2] : null;
+    if (!id || seen.has(id) || typeof e.creator !== 'string' || !HANDLE.test(e.creator)) continue;
+    seen.add(id);
+    out.push({ url: e.url, creator: e.creator, id });
+  }
+  return out;
+}
+
+export const EDITS = parseEdits(TIKTOK_EDITS);
+
+/**
+ * Where tools/refresh-tiktok-edits.mjs publishes the edits it keeps finding
+ * under EDIT_TAG. It is a file on this site, not a request to TikTok; the page
+ * adds what it lists to the edits above.
+ */
+export const POOL_URL = '/pool/tiktok-edits.json';
 
 /**
  * The player URL for a post: TikTok's documented embed player, no

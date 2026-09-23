@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { PerspectiveCamera, Vector3 } from 'three';
-import { BAR_CAMERA, GLASS, MOUTH, TIN } from '../src/scene/barLayout.js';
-import { FLY } from '../src/scene/layout.js';
+import { BAR_CAMERA, BAR_FLY, GLASS, MOUTH, TIN } from '../src/scene/barLayout.js';
 import { BAR_CAMERA_LIMITS, barCameraFov, constrainBarView, dampBarView, dragBarView, sampleBarCamera, zoomBarView } from '../src/scene/barCamera.js';
 
 test('neutral view preserves the authored bar camera exactly', () => {
@@ -55,7 +54,7 @@ test('reduced motion removes parallax, floating and shake while retaining user o
 });
 
 test('fly, mouth and interactive props stay in frame at orbit extremes on desktop and mobile', () => {
-  const points = [FLY.position, MOUTH, GLASS.base, TIN.center];
+  const points = [BAR_FLY.position, MOUTH, GLASS.base, TIN.center];
   for (const [width, height] of [[1440, 900], [800, 700], [390, 650], [320, 576]]) {
     const camera = new PerspectiveCamera(barCameraFov(width, height), width / height, 0.05, 60);
     for (const yaw of [-BAR_CAMERA_LIMITS.yaw, 0, BAR_CAMERA_LIMITS.yaw]) {

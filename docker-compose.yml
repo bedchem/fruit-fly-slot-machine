@@ -3,4 +3,26 @@ services:
     build: .
     ports:
       - "${PORT:-3006}:80"
+    volumes:
+      - tiktok-pool:/usr/share/nginx/html/pool:ro
     restart: unless-stopped
+
+  # Finds new #sabrinacarpenter edits once a day and publishes them at
+  # /pool/tiktok-edits.json (tools/refresh-tiktok-edits.mjs). Needs a search
+  # key: BRAVE_API_KEY, or GOOGLE_API_KEY with GOOGLE_CSE_ID. Without one it
+  # only re-checks the pool it has.
+  tiktok-edits:
+    build:
+      context: .
+      target: build
+    command: ["node", "tools/refresh-tiktok-edits.mjs", "--out", "/pool/tiktok-edits.json", "--every", "24"]
+    environment:
+      BRAVE_API_KEY: ${BRAVE_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GOOGLE_CSE_ID: ${GOOGLE_CSE_ID:-}
+    volumes:
+      - tiktok-pool:/pool
+    restart: unless-stopped
+
+volumes:
+  tiktok-pool:

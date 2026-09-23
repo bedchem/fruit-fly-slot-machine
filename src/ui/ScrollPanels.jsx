@@ -96,8 +96,8 @@ export function ScrollBank({ duoRef }) {
  * over its screen, and the credit underneath.
  */
 export function Phones({
-  duoRef, canvasRefs, playing = [null, null], soundOn = false, listen = 0, onListen = () => {},
-  expanded = null, onExpand = () => {},
+  duoRef, canvasRefs, playing = [null, null], upcoming = [null, null], soundOn = false, listen = 0,
+  onListen = () => {}, expanded = null, onExpand = () => {},
 }) {
   // the one phone you hear: the open one, else the chosen one if it is on an
   // edit, else whichever is — and never two at once
@@ -119,7 +119,13 @@ export function Phones({
           <div className="phone-screen">
             <canvas ref={(el) => { refs.current[i] = el; }} width="270" height="560" aria-label={`${n}'s phone`} />
             {playing[i] && expanded !== i && (
-              <TikTokFeedPlayer duo={duoRef.current} index={i} reel={playing[i]} audible={soundOn && heard === i} />
+              <TikTokFeedPlayer
+                duo={duoRef.current}
+                index={i}
+                reel={playing[i]}
+                next={upcoming[i]}
+                audible={soundOn && heard === i}
+              />
             )}
             {playing[i] && expanded !== i && (
               <button type="button" className="phone-expand" onClick={() => onExpand(i)} aria-label={`Watch ${n}'s edit large`}>

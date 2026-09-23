@@ -3,3 +3,4 @@ dist
 .cache
 .vite.log
 preview_*.png
+public/pool

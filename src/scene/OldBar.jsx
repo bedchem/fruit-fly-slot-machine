@@ -16,8 +16,10 @@ const CUTOUT_MATERIALS = new Set(['TextureMaterial_31', 'TextureMaterial_48']);
 /**
  * Old bar by katydid. Keep the authored textures and embedded attribution.
  * The source includes its own Y-up transform and an offset floor at Y=4.37.
- * Align the existing countertop to the fly's measured interaction plane;
- * moving the fly instead would break its seat and foreleg IK.
+ * Align the existing countertop to the fly's measured interaction plane, and
+ * slide the room along it until the near upholstered stool stands where the
+ * casino's stool does (seat centre 1.543, -0.009). Moving the fly instead
+ * would take it off the casino, trading and doomscroll stools as well.
  */
 export function OldBar() {
   const { scene } = useGLTF('/models/old-bar.glb');
@@ -45,7 +47,7 @@ export function OldBar() {
     return { root, materials };
   }, [scene]);
   useEffect(() => () => room.materials.forEach((material) => material.dispose()), [room]);
-  return <primitive object={room.root} position={[2.047, -5.2877, 2.30]} rotation={[0, 1.6018, 0]} scale={1.21} dispose={null} />;
+  return <primitive object={room.root} position={[1.9615, -5.2877, 3.6351]} rotation={[0, 1.6018, 0]} scale={1.21} dispose={null} />;
 }
 
 useGLTF.preload('/models/old-bar.glb');

@@ -1439,6 +1439,8 @@ a.pill { text-decoration: none; }
   transform: translateY(calc(var(--swipe, 0) * -100%));
   animation: edit-feed-in 240ms ease-out;
 }
+/* the next post, loaded and waiting just below: the swipe pulls it up */
+.tiktok-feed-item.next { transform: translateY(calc(100% - var(--swipe, 0) * 100%)); }
 @keyframes edit-feed-in {
   from { translate: 0 100%; }
   to { translate: 0 0; }
@@ -1459,6 +1461,29 @@ a.pill { text-decoration: none; }
 .edit-list ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem 0.8rem; font-size: 0.75rem; }
 .edit-list a { color: var(--ink-2); }
 .edit-disclaimer { margin: 0; font-size: 0.66rem; color: var(--ink-3); }
+.tag-feed { display: grid; gap: 0.4rem; }
+.tiktok-tag {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 11px;
+  background: #fff;
+}
+.tag-feed-off { margin: 0; font-size: 0.75rem; line-height: 1.45; color: var(--ink-2); }
+.tag-feed-off a { color: var(--ink); }
+.tag-feed-off button {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.tag-feed-off button:hover { color: var(--accent); }
 
 @media (max-width: 560px) {
   .slip.consent { max-width: calc(100% - 1.8rem); bottom: 4.2rem; }
@@ -1605,6 +1630,8 @@ a.pill { text-decoration: none; }
 .edit-overlay .edit-credit { max-width: 22rem; align-self: center; }
 @media (prefers-reduced-motion: reduce) {
   .tiktok-feed-item { animation: none; transform: none; }
+  /* no slide: the waiting post stays out of sight until it is the one playing */
+  .tiktok-feed-item.next { transform: none; visibility: hidden; }
   .edit-overlay { animation: none; }
   .scene-loader-track i { transition: none; }
 }
